@@ -1,7 +1,7 @@
 import streamlit as st
 
 from core.engine.session_manager import initialise_session, reset_test
-from core.engine.question_factory import generate_question, get_levels, TOPIC_REGISTRY
+from core.engine.question_factory import generate_question, get_levels, QUAL_REGISTRY
 from core.ui.question_ui import render_question
 from core.ui.scaffold_ui import render_scaffold
 from core.ui.notes_ui import render_notes
@@ -16,6 +16,16 @@ st.title("Applications of Maths Practice")
 if "submitted" not in st.session_state:
     st.session_state.submitted = False
 
+# --- Qualification selection ---
+qualification = st.radio("Qualification", ["National 5", "National 4"], horizontal=True)
+
+if st.session_state.get("last_qualification") != qualification:
+    st.session_state.last_qualification = qualification
+    st.session_state.submitted = False
+    reset_test()
+
+st.divider()
+
 # --- Mode selection ---
 mode = st.radio("Mode", ["Practice", "Test"], horizontal=True, index=0)
 
@@ -27,14 +37,15 @@ if st.session_state.mode != mode:
 st.divider()
 
 # --- Topic and question type selection ---
-topic = st.selectbox("Choose Topic", list(TOPIC_REGISTRY.keys()))
+topic_registry = QUAL_REGISTRY[qualification]
+topic = st.selectbox("Choose Topic", list(topic_registry.keys()))
 
 if st.session_state.get("last_topic") != topic:
     st.session_state.last_topic = topic
     st.session_state.submitted = False
     reset_test()
 
-question_types = list(TOPIC_REGISTRY[topic].keys())
+question_types = list(topic_registry[topic].keys())
 question_type = st.selectbox("Choose Question Type", question_types)
 
 if st.session_state.get("last_question_type") != question_type:
@@ -43,7 +54,7 @@ if st.session_state.get("last_question_type") != question_type:
     reset_test()
 
 # --- Level selection (shown only for question types that have levels) ---
-levels = get_levels(topic, question_type)
+levels = get_levels(topic, question_type, qualification)
 selected_level = None
 
 if levels:
@@ -53,13 +64,13 @@ if levels:
 
 # --- Mode routing ---
 if mode == "Test":
-    render_test(topic, question_type, level=selected_level)
+    render_test(topic, question_type, level=selected_level, qualification=qualification)
 
 else:
     quiz = st.session_state.quiz
 
     if st.button("Generate Question"):
-        quiz["current_question"] = generate_question(topic, question_type, level=selected_level)
+        quiz["current_question"] = generate_question(topic, question_type, level=selected_level, qualification=qualification)
         st.session_state.submitted = False
         st.rerun()
 

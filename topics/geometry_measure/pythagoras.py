@@ -97,6 +97,59 @@ at right angles to the base, you need two steps:
 """
 
 # (AD, BD, AB, DC, AC) — exact Pythagorean triples in both sub-triangles
+_N4_TRIPLES = [(3, 4, 5), (5, 12, 13), (6, 8, 10), (8, 15, 17)]
+
+
+def generate_pythagoras_question_n4():
+    a, b, c = random.choice(_N4_TRIPLES)
+    find_hyp = random.choice([True, False])
+
+    if find_hyp:
+        question_text = (
+            f"A right-angled triangle has shorter sides of {a} cm and {b} cm. "
+            f"Calculate the length of the hypotenuse."
+        )
+        answer = c
+        scaffold_steps = [
+            {"prompt": "Square the first shorter side", "answer": float(a ** 2)},
+            {"prompt": "Square the second shorter side", "answer": float(b ** 2)},
+            {"prompt": "Add the two squared values together", "answer": float(a**2 + b**2)},
+            {"prompt": "Take the square root to find the hypotenuse", "answer": float(c)},
+        ]
+        worked = [
+            "c² = a² + b²",
+            f"c² = {a}² + {b}² = {a**2} + {b**2} = {a**2 + b**2}",
+            f"c = √{a**2 + b**2} = {c} cm",
+        ]
+    else:
+        question_text = (
+            f"A right-angled triangle has a hypotenuse of {c} cm and one shorter side of {b} cm. "
+            f"Calculate the length of the missing side."
+        )
+        answer = a
+        scaffold_steps = [
+            {"prompt": "Square the hypotenuse", "answer": float(c ** 2)},
+            {"prompt": "Square the known shorter side", "answer": float(b ** 2)},
+            {"prompt": "Subtract to find the missing squared value", "answer": float(c**2 - b**2)},
+            {"prompt": "Take the square root to find the missing side", "answer": float(a)},
+        ]
+        worked = [
+            "a² = c² − b²",
+            f"a² = {c}² − {b}² = {c**2} − {b**2} = {c**2 - b**2}",
+            f"a = √{c**2 - b**2} = {a} cm",
+        ]
+
+    return Question(
+        question_text=question_text,
+        correct_answer=answer,
+        topic="Geometry and Measure",
+        question_type="Pythagoras Theorem",
+        scaffold_steps=scaffold_steps,
+        worked_solution=worked,
+        notes=NOTES,
+    )
+
+
 _TWO_TRI_SETUPS = [
     (12,  5, 13,  9, 15),
     (12,  9, 15,  5, 13),

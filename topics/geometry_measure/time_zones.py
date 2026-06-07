@@ -259,8 +259,148 @@ def _level1_relative():
         )
 
 
+def _level1_find_arrival():
+    """Given departure time and journey duration, find local arrival time in destination."""
+    for _ in range(50):
+        city_a, city_b = random.sample(_CITIES, 2)
+        if city_a["offset"] == city_b["offset"]:
+            continue
+
+        dep_h = random.randint(6, 18)
+        dep_m = random.choice([0, 30])
+        dep_local_min = _to_min(dep_h, dep_m)
+        journey_h = random.randint(1, 5)
+        journey_min = journey_h * 60
+
+        # Arrival in origin local time (intermediate step)
+        arr_origin_min = dep_local_min + journey_min
+        dep_gmt_min = dep_local_min - city_a["offset"] * 60
+        arr_gmt_min = dep_gmt_min + journey_min
+        arr_dest_min = arr_gmt_min + city_b["offset"] * 60
+
+        dep_time = _fmt(dep_local_min)
+        arr_origin_hhmm = _fmt_hhmm(arr_origin_min)
+        arr_dest_hhmm = _fmt_hhmm(arr_dest_min)
+        arr_dest_display = _fmt(arr_dest_min)
+        arr_origin_display = _fmt(arr_origin_min)
+        arr_dest_day = _day_note(arr_dest_min)
+
+        delta = city_b["offset"] - city_a["offset"]
+        if delta > 0:
+            offset_desc = f"Apply time zone offset: {arr_origin_display} + {delta}h = {arr_dest_display}{arr_dest_day}"
+        else:
+            offset_desc = f"Apply time zone offset: {arr_origin_display} − {abs(delta)}h = {arr_dest_display}{arr_dest_day}"
+
+        question_text = (
+            f"A flight from {city_a['name']} ({city_a['gmt']}) to {city_b['name']} ({city_b['gmt']}) "
+            f"takes {journey_h} hour{'s' if journey_h != 1 else ''}. "
+            f"The flight departs {city_a['name']} at {dep_time}. "
+            f"What time does it arrive in {city_b['name']} (local time)? "
+            f"Give your answer in HHMM format (e.g. 0930)."
+        )
+
+        scaffold_steps = [
+            {
+                "prompt": f"Add the journey time to find the arrival time in {city_a['name']} time. Give your answer in HHMM format.",
+                "answer": arr_origin_hhmm,
+            },
+            {
+                "prompt": f"Apply the time zone offset to find the arrival time in {city_b['name']}. Give your answer in HHMM format.",
+                "answer": arr_dest_hhmm,
+            },
+        ]
+
+        worked = [
+            f"Arrival in {city_a['name']} time: {dep_time} + {journey_h}h = {arr_origin_display}",
+            offset_desc,
+        ]
+
+        return Question(
+            question_text=question_text,
+            correct_answer=arr_dest_hhmm,
+            topic="Geometry and Measure",
+            question_type="Time Zones (Level 1)",
+            scaffold_steps=scaffold_steps,
+            worked_solution=worked,
+            notes=NOTES,
+        )
+
+    return _level1_gmt_labels()
+
+
+def _level1_find_departure():
+    """Given arrival time and journey duration, find local departure time in origin."""
+    for _ in range(50):
+        city_a, city_b = random.sample(_CITIES, 2)
+        if city_a["offset"] == city_b["offset"]:
+            continue
+
+        # Build from a known departure so all values are consistent
+        dep_h = random.randint(6, 18)
+        dep_m = random.choice([0, 30])
+        dep_local_min = _to_min(dep_h, dep_m)
+        journey_h = random.randint(1, 5)
+        journey_min = journey_h * 60
+
+        dep_gmt_min = dep_local_min - city_a["offset"] * 60
+        arr_gmt_min = dep_gmt_min + journey_min
+        arr_dest_min = arr_gmt_min + city_b["offset"] * 60
+
+        # Intermediate: arrival time expressed in origin timezone
+        arr_in_origin_min = dep_local_min + journey_min
+
+        dep_time = _fmt(dep_local_min)
+        dep_hhmm = _fmt_hhmm(dep_local_min)
+        arr_dest_time = _fmt(arr_dest_min)
+        arr_in_origin_hhmm = _fmt_hhmm(arr_in_origin_min)
+        arr_in_origin_display = _fmt(arr_in_origin_min)
+        arr_dest_day = _day_note(arr_dest_min)
+
+        delta = city_b["offset"] - city_a["offset"]
+        if delta > 0:
+            conv_desc = f"Convert arrival to {city_a['name']} time: {arr_dest_time}{arr_dest_day} − {delta}h = {arr_in_origin_display}"
+        else:
+            conv_desc = f"Convert arrival to {city_a['name']} time: {arr_dest_time}{arr_dest_day} + {abs(delta)}h = {arr_in_origin_display}"
+
+        question_text = (
+            f"A flight from {city_a['name']} ({city_a['gmt']}) to {city_b['name']} ({city_b['gmt']}) "
+            f"takes {journey_h} hour{'s' if journey_h != 1 else ''}. "
+            f"The flight arrives in {city_b['name']} at {arr_dest_time}{arr_dest_day} local time. "
+            f"What time did the flight depart from {city_a['name']}? "
+            f"Give your answer in HHMM format (e.g. 0930)."
+        )
+
+        scaffold_steps = [
+            {
+                "prompt": f"Convert the arrival time from {city_b['name']} time to {city_a['name']} time. Give your answer in HHMM format.",
+                "answer": arr_in_origin_hhmm,
+            },
+            {
+                "prompt": f"Subtract the journey time to find the departure time. Give your answer in HHMM format.",
+                "answer": dep_hhmm,
+            },
+        ]
+
+        worked = [
+            conv_desc,
+            f"Departure from {city_a['name']}: {arr_in_origin_display} − {journey_h}h = {dep_time}",
+        ]
+
+        return Question(
+            question_text=question_text,
+            correct_answer=dep_hhmm,
+            topic="Geometry and Measure",
+            question_type="Time Zones (Level 1)",
+            scaffold_steps=scaffold_steps,
+            worked_solution=worked,
+            notes=NOTES,
+        )
+
+    return _level1_relative()
+
+
 def generate_level1_question():
-    return random.choice([_level1_gmt_labels, _level1_relative])()
+    return random.choice([_level1_gmt_labels, _level1_relative, _level1_find_arrival, _level1_find_departure])()
 
 
 # ---------------------------------------------------------------------------
@@ -483,8 +623,105 @@ def _level2_find_arrival():
         )
 
 
+def _level2_find_departure():
+    """Given arrival time and flight duration, find local departure time in origin."""
+    name = random.choice(_NAMES)
+
+    for _ in range(50):
+        city_a, city_b = random.sample(_CITIES, 2)
+        if city_a["offset"] == city_b["offset"]:
+            continue
+
+        dep_h = random.randint(5, 15)
+        dep_m = random.choice([0, 15, 30, 45])
+        dep_local_min = _to_min(dep_h, dep_m)
+
+        duration_min = random.choice(range(60, 13 * 60 + 1, 15))
+
+        dep_gmt_min = dep_local_min - city_a["offset"] * 60
+        arr_gmt_min = dep_gmt_min + duration_min
+        arr_dest_min = arr_gmt_min + city_b["offset"] * 60
+
+        dep_time = _fmt(dep_local_min)
+        arr_dest_time = _fmt(arr_dest_min)
+        dep_hhmm_answer = dep_time  # answer in HH:MM to match _level2_find_arrival style
+        arr_gmt_display = _fmt(arr_gmt_min)
+        dep_gmt_display = _fmt(dep_gmt_min)
+        arr_dest_day = _day_note(arr_dest_min)
+        dur_str = _duration_str(duration_min)
+
+        dep_g, arr_g = _norm_gmt(dep_gmt_min, arr_gmt_min)
+
+        off_b = city_b["offset"]
+        if off_b == 0:
+            step1_desc = f"Arrival in {city_b['name']} is already GMT: {arr_dest_time}{arr_dest_day}"
+        elif off_b > 0:
+            step1_desc = (
+                f"Convert arrival to GMT: {arr_dest_time}{arr_dest_day} − {off_b} "
+                f"hour{'s' if off_b != 1 else ''} = {_fmt_gmt(arr_g)}"
+            )
+        else:
+            step1_desc = (
+                f"Convert arrival to GMT: {arr_dest_time}{arr_dest_day} + {abs(off_b)} "
+                f"hour{'s' if abs(off_b) != 1 else ''} = {_fmt_gmt(arr_g)}"
+            )
+
+        off_a = city_a["offset"]
+        if off_a == 0:
+            step3_desc = f"Departure is already in GMT: {dep_time}"
+        elif off_a > 0:
+            step3_desc = (
+                f"Convert departure GMT to {city_a['name']} local time: "
+                f"{_fmt_gmt(dep_g)} + {off_a} hour{'s' if off_a != 1 else ''} = {dep_time}"
+            )
+        else:
+            step3_desc = (
+                f"Convert departure GMT to {city_a['name']} local time: "
+                f"{_fmt_gmt(dep_g)} − {abs(off_a)} hour{'s' if abs(off_a) != 1 else ''} = {dep_time}"
+            )
+
+        question_text = (
+            f"{name}'s flight arrives in {city_b['name']} ({city_b['gmt']}) at "
+            f"{arr_dest_time}{arr_dest_day} local time. "
+            f"The flight from {city_a['name']} ({city_a['gmt']}) takes {dur_str}. "
+            f"What time did the flight depart from {city_a['name']}? "
+            f"Give your answer in 24-hour format (HH:MM)."
+        )
+
+        scaffold_steps = [
+            {
+                "prompt": f"Convert the {city_b['name']} arrival time to GMT",
+                "answer": arr_gmt_display,
+            },
+            {
+                "prompt": "Subtract the flight time to find the departure time in GMT",
+                "answer": dep_gmt_display,
+            },
+            {
+                "prompt": f"Convert the GMT departure time to {city_a['name']} local time",
+                "answer": dep_time,
+            },
+        ]
+
+        worked = [
+            step1_desc,
+            f"Departure in GMT: {_fmt_gmt(arr_g)} − {dur_str} = {_fmt_gmt(dep_g)}",
+            step3_desc,
+        ]
+
+        return Question(
+            question_text=question_text,
+            correct_answer=dep_time,
+            topic="Geometry and Measure",
+            question_type="Time Zones (Level 2)",
+            scaffold_steps=scaffold_steps,
+            worked_solution=worked,
+            notes=NOTES,
+        )
+
+
 def generate_level2_question():
-    return random.choice([_level2_find_duration, _level2_find_arrival])()
+    return random.choice([_level2_find_duration, _level2_find_arrival, _level2_find_departure])()
 
 
 # ---------------------------------------------------------------------------
@@ -492,61 +729,69 @@ def generate_level2_question():
 # ---------------------------------------------------------------------------
 
 def _level3_find_stopover():
-    """Given departure, flight durations and final arrival time, find the stopover."""
     name = random.choice(_NAMES)
 
     for _ in range(100):
-        # Pick three distinct cities: origin → stopover → destination
         cities = random.sample(_CITIES, 3)
         origin, stop, dest = cities
 
-        # Departure from origin (whole/half hour, 05:00–10:00)
-        dep_h = random.randint(5, 10)
+        if origin["offset"] == dest["offset"]:
+            continue
+
+        dep_h = random.randint(6, 12)
         dep_m = random.choice([0, 30])
         dep_local_min = _to_min(dep_h, dep_m)
         dep_gmt_min = dep_local_min - origin["offset"] * 60
 
-        # Flight 1: 2–13 hours in whole hours
-        flight1_h = random.randint(2, 13)
+        flight1_h = random.randint(1, 7)
         flight1_min = flight1_h * 60
 
-        # Arrival at stopover in GMT, then local
-        arr_stop_gmt_min = dep_gmt_min + flight1_min
-        arr_stop_local_min = arr_stop_gmt_min + stop["offset"] * 60
-
-        # Stopover: 1–6 whole hours
-        stopover_h = random.randint(1, 6)
+        stopover_h = random.randint(1, 4)
         stopover_min = stopover_h * 60
 
-        # Departure from stopover in GMT
-        dep_stop_gmt_min = arr_stop_gmt_min + stopover_min
-        dep_stop_local_min = dep_stop_gmt_min + stop["offset"] * 60
-
-        # Flight 2: 2–13 hours in whole hours
-        flight2_h = random.randint(2, 13)
+        flight2_h = random.randint(1, 7)
         flight2_min = flight2_h * 60
 
-        # Arrival at destination in GMT, then local
-        arr_dest_gmt_min = dep_stop_gmt_min + flight2_min
+        total_journey_min = flight1_min + stopover_min + flight2_min
+        total_flight_min = flight1_min + flight2_min
+
+        arr_dest_gmt_min = dep_gmt_min + total_journey_min
         arr_dest_local_min = arr_dest_gmt_min + dest["offset"] * 60
 
+        # Departure time converted into the destination timezone
+        dep_in_dest_min = dep_local_min + (dest["offset"] - origin["offset"]) * 60
+
+        # Keep dep_in_dest as a clean same-day time so the arithmetic is clear
+        if not (0 <= dep_in_dest_min < 24 * 60):
+            continue
+
         dep_time = _fmt(dep_local_min)
-        arr_stop_time = _fmt(arr_stop_local_min)
-        dep_stop_time = _fmt(dep_stop_local_min)
         arr_dest_time = _fmt(arr_dest_local_min)
-
-        arr_stop_day = _day_note(arr_stop_local_min)
-        dep_stop_day = _day_note(dep_stop_local_min)
         arr_dest_day = _day_note(arr_dest_local_min)
+        dep_in_dest = _fmt_hhmm(dep_in_dest_min)
+        dep_in_dest_display = _fmt(dep_in_dest_min)
 
+        total_journey_str = _duration_str(total_journey_min)
+        total_flight_str = _duration_str(total_flight_min)
         stopover_str = _duration_str(stopover_min)
+
+        off_diff = dest["offset"] - origin["offset"]
+        if off_diff > 0:
+            conv_desc = (
+                f"Convert departure to {dest['name']} time: "
+                f"{dep_time} + {off_diff}h = {dep_in_dest_display}"
+            )
+        else:
+            conv_desc = (
+                f"Convert departure to {dest['name']} time: "
+                f"{dep_time} − {abs(off_diff)}h = {dep_in_dest_display}"
+            )
 
         question_text = (
             f"{name} flies from {origin['name']} to {dest['name']} with a stopover in {stop['name']}.\n\n"
             f"- {name} departs {origin['name']} ({origin['gmt']}) at {dep_time}.\n"
             f"- The flight from {origin['name']} to {stop['name']} takes "
             f"{flight1_h} hour{'s' if flight1_h != 1 else ''}.\n"
-            f"- {stop['name']} is in the {stop['gmt']} time zone.\n"
             f"- The flight from {stop['name']} to {dest['name']} takes "
             f"{flight2_h} hour{'s' if flight2_h != 1 else ''}.\n"
             f"- {name} arrives in {dest['name']} ({dest['gmt']}) at {arr_dest_time} local time{arr_dest_day}.\n\n"
@@ -554,229 +799,44 @@ def _level3_find_stopover():
             f"Give your answer in the form 'X hours Y minutes'."
         )
 
-        # Normalise GMT times so dep_gmt is "day 0" for clear annotation
-        dep_g, arr_s_g, dep_s_g, arr_d_g = _norm_gmt(
-            dep_gmt_min, arr_stop_gmt_min, dep_stop_gmt_min, arr_dest_gmt_min
-        )
-
-        off_o = origin["offset"]
-        off_s = stop["offset"]
-        off_d = dest["offset"]
-
-        # Step 1 — arrival at stopover (local)
-        if off_o == 0:
-            step1a = f"Departure is already GMT: {dep_time}"
-        elif off_o > 0:
-            step1a = f"Departure in GMT: {dep_time} − {off_o}h = {_fmt_gmt(dep_g)}"
-        else:
-            step1a = f"Departure in GMT: {dep_time} + {abs(off_o)}h = {_fmt_gmt(dep_g)}"
-
-        if off_s > 0:
-            step1b = (
-                f"Arrival in {stop['name']} (local): {_fmt_gmt(arr_s_g)} GMT + {off_s}h = "
-                f"{arr_stop_time}{arr_stop_day}"
-            )
-        elif off_s < 0:
-            step1b = (
-                f"Arrival in {stop['name']} (local): {_fmt_gmt(arr_s_g)} GMT − {abs(off_s)}h = "
-                f"{arr_stop_time}{arr_stop_day}"
-            )
-        else:
-            step1b = f"Arrival in {stop['name']}: {arr_stop_time}{arr_stop_day} (GMT)"
-
-        # Step 2 — departure from stopover (local), working back from destination arrival
-        if off_d > 0:
-            step2a = (
-                f"Arrival in {dest['name']} (GMT): {arr_dest_time}{arr_dest_day} − {off_d}h = "
-                f"{_fmt_gmt(arr_d_g)}"
-            )
-        elif off_d < 0:
-            step2a = (
-                f"Arrival in {dest['name']} (GMT): {arr_dest_time}{arr_dest_day} + {abs(off_d)}h = "
-                f"{_fmt_gmt(arr_d_g)}"
-            )
-        else:
-            step2a = f"Arrival in {dest['name']}: {arr_dest_time}{arr_dest_day} (already GMT)"
-
-        step2b = (
-            f"Departure from {stop['name']} (GMT): {_fmt_gmt(arr_d_g)} − {flight2_h}h = "
-            f"{_fmt_gmt(dep_s_g)}"
-        )
-
-        if off_s > 0:
-            step2c = (
-                f"Departure from {stop['name']} (local): {_fmt_gmt(dep_s_g)} + {off_s}h = "
-                f"{dep_stop_time}{dep_stop_day}"
-            )
-        elif off_s < 0:
-            step2c = (
-                f"Departure from {stop['name']} (local): {_fmt_gmt(dep_s_g)} − {abs(off_s)}h = "
-                f"{dep_stop_time}{dep_stop_day}"
-            )
-        else:
-            step2c = f"Departure from {stop['name']}: {dep_stop_time}{dep_stop_day} (GMT)"
-
         scaffold_steps = [
             {
                 "prompt": (
-                    f"Find the arrival time in {stop['name']} (local time) — "
-                    f"convert departure to GMT, add flight time, then apply {stop['name']} offset"
+                    f"Convert the departure time from {origin['name']} ({origin['gmt']}) to "
+                    f"{dest['name']} ({dest['gmt']}) time. Give your answer in HHMM format (e.g. 0930)."
                 ),
-                "answer": arr_stop_time,
+                "answer": dep_in_dest,
             },
             {
                 "prompt": (
-                    f"Find the departure time from {stop['name']} (local time) — "
-                    f"convert {dest['name']} arrival to GMT, subtract flight 2, "
-                    f"then apply {stop['name']} offset"
+                    f"Calculate the total journey time using the departure time in {dest['name']} time "
+                    f"({dep_in_dest_display}) and the arrival time in {dest['name']} "
+                    f"({arr_dest_time}{arr_dest_day})."
                 ),
-                "answer": dep_stop_time,
+                "answer": total_journey_str,
+                "answer_type": "duration",
             },
             {
-                "prompt": f"Calculate the stopover (both times are in {stop['name']}, so subtract directly)",
+                "prompt": (
+                    f"Calculate the total flight time "
+                    f"({flight1_h} hour{'s' if flight1_h != 1 else ''} + "
+                    f"{flight2_h} hour{'s' if flight2_h != 1 else ''})."
+                ),
+                "answer": total_flight_str,
+                "answer_type": "duration",
+            },
+            {
+                "prompt": "Calculate the stopover time (total journey time − total flight time).",
                 "answer": stopover_str,
                 "answer_type": "duration",
             },
         ]
 
         worked = [
-            step1a,
-            f"Arrival in {stop['name']} (GMT): {_fmt_gmt(dep_g)} + {flight1_h}h = {_fmt_gmt(arr_s_g)}",
-            step1b,
-            step2a,
-            step2b,
-            step2c,
-            f"Stopover = {dep_stop_time}{dep_stop_day} − {arr_stop_time}{arr_stop_day} = {stopover_str}",
-        ]
-
-        return Question(
-            question_text=question_text,
-            correct_answer=stopover_str,
-            topic="Geometry and Measure",
-            question_type="Time Zones (Level 3)",
-            scaffold_steps=scaffold_steps,
-            worked_solution=worked,
-            notes=NOTES,
-            metadata={"answer_type": "duration"},
-        )
-
-
-def _level3_calculate_flights_and_stopover():
-    """Given departure and arrival times at each leg, find individual flight times and stopover."""
-    name = random.choice(_NAMES)
-
-    for _ in range(100):
-        cities = random.sample(_CITIES, 3)
-        origin, stop, dest = cities
-
-        # Build from flight durations to guarantee everything is consistent
-        dep_h = random.randint(5, 10)
-        dep_m = random.choice([0, 30])
-        dep_local_min = _to_min(dep_h, dep_m)
-        dep_gmt_min = dep_local_min - origin["offset"] * 60
-
-        flight1_h = random.randint(2, 12)
-        flight1_min = flight1_h * 60
-
-        arr_stop_gmt_min = dep_gmt_min + flight1_min
-        arr_stop_local_min = arr_stop_gmt_min + stop["offset"] * 60
-
-        stopover_h = random.randint(1, 5)
-        stopover_min = stopover_h * 60
-
-        dep_stop_gmt_min = arr_stop_gmt_min + stopover_min
-        dep_stop_local_min = dep_stop_gmt_min + stop["offset"] * 60
-
-        flight2_h = random.randint(2, 12)
-        flight2_min = flight2_h * 60
-
-        arr_dest_gmt_min = dep_stop_gmt_min + flight2_min
-        arr_dest_local_min = arr_dest_gmt_min + dest["offset"] * 60
-
-        dep_time = _fmt(dep_local_min)
-        arr_stop_time = _fmt(arr_stop_local_min)
-        dep_stop_time = _fmt(dep_stop_local_min)
-        arr_dest_time = _fmt(arr_dest_local_min)
-
-        arr_stop_day = _day_note(arr_stop_local_min)
-        dep_stop_day = _day_note(dep_stop_local_min)
-        arr_dest_day = _day_note(arr_dest_local_min)
-
-        flight1_str = _duration_str(flight1_min)
-        flight2_str = _duration_str(flight2_min)
-        stopover_str = _duration_str(stopover_min)
-
-        question_text = (
-            f"{name} travels from {origin['name']} to {dest['name']} with a stopover in {stop['name']}.\n\n"
-            f"- Departs {origin['name']} ({origin['gmt']}) at {dep_time}.\n"
-            f"- Arrives {stop['name']} ({stop['gmt']}) at {arr_stop_time} local time{arr_stop_day}.\n"
-            f"- Departs {stop['name']} at {dep_stop_time} local time{dep_stop_day}.\n"
-            f"- Arrives {dest['name']} ({dest['gmt']}) at {arr_dest_time} local time{arr_dest_day}.\n\n"
-            f"(a) Calculate the flight time from {origin['name']} to {stop['name']}. "
-            f"Give your answer in the form 'X hours Y minutes'.\n"
-            f"(b) Calculate the flight time from {stop['name']} to {dest['name']}. "
-            f"Give your answer in the form 'X hours Y minutes'.\n"
-            f"(c) Calculate the stopover time in {stop['name']}. "
-            f"Give your answer in the form 'X hours Y minutes'.\n\n"
-            f"Enter your answer to part (c) below."
-        )
-
-        off_o = origin["offset"]
-        off_s = stop["offset"]
-        off_d = dest["offset"]
-
-        # Normalise all GMT values so dep is "day 0"
-        dep_g, arr_s_g, dep_s_g, arr_d_g = _norm_gmt(
-            dep_gmt_min, arr_stop_gmt_min, dep_stop_gmt_min, arr_dest_gmt_min
-        )
-
-        def _gmt_line(local_time, local_day_note, abs_gmt_norm, offset, label):
-            t = f"{local_time}{local_day_note}"
-            g = _fmt_gmt(abs_gmt_norm)
-            if offset == 0:
-                return f"{label}: {t} (already GMT)"
-            sign = "−" if offset > 0 else "+"
-            return f"{label}: {t} {sign} {abs(offset)}h = {g}"
-
-        scaffold_steps = [
-            {
-                "prompt": (
-                    f"(a) Convert departure ({dep_time}, {origin['gmt']}) and arrival at "
-                    f"{stop['name']} ({arr_stop_time}{arr_stop_day}, {stop['gmt']}) to GMT, then subtract"
-                ),
-                "answer": flight1_str,
-                "answer_type": "duration",
-            },
-            {
-                "prompt": (
-                    f"(b) Convert departure from {stop['name']} ({dep_stop_time}{dep_stop_day}, "
-                    f"{stop['gmt']}) and arrival at {dest['name']} ({arr_dest_time}{arr_dest_day}, "
-                    f"{dest['gmt']}) to GMT, then subtract"
-                ),
-                "answer": flight2_str,
-                "answer_type": "duration",
-            },
-            {
-                "prompt": (
-                    f"(c) Both stopover times are in {stop['name']}, so subtract directly: "
-                    f"{dep_stop_time}{dep_stop_day} − {arr_stop_time}{arr_stop_day}"
-                ),
-                "answer": stopover_str,
-                "answer_type": "duration",
-            },
-        ]
-
-        worked = [
-            "(a) Flight 1:",
-            _gmt_line(dep_time, "", dep_g, off_o, f"Departure {origin['name']}"),
-            _gmt_line(arr_stop_time, arr_stop_day, arr_s_g, off_s, f"Arrival {stop['name']}"),
-            f"Flight 1 = {_fmt_gmt(arr_s_g)} − {_fmt_gmt(dep_g)} = {flight1_str}",
-            "(b) Flight 2:",
-            _gmt_line(dep_stop_time, dep_stop_day, dep_s_g, off_s, f"Departure {stop['name']}"),
-            _gmt_line(arr_dest_time, arr_dest_day, arr_d_g, off_d, f"Arrival {dest['name']}"),
-            f"Flight 2 = {_fmt_gmt(arr_d_g)} − {_fmt_gmt(dep_s_g)} = {flight2_str}",
-            f"(c) Stopover (both times in {stop['name']}, so no conversion needed):",
-            f"{dep_stop_time}{dep_stop_day} − {arr_stop_time}{arr_stop_day} = {stopover_str}",
+            conv_desc,
+            f"Total journey time = {arr_dest_time}{arr_dest_day} − {dep_in_dest_display} = {total_journey_str}",
+            f"Total flight time = {flight1_h}h + {flight2_h}h = {total_flight_str}",
+            f"Stopover = {total_journey_str} − {total_flight_str} = {stopover_str}",
         ]
 
         return Question(
@@ -792,12 +852,16 @@ def _level3_calculate_flights_and_stopover():
 
 
 def generate_level3_question():
-    return random.choice([_level3_find_stopover, _level3_calculate_flights_and_stopover])()
+    return _level3_find_stopover()
 
 
 # ---------------------------------------------------------------------------
 # Dispatchers
 # ---------------------------------------------------------------------------
+
+def generate_time_zone_question_n4():
+    return generate_level1_question()
+
 
 def generate_time_zone_l1():
     return generate_level1_question()

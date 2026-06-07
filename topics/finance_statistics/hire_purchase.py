@@ -262,6 +262,62 @@ def _find_total_hp():
 
 
 # ---------------------------------------------------------------------------
+# N4 — Find monthly installment (fixed deposit given)
+# ---------------------------------------------------------------------------
+
+_N4_ITEMS = [
+    ("A television",    [200, 400, 600]),
+    ("A laptop",        [400, 600, 800]),
+    ("A washing machine", [400, 600]),
+    ("A games console", [200, 400]),
+    ("A mobile phone",  [400, 600]),
+    ("A tablet computer", [200, 400]),
+]
+
+_N4_MONTHS = [12, 24]
+
+
+def generate_hire_purchase_question_n4():
+    name, prices = random.choice(_N4_ITEMS)
+    cash = random.choice(prices)
+    dep_pct = random.choice([0.10, 0.20, 0.25])
+    deposit = round(cash * dep_pct / 5) * 5
+    months = random.choice(_N4_MONTHS)
+    monthly = _realistic_monthly(deposit, months, cash)
+    total_hp = deposit + monthly * months
+
+    question_text = (
+        f"{name} has a cash price of £{cash:,}. "
+        f"It can be bought on hire purchase by paying a deposit of £{deposit:,} "
+        f"and then equal monthly installments over {months} months. "
+        f"The total hire purchase price is £{total_hp:,}. "
+        f"Calculate the monthly installment."
+    )
+
+    scaffold_steps = [
+        {"prompt": "Find the amount left to pay after the deposit",
+         "answer": float(total_hp - deposit)},
+        {"prompt": "Divide by the number of months to find each installment",
+         "answer": float(monthly)},
+    ]
+
+    worked = [
+        f"Amount remaining = £{total_hp:,} − £{deposit:,} = £{total_hp - deposit:,}",
+        f"Monthly installment = £{total_hp - deposit:,} ÷ {months} = £{monthly:.2f}",
+    ]
+
+    return Question(
+        question_text=question_text,
+        correct_answer=float(monthly),
+        topic="Finance and Statistics",
+        question_type="Hire Purchase",
+        scaffold_steps=scaffold_steps,
+        worked_solution=worked,
+        notes=NOTES,
+    )
+
+
+# ---------------------------------------------------------------------------
 # Dispatcher
 # ---------------------------------------------------------------------------
 

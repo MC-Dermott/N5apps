@@ -19,7 +19,7 @@ def _is_correct(user_input, expected):
         return str(user_input).strip().lower() == str(expected).strip().lower()
 
 
-def render_test(topic, question_type, level=None):
+def render_test(topic, question_type, level=None, qualification="National 5"):
     test = st.session_state.test
 
     if not test["questions"]:
@@ -31,7 +31,7 @@ def render_test(topic, question_type, level=None):
         if st.button("Start Test", type="primary"):
             reset_test()
             st.session_state.test["questions"] = [
-                generate_question(topic, question_type, level=level) for _ in range(_NUM_QUESTIONS)
+                generate_question(topic, question_type, level=level, qualification=qualification) for _ in range(_NUM_QUESTIONS)
             ]
             st.rerun()
         return

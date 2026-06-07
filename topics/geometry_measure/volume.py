@@ -250,6 +250,49 @@ def generate_cylinder_question():
     )
 
 
+_N4_CYLINDER_CONTEXTS = [
+    {"shape": "cylindrical tin can",    "unit": "cm", "radii": [3, 4, 5, 6, 7],    "heights": [8, 10, 12, 15]},
+    {"shape": "cylindrical water tank", "unit": "m",  "radii": [1, 2, 3],           "heights": [2, 3, 4, 5]},
+    {"shape": "cylindrical glass",      "unit": "cm", "radii": [3, 4, 5],           "heights": [8, 9, 10, 12]},
+]
+
+
+def generate_volume_question_n4():
+    ctx = random.choice(_N4_CYLINDER_CONTEXTS)
+    unit = ctx["unit"]
+    r = random.choice(ctx["radii"])
+    h = random.choice(ctx["heights"])
+    volume = round(math.pi * r ** 2 * h, 2)
+
+    question_text = f"Calculate the volume of the {ctx['shape']}. Give your answer to 2 decimal places."
+
+    scaffold_steps = [
+        {"prompt": "Square the radius", "answer": float(r ** 2)},
+        {"prompt": "Calculate the volume using V = πr²h", "answer": volume},
+    ]
+
+    worked = [
+        f"V = π × {r}² × {h}",
+        f"V = π × {r**2} × {h}",
+        f"V = {volume} {unit}³",
+    ]
+
+    return Question(
+        question_text=question_text,
+        correct_answer=volume,
+        topic="Geometry and Measure",
+        question_type="Volume of a Cylinder",
+        scaffold_steps=scaffold_steps,
+        worked_solution=worked,
+        notes=CYLINDER_NOTES,
+        metadata={
+            "diagram": "cylinder",
+            "unit": unit,
+            "diagram_params": {"r": r, "h": h, "d": None, "use_diam": False},
+        },
+    )
+
+
 def generate_volume_question():
     return random.choice([
         generate_sphere_question,

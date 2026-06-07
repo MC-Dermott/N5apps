@@ -18,6 +18,59 @@ NOTES = """
 """
 
 
+def generate_appreciation_question_n4():
+    kind = random.choice(["depreciation", "appreciation"])
+    rate = random.choice([10, 20, 25])
+    years = random.randint(1, 2)
+
+    if kind == "depreciation":
+        start = random.choice(range(1000, 8001, 500))
+        multiplier = round(1 - rate / 100, 2)
+        subject = random.choice(["A car", "A motorbike", "A piece of equipment"])
+        verb = "depreciates"
+    else:
+        start = random.choice(range(50000, 150001, 5000))
+        multiplier = round(1 + rate / 100, 2)
+        subject = random.choice(["A house", "A flat", "A property"])
+        verb = "appreciates"
+
+    year_values = []
+    value = start
+    for _ in range(years):
+        value = round(value * multiplier, 2)
+        year_values.append(value)
+
+    answer = year_values[-1]
+
+    question_text = (
+        f"{subject} is worth £{start:,}. "
+        f"It {verb} at {rate}% per year. "
+        f"What is it worth after {years} year{'s' if years > 1 else ''}?"
+    )
+
+    scaffold_steps = [{"prompt": "Calculate the multiplier", "answer": multiplier}]
+    for y in range(years):
+        scaffold_steps.append({
+            "prompt": f"Find the value after year {y + 1}",
+            "answer": year_values[y],
+        })
+
+    worked = [f"Multiplier = {multiplier}"]
+    for y in range(years):
+        prev = start if y == 0 else year_values[y - 1]
+        worked.append(f"After year {y + 1}: £{prev:,.2f} × {multiplier} = £{year_values[y]:,.2f}")
+
+    return Question(
+        question_text=question_text,
+        correct_answer=answer,
+        topic="Finance and Statistics",
+        question_type="Appreciation and Depreciation",
+        scaffold_steps=scaffold_steps,
+        worked_solution=worked,
+        notes=NOTES,
+    )
+
+
 def generate_appreciation_question():
     kind = random.choice(["depreciation", "appreciation"])
     rate = random.choice([5, 8, 10, 12, 15, 20, 25])

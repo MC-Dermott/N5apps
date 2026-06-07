@@ -70,6 +70,10 @@ def _frac_str(num, den):
     return str(n) if d == 1 else f"{n}/{d}"
 
 
+def generate_gradient_question_n4():
+    return _gradient_cm_m()
+
+
 def generate_gradient_question():
     qtype = random.choice(["cm_m_slope", "m_km_slope", "sea_level"])
     return {

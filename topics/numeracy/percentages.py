@@ -13,6 +13,40 @@ NOTES = """
 """
 
 
+_N4_PERCENTAGES = [10, 20, 25, 50, 75]
+
+
+def generate_percentage_question_n4():
+    percentage = random.choice(_N4_PERCENTAGES)
+    amount = random.choice(range(20, 201, 20))
+    answer = round((amount * percentage) / 100, 2)
+    one_percent = round(amount / 100, 2)
+
+    scaffold_steps = [
+        {
+            "prompt": "Find 1% of the amount",
+            "answer": one_percent
+        },
+        {
+            "prompt": "Multiply 1% by the percentage you need",
+            "answer": answer
+        }
+    ]
+
+    return Question(
+        question_text=f"What is {percentage}% of {amount}?",
+        correct_answer=answer,
+        topic="Numeracy",
+        question_type="Percentages",
+        scaffold_steps=scaffold_steps,
+        worked_solution=[
+            f"1% of {amount} = {amount} ÷ 100 = {one_percent}",
+            f"{percentage}% of {amount} = {percentage} × {one_percent} = {answer}",
+        ],
+        notes=NOTES,
+    )
+
+
 def generate_percentage_question():
     percentage = random.randint(1, 99)
     amount = random.randint(10, 200)

@@ -14,6 +14,38 @@ If you are given the **diameter**: r = d ÷ 2
 """
 
 
+def generate_circle_area_question_n4():
+    radius = random.choice([2, 3, 4, 5, 6, 7])
+    answer = round(math.pi * radius ** 2, 2)
+
+    question_text = (
+        f"Calculate the area of a circle with radius {radius} cm. "
+        f"Give your answer to 2 decimal places."
+    )
+
+    scaffold_steps = [
+        {"prompt": "Square the radius", "answer": float(radius ** 2)},
+        {"prompt": "Multiply by π to find the area", "answer": answer},
+    ]
+
+    worked = [
+        "A = πr²",
+        f"A = π × {radius}²",
+        f"A = π × {radius**2}",
+        f"A = {answer} cm²",
+    ]
+
+    return Question(
+        question_text=question_text,
+        correct_answer=answer,
+        topic="Geometry and Measure",
+        question_type="Area of a Circle",
+        scaffold_steps=scaffold_steps,
+        worked_solution=worked,
+        notes=NOTES,
+    )
+
+
 def generate_circle_area_question():
     given_radius = random.choice([True, False])
 
