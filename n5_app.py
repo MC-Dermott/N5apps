@@ -11,13 +11,35 @@ from core.ui.test_ui import render_test
 initialise_session()
 
 st.set_page_config(page_title="Applications of Maths Practice")
-st.title("Applications of Maths Practice")
 
 if "submitted" not in st.session_state:
     st.session_state.submitted = False
 
-# --- Qualification selection ---
-qualification = st.radio("Qualification", ["National 5", "National 4"], horizontal=True)
+# --- Homepage: level selection ---
+if "qualification" not in st.session_state:
+    st.title("Applications of Maths Practice")
+    st.write("Choose your level to get started.")
+    st.write("")
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("National 5", use_container_width=True):
+            st.session_state.qualification = "National 5"
+            st.rerun()
+    with col2:
+        if st.button("National 4", use_container_width=True):
+            st.session_state.qualification = "National 4"
+            st.rerun()
+    st.stop()
+
+qualification = st.session_state.qualification
+
+st.title("Applications of Maths Practice")
+st.caption(f"Level: {qualification}")
+if st.button("← Change Level"):
+    del st.session_state.qualification
+    st.session_state.submitted = False
+    reset_test()
+    st.rerun()
 
 if st.session_state.get("last_qualification") != qualification:
     st.session_state.last_qualification = qualification
@@ -26,7 +48,7 @@ if st.session_state.get("last_qualification") != qualification:
 
 st.divider()
 
-# --- Mode selection ---
+# --- Mode and topic selection ---
 mode = st.radio("Mode", ["Practice", "Test"], horizontal=True, index=0)
 
 if st.session_state.mode != mode:

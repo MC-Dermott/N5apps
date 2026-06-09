@@ -720,8 +720,255 @@ def _level2_find_departure():
         )
 
 
+def _level2_find_duration_relative():
+    """Find flight duration; time difference given as 'X hours ahead/behind'."""
+    name = random.choice(_NAMES)
+
+    for _ in range(50):
+        city_a, city_b = random.sample(_CITIES, 2)
+        delta = city_b["offset"] - city_a["offset"]
+        if delta == 0:
+            continue
+
+        dep_h = random.randint(5, 14)
+        dep_m = random.choice([0, 15, 30, 45])
+        dep_local_min = _to_min(dep_h, dep_m)
+        dep_in_b_min = dep_local_min + delta * 60
+
+        # Avoid day-crossing in the dep-to-city-b conversion to keep worked solution clean
+        if not (0 <= dep_in_b_min < 24 * 60):
+            continue
+
+        duration_min = random.choice(range(60, 13 * 60 + 1, 15))
+
+        dep_gmt_min = dep_local_min - city_a["offset"] * 60
+        arr_gmt_min = dep_gmt_min + duration_min
+        arr_local_min = arr_gmt_min + city_b["offset"] * 60
+
+        dep_time = _fmt(dep_local_min)
+        arr_time = _fmt(arr_local_min)
+        dur_str = _duration_str(duration_min)
+        day_note_arr = _day_note(arr_local_min)
+        dep_in_b_display = _fmt(dep_in_b_min)
+        dep_in_b_hhmm = _fmt_hhmm(dep_in_b_min)
+
+        if delta > 0:
+            rel = f"{delta} hour{'s' if delta != 1 else ''} ahead of"
+            conv_desc = f"Convert departure to {city_b['name']} time: {dep_time} + {delta}h = {dep_in_b_display}"
+        else:
+            rel = f"{abs(delta)} hour{'s' if abs(delta) != 1 else ''} behind"
+            conv_desc = f"Convert departure to {city_b['name']} time: {dep_time} − {abs(delta)}h = {dep_in_b_display}"
+
+        question_text = (
+            f"{name} flies from {city_a['name']} to {city_b['name']}. "
+            f"{city_b['name']} is {rel} {city_a['name']}. "
+            f"The flight departs {city_a['name']} at {dep_time}. "
+            f"The flight arrives in {city_b['name']} at {arr_time} local time{day_note_arr}. "
+            f"Calculate the flight time. "
+            f"Give your answer in the form 'X hours Y minutes'."
+        )
+
+        scaffold_steps = [
+            {
+                "prompt": f"Convert the departure time to {city_b['name']} time. Give your answer in HHMM format.",
+                "answer": dep_in_b_hhmm,
+            },
+            {
+                "prompt": f"Calculate the flight time (arrival time in {city_b['name']} − departure time in {city_b['name']} time)",
+                "answer": dur_str,
+                "answer_type": "duration",
+            },
+        ]
+
+        worked = [
+            f"{city_b['name']} is {rel} {city_a['name']}",
+            conv_desc,
+            f"Flight time = {arr_time}{day_note_arr} − {dep_in_b_display} = {dur_str}",
+        ]
+
+        return Question(
+            question_text=question_text,
+            correct_answer=dur_str,
+            topic="Geometry and Measure",
+            question_type="Time Zones (Level 2)",
+            scaffold_steps=scaffold_steps,
+            worked_solution=worked,
+            notes=NOTES,
+            metadata={"answer_type": "duration"},
+        )
+
+
+def _level2_find_arrival_relative():
+    """Find arrival time; time difference given as 'X hours ahead/behind'."""
+    name = random.choice(_NAMES)
+
+    for _ in range(50):
+        city_a, city_b = random.sample(_CITIES, 2)
+        delta = city_b["offset"] - city_a["offset"]
+        if delta == 0:
+            continue
+
+        dep_h = random.randint(5, 15)
+        dep_m = random.choice([0, 15, 30, 45])
+        dep_local_min = _to_min(dep_h, dep_m)
+
+        duration_min = random.choice(range(60, 14 * 60 + 1, 15))
+        if duration_min < 60:
+            continue
+
+        dep_gmt_min = dep_local_min - city_a["offset"] * 60
+        arr_gmt_min = dep_gmt_min + duration_min
+        arr_local_min = arr_gmt_min + city_b["offset"] * 60
+
+        dep_time = _fmt(dep_local_min)
+        arr_time = _fmt(arr_local_min)
+        dur_str = _duration_str(duration_min)
+        day_note_arr = _day_note(arr_local_min)
+
+        # Intermediate: add duration in city_a's timezone, then adjust
+        naive_arr_min = dep_local_min + duration_min
+        naive_arr_display = _fmt(naive_arr_min)
+        naive_arr_hhmm = _fmt_hhmm(naive_arr_min)
+        naive_arr_day = _day_note(naive_arr_min)
+
+        if delta > 0:
+            rel = f"{delta} hour{'s' if delta != 1 else ''} ahead of"
+            step2_desc = (
+                f"Apply time zone: {naive_arr_display}{naive_arr_day} + {delta}h = {arr_time}{day_note_arr}"
+            )
+        else:
+            rel = f"{abs(delta)} hour{'s' if abs(delta) != 1 else ''} behind"
+            step2_desc = (
+                f"Apply time zone: {naive_arr_display}{naive_arr_day} − {abs(delta)}h = {arr_time}{day_note_arr}"
+            )
+
+        question_text = (
+            f"{name}'s flight departs {city_a['name']} at {dep_time}. "
+            f"The flight to {city_b['name']} takes {dur_str}. "
+            f"{city_b['name']} is {rel} {city_a['name']}. "
+            f"What is the local time in {city_b['name']} when the flight lands? "
+            f"Give your answer in 24-hour format (HH:MM)."
+        )
+
+        scaffold_steps = [
+            {
+                "prompt": f"Add the flight time to find the arrival time in {city_a['name']} time. Give your answer in HHMM format.",
+                "answer": naive_arr_hhmm,
+            },
+            {
+                "prompt": f"Apply the time zone difference to find the arrival time in {city_b['name']}.",
+                "answer": arr_time,
+            },
+        ]
+
+        worked = [
+            f"{city_b['name']} is {rel} {city_a['name']}",
+            f"Add flight time: {dep_time} + {dur_str} = {naive_arr_display}{naive_arr_day}",
+            step2_desc,
+        ]
+
+        return Question(
+            question_text=question_text,
+            correct_answer=arr_time,
+            topic="Geometry and Measure",
+            question_type="Time Zones (Level 2)",
+            scaffold_steps=scaffold_steps,
+            worked_solution=worked,
+            notes=NOTES,
+        )
+
+
+def _level2_find_departure_relative():
+    """Find departure time; time difference given as 'X hours ahead/behind'."""
+    name = random.choice(_NAMES)
+
+    for _ in range(50):
+        city_a, city_b = random.sample(_CITIES, 2)
+        delta = city_b["offset"] - city_a["offset"]
+        if delta == 0:
+            continue
+
+        dep_h = random.randint(5, 15)
+        dep_m = random.choice([0, 15, 30, 45])
+        dep_local_min = _to_min(dep_h, dep_m)
+
+        duration_min = random.choice(range(60, 13 * 60 + 1, 15))
+        if duration_min < 60:
+            continue
+
+        dep_gmt_min = dep_local_min - city_a["offset"] * 60
+        arr_gmt_min = dep_gmt_min + duration_min
+        arr_dest_min = arr_gmt_min + city_b["offset"] * 60
+
+        dep_time = _fmt(dep_local_min)
+        arr_dest_time = _fmt(arr_dest_min)
+        dur_str = _duration_str(duration_min)
+        arr_dest_day = _day_note(arr_dest_min)
+
+        # Convert arrival back to city_a time by reversing the offset
+        arr_in_a_min = arr_dest_min - delta * 60
+        arr_in_a_display = _fmt(arr_in_a_min)
+        arr_in_a_hhmm = _fmt_hhmm(arr_in_a_min)
+        arr_in_a_day = _day_note(arr_in_a_min)
+
+        if delta > 0:
+            rel = f"{delta} hour{'s' if delta != 1 else ''} ahead of"
+            step1_desc = (
+                f"Convert arrival to {city_a['name']} time: "
+                f"{arr_dest_time}{arr_dest_day} − {delta}h = {arr_in_a_display}{arr_in_a_day}"
+            )
+        else:
+            rel = f"{abs(delta)} hour{'s' if abs(delta) != 1 else ''} behind"
+            step1_desc = (
+                f"Convert arrival to {city_a['name']} time: "
+                f"{arr_dest_time}{arr_dest_day} + {abs(delta)}h = {arr_in_a_display}{arr_in_a_day}"
+            )
+
+        question_text = (
+            f"{name}'s flight arrives in {city_b['name']} at {arr_dest_time}{arr_dest_day} local time. "
+            f"The flight from {city_a['name']} takes {dur_str}. "
+            f"{city_b['name']} is {rel} {city_a['name']}. "
+            f"What time did the flight depart from {city_a['name']}? "
+            f"Give your answer in 24-hour format (HH:MM)."
+        )
+
+        scaffold_steps = [
+            {
+                "prompt": f"Convert the {city_b['name']} arrival time to {city_a['name']} time. Give your answer in HHMM format.",
+                "answer": arr_in_a_hhmm,
+            },
+            {
+                "prompt": f"Subtract the flight time to find the departure time from {city_a['name']}.",
+                "answer": dep_time,
+            },
+        ]
+
+        worked = [
+            f"{city_b['name']} is {rel} {city_a['name']}",
+            step1_desc,
+            f"Departure from {city_a['name']}: {arr_in_a_display}{arr_in_a_day} − {dur_str} = {dep_time}",
+        ]
+
+        return Question(
+            question_text=question_text,
+            correct_answer=dep_time,
+            topic="Geometry and Measure",
+            question_type="Time Zones (Level 2)",
+            scaffold_steps=scaffold_steps,
+            worked_solution=worked,
+            notes=NOTES,
+        )
+
+
 def generate_level2_question():
-    return random.choice([_level2_find_duration, _level2_find_arrival, _level2_find_departure])()
+    return random.choice([
+        _level2_find_duration,
+        _level2_find_arrival,
+        _level2_find_departure,
+        _level2_find_duration_relative,
+        _level2_find_arrival_relative,
+        _level2_find_departure_relative,
+    ])()
 
 
 # ---------------------------------------------------------------------------
