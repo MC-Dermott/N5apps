@@ -33,6 +33,8 @@ def _render_duration_input(qid, suffix):
 
 
 def render_question(question, suffix="default"):
+    if question.metadata.get("table"):
+        st.markdown(question.metadata["table"])
     st.subheader(question.question_text)
 
     if question.metadata.get("diagram") == "two_triangle":

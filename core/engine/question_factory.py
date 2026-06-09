@@ -8,6 +8,12 @@ from topics.finance_statistics.hire_purchase import (
     generate_hire_purchase_l1,
     generate_hire_purchase_l2,
 )
+from topics.finance_statistics.national_insurance import (
+    generate_ni_question,
+    generate_ni_l1,
+    generate_ni_l2,
+    generate_ni_l3,
+)
 from topics.geometry_measure.pythagoras import generate_pythagoras_question, generate_pythagoras_question_n4
 from topics.geometry_measure.circle_area import generate_circle_area_question, generate_circle_area_question_n4
 from topics.geometry_measure.gradient import generate_gradient_question, generate_gradient_question_n4
@@ -29,6 +35,7 @@ _N5_TOPICS = {
         "Simple Interest": generate_simple_interest_question,
         "Appreciation and Depreciation": generate_appreciation_question,
         "Hire Purchase": generate_hire_purchase_question,
+        "National Insurance": generate_ni_question,
     },
     "Geometry and Measure": {
         "Pythagoras Theorem": generate_pythagoras_question,
@@ -71,7 +78,12 @@ _N5_LEVELS = {
         "Hire Purchase": {
             "Level 1": generate_hire_purchase_l1,
             "Level 2": generate_hire_purchase_l2,
-        }
+        },
+        "National Insurance": {
+            "Level 1": generate_ni_l1,
+            "Level 2": generate_ni_l2,
+            "Level 3": generate_ni_l3,
+        },
     },
     "Geometry and Measure": {
         "Time Zones": {
