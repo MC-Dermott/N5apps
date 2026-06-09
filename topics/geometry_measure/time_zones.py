@@ -441,7 +441,7 @@ def _level2_find_duration():
 
         # Normalise so dep_gmt is "day 0" for correct day annotations
         dep_g, arr_g = _norm_gmt(dep_gmt_min, arr_gmt_min)
-        arr_gmt_display = _fmt(arr_gmt_min)   # for scaffold answer (plain HH:MM)
+        arr_gmt_hhmm = _fmt_hhmm(arr_gmt_min)   # for scaffold answer
         dep_gmt_display = _fmt(dep_gmt_min)
 
         off_a = city_a["offset"]
@@ -487,8 +487,8 @@ def _level2_find_duration():
 
         scaffold_steps = [
             {
-                "prompt": f"Convert the {city_b['name']} arrival time to GMT",
-                "answer": arr_gmt_display,
+                "prompt": f"Convert the {city_b['name']} arrival time to GMT. Give your answer in HHMM format.",
+                "answer": arr_gmt_hhmm,
             },
             {
                 "prompt": "Calculate the flight time (arrival GMT − departure GMT)",
@@ -543,8 +543,9 @@ def _level2_find_arrival():
 
         dep_time = _fmt(dep_local_min)
         arr_time = _fmt(arr_local_min)
-        dep_gmt_display = _fmt(dep_gmt_min)   # scaffold answer (plain)
-        arr_gmt_display = _fmt(arr_gmt_min)   # scaffold answer (plain)
+        dep_gmt_hhmm = _fmt_hhmm(dep_gmt_min)   # scaffold answer
+        arr_gmt_hhmm = _fmt_hhmm(arr_gmt_min)   # scaffold answer
+        arr_time_hhmm = _fmt_hhmm(arr_local_min)
         dur_str = _duration_str(duration_min)
         day_note_arr = _day_note(arr_local_min)
 
@@ -588,21 +589,21 @@ def _level2_find_arrival():
             f"{name}'s flight departs {city_a['name']} ({city_a['gmt']}) at {dep_time}. "
             f"The flight to {city_b['name']} ({city_b['gmt']}) takes {dur_str}. "
             f"What is the local time in {city_b['name']} when the flight lands? "
-            f"Give your answer in 24-hour format (HH:MM)."
+            f"Give your answer in HHMM format (e.g. 0930)."
         )
 
         scaffold_steps = [
             {
-                "prompt": f"Convert the {city_a['name']} departure time to GMT",
-                "answer": step1_ans,
+                "prompt": f"Convert the {city_a['name']} departure time to GMT. Give your answer in HHMM format.",
+                "answer": dep_gmt_hhmm,
             },
             {
-                "prompt": "Add the flight time to find the arrival time in GMT",
-                "answer": arr_gmt_display,
+                "prompt": "Add the flight time to find the arrival time in GMT. Give your answer in HHMM format.",
+                "answer": arr_gmt_hhmm,
             },
             {
-                "prompt": f"Convert the GMT arrival time to {city_b['name']} local time",
-                "answer": arr_time,
+                "prompt": f"Convert the GMT arrival time to {city_b['name']} local time. Give your answer in HHMM format.",
+                "answer": arr_time_hhmm,
             },
         ]
 
@@ -614,7 +615,7 @@ def _level2_find_arrival():
 
         return Question(
             question_text=question_text,
-            correct_answer=arr_time,
+            correct_answer=arr_time_hhmm,
             topic="Geometry and Measure",
             question_type="Time Zones (Level 2)",
             scaffold_steps=scaffold_steps,
@@ -644,7 +645,9 @@ def _level2_find_departure():
 
         dep_time = _fmt(dep_local_min)
         arr_dest_time = _fmt(arr_dest_min)
-        dep_hhmm_answer = dep_time  # answer in HH:MM to match _level2_find_arrival style
+        dep_hhmm = _fmt_hhmm(dep_local_min)
+        arr_gmt_hhmm = _fmt_hhmm(arr_gmt_min)
+        dep_gmt_hhmm = _fmt_hhmm(dep_gmt_min)
         arr_gmt_display = _fmt(arr_gmt_min)
         dep_gmt_display = _fmt(dep_gmt_min)
         arr_dest_day = _day_note(arr_dest_min)
@@ -685,21 +688,21 @@ def _level2_find_departure():
             f"{arr_dest_time}{arr_dest_day} local time. "
             f"The flight from {city_a['name']} ({city_a['gmt']}) takes {dur_str}. "
             f"What time did the flight depart from {city_a['name']}? "
-            f"Give your answer in 24-hour format (HH:MM)."
+            f"Give your answer in HHMM format (e.g. 0930)."
         )
 
         scaffold_steps = [
             {
-                "prompt": f"Convert the {city_b['name']} arrival time to GMT",
-                "answer": arr_gmt_display,
+                "prompt": f"Convert the {city_b['name']} arrival time to GMT. Give your answer in HHMM format.",
+                "answer": arr_gmt_hhmm,
             },
             {
-                "prompt": "Subtract the flight time to find the departure time in GMT",
-                "answer": dep_gmt_display,
+                "prompt": "Subtract the flight time to find the departure time in GMT. Give your answer in HHMM format.",
+                "answer": dep_gmt_hhmm,
             },
             {
-                "prompt": f"Convert the GMT departure time to {city_a['name']} local time",
-                "answer": dep_time,
+                "prompt": f"Convert the GMT departure time to {city_a['name']} local time. Give your answer in HHMM format.",
+                "answer": dep_hhmm,
             },
         ]
 
@@ -711,7 +714,7 @@ def _level2_find_departure():
 
         return Question(
             question_text=question_text,
-            correct_answer=dep_time,
+            correct_answer=dep_hhmm,
             topic="Geometry and Measure",
             question_type="Time Zones (Level 2)",
             scaffold_steps=scaffold_steps,
@@ -822,6 +825,7 @@ def _level2_find_arrival_relative():
 
         dep_time = _fmt(dep_local_min)
         arr_time = _fmt(arr_local_min)
+        arr_time_hhmm = _fmt_hhmm(arr_local_min)
         dur_str = _duration_str(duration_min)
         day_note_arr = _day_note(arr_local_min)
 
@@ -847,7 +851,7 @@ def _level2_find_arrival_relative():
             f"The flight to {city_b['name']} takes {dur_str}. "
             f"{city_b['name']} is {rel} {city_a['name']}. "
             f"What is the local time in {city_b['name']} when the flight lands? "
-            f"Give your answer in 24-hour format (HH:MM)."
+            f"Give your answer in HHMM format (e.g. 0930)."
         )
 
         scaffold_steps = [
@@ -856,8 +860,8 @@ def _level2_find_arrival_relative():
                 "answer": naive_arr_hhmm,
             },
             {
-                "prompt": f"Apply the time zone difference to find the arrival time in {city_b['name']}.",
-                "answer": arr_time,
+                "prompt": f"Apply the time zone difference to find the arrival time in {city_b['name']}. Give your answer in HHMM format.",
+                "answer": arr_time_hhmm,
             },
         ]
 
@@ -869,7 +873,7 @@ def _level2_find_arrival_relative():
 
         return Question(
             question_text=question_text,
-            correct_answer=arr_time,
+            correct_answer=arr_time_hhmm,
             topic="Geometry and Measure",
             question_type="Time Zones (Level 2)",
             scaffold_steps=scaffold_steps,
@@ -901,6 +905,7 @@ def _level2_find_departure_relative():
         arr_dest_min = arr_gmt_min + city_b["offset"] * 60
 
         dep_time = _fmt(dep_local_min)
+        dep_hhmm = _fmt_hhmm(dep_local_min)
         arr_dest_time = _fmt(arr_dest_min)
         dur_str = _duration_str(duration_min)
         arr_dest_day = _day_note(arr_dest_min)
@@ -929,7 +934,7 @@ def _level2_find_departure_relative():
             f"The flight from {city_a['name']} takes {dur_str}. "
             f"{city_b['name']} is {rel} {city_a['name']}. "
             f"What time did the flight depart from {city_a['name']}? "
-            f"Give your answer in 24-hour format (HH:MM)."
+            f"Give your answer in HHMM format (e.g. 0930)."
         )
 
         scaffold_steps = [
@@ -938,8 +943,8 @@ def _level2_find_departure_relative():
                 "answer": arr_in_a_hhmm,
             },
             {
-                "prompt": f"Subtract the flight time to find the departure time from {city_a['name']}.",
-                "answer": dep_time,
+                "prompt": f"Subtract the flight time to find the departure time from {city_a['name']}. Give your answer in HHMM format.",
+                "answer": dep_hhmm,
             },
         ]
 
@@ -951,7 +956,7 @@ def _level2_find_departure_relative():
 
         return Question(
             question_text=question_text,
-            correct_answer=dep_time,
+            correct_answer=dep_hhmm,
             topic="Geometry and Measure",
             question_type="Time Zones (Level 2)",
             scaffold_steps=scaffold_steps,
