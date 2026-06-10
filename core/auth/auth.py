@@ -22,6 +22,17 @@ def login(username: str, password: str) -> dict | None:
     return user if _verify(password, user["password_hash"]) else None
 
 
+def reset_password(user_id: str, new_password: str) -> "str | None":
+    """Returns None on success, error string on failure."""
+    try:
+        get_supabase().table("users").update({
+            "password_hash": _hash(new_password),
+        }).eq("id", user_id).execute()
+        return None
+    except Exception as e:
+        return f"Reset failed: {e}"
+
+
 def signup(username: str, password: str, role: str = "student") -> "dict | str":
     """Returns user dict on success, error string on failure."""
     try:

@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 from core.db.client import get_supabase
+from core.auth.auth import reset_password
 
 
 def _fetch_all():
@@ -102,3 +103,27 @@ def render_dashboard():
             st.dataframe(tdf, use_container_width=True, hide_index=True)
         else:
             st.info("No tests taken yet.")
+
+    st.divider()
+
+    # --- Password reset ---
+    st.subheader("Reset Password")
+    reset_student = st.selectbox("Student", [u["username"] for u in users], key="reset_select")
+    with st.form("reset_password_form"):
+        new_pw = st.text_input("New password", type="password")
+        confirm_pw = st.text_input("Confirm new password", type="password")
+        submitted = st.form_submit_button("Reset password", type="primary")
+    if submitted:
+        if not new_pw:
+            st.error("Please enter a new password.")
+        elif new_pw != confirm_pw:
+            st.error("Passwords do not match.")
+        elif len(new_pw) < 6:
+            st.error("Password must be at least 6 characters.")
+        else:
+            reset_uid = next(u["id"] for u in users if u["username"] == reset_student)
+            error = reset_password(reset_uid, new_pw)
+            if error:
+                st.error(error)
+            else:
+                st.success(f"Password for **{reset_student}** has been reset.")
