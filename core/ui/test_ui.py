@@ -4,6 +4,7 @@ from core.engine.question_factory import generate_question
 from core.engine.session_manager import reset_test
 from core.ui.question_ui import render_question
 from core.ui.solution_ui import render_solution
+from core.db.tracker import save_test_result
 
 _NUM_QUESTIONS = 5
 
@@ -19,7 +20,7 @@ def _is_correct(user_input, expected):
         return str(user_input).strip().lower() == str(expected).strip().lower()
 
 
-def render_test(topic, question_type, level=None, qualification="National 5"):
+def render_test(topic, question_type, level=None, qualification="National 5", user_id=None):
     test = st.session_state.test
 
     if not test["questions"]:
@@ -37,6 +38,9 @@ def render_test(topic, question_type, level=None, qualification="National 5"):
         return
 
     if test["complete"]:
+        if not test.get("saved") and user_id:
+            save_test_result(user_id, qualification, topic, question_type, sum(test["results"]), _NUM_QUESTIONS)
+            test["saved"] = True
         _render_summary(test)
         if st.button("Start New Test", type="primary"):
             reset_test()

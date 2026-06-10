@@ -8,6 +8,7 @@ def _empty_test():
         "answers": [],
         "results": [],
         "complete": False,
+        "saved": False,
     }
 
 

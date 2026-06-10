@@ -7,6 +7,9 @@ from core.ui.scaffold_ui import render_scaffold
 from core.ui.notes_ui import render_notes
 from core.ui.solution_ui import render_solution
 from core.ui.test_ui import render_test
+from core.ui.auth_ui import render_auth
+from core.ui.dashboard_ui import render_dashboard
+from core.db.tracker import save_practice_attempt
 
 initialise_session()
 
@@ -15,28 +18,98 @@ st.set_page_config(page_title="Applications of Maths Practice")
 if "submitted" not in st.session_state:
     st.session_state.submitted = False
 
-# --- Homepage: level selection ---
+
+def _do_logout():
+    for key in ["user", "qualification", "submitted", "last_qualification",
+                "last_topic", "last_question_type", "last_tracked_qid", "show_dashboard"]:
+        st.session_state.pop(key, None)
+    reset_test()
+
+
+def _render_auth_button():
+    """Top-right login/logout button, shown on every page."""
+    user = st.session_state.get("user")
+    if user:
+        st.caption(f"**{user['username']}**")
+        if st.button("Log out", key="logout_corner"):
+            _do_logout()
+            st.rerun()
+    else:
+        if st.button("Log in / Sign up", key="login_corner"):
+            st.session_state.show_auth = True
+            st.rerun()
+
+
+# --- Auth page ---
+if st.session_state.get("show_auth"):
+    if st.button("← Back"):
+        st.session_state.pop("show_auth", None)
+        st.rerun()
+    render_auth()
+    st.stop()
+
+user = st.session_state.get("user")  # None if not logged in
+
+# --- Teacher dashboard ---
+if st.session_state.get("show_dashboard"):
+    st.title("Applications of Maths Practice")
+    col_back, col_corner = st.columns([5, 1])
+    with col_back:
+        if st.button("← Back to practice"):
+            st.session_state.pop("show_dashboard", None)
+            st.rerun()
+    with col_corner:
+        _render_auth_button()
+    render_dashboard()
+    st.stop()
+
+# --- Homepage: qualification selection ---
 if "qualification" not in st.session_state:
     st.title("Applications of Maths Practice")
+
+    col_title, col_corner = st.columns([5, 1])
+    with col_corner:
+        _render_auth_button()
+
+    if user and user["role"] == "teacher":
+        if st.button("📊 Teacher Dashboard", use_container_width=True):
+            st.session_state.show_dashboard = True
+            st.rerun()
+        st.write("")
+
     st.write("Choose your level to get started.")
     st.write("")
-    col1, col2 = st.columns(2)
+
+    col1, col2, col3 = st.columns(3)
     with col1:
+        if st.button("National 4", use_container_width=True):
+            st.session_state.qualification = "National 4"
+            st.rerun()
+    with col2:
         if st.button("National 5", use_container_width=True):
             st.session_state.qualification = "National 5"
             st.rerun()
-    with col2:
-        if st.button("National 4", use_container_width=True):
-            st.session_state.qualification = "National 4"
+    with col3:
+        if st.button("Higher", use_container_width=True):
+            st.session_state.qualification = "Higher"
             st.rerun()
     st.stop()
 
 qualification = st.session_state.qualification
 
 st.title("Applications of Maths Practice")
-st.caption(f"Level: {qualification}")
+
+col_info, col_corner = st.columns([5, 1])
+with col_info:
+    label = f"Level: **{qualification}**"
+    if user:
+        label += f" | **{user['username']}**"
+    st.caption(label)
+with col_corner:
+    _render_auth_button()
+
 if st.button("← Change Level"):
-    del st.session_state.qualification
+    st.session_state.pop("qualification", None)
     st.session_state.submitted = False
     reset_test()
     st.rerun()
@@ -75,7 +148,7 @@ if st.session_state.get("last_question_type") != question_type:
     st.session_state.submitted = False
     reset_test()
 
-# --- Level selection (shown only for question types that have levels) ---
+# --- Level selection ---
 levels = get_levels(topic, question_type, qualification)
 selected_level = None
 
@@ -85,8 +158,10 @@ if levels:
     selected_level = None if level_choice == "All Levels" else level_choice
 
 # --- Mode routing ---
+user_id = user["id"] if user else None
+
 if mode == "Test":
-    render_test(topic, question_type, level=selected_level, qualification=qualification)
+    render_test(topic, question_type, level=selected_level, qualification=qualification, user_id=user_id)
 
 else:
     quiz = st.session_state.quiz
@@ -94,6 +169,7 @@ else:
     if st.button("Generate Question"):
         quiz["current_question"] = generate_question(topic, question_type, level=selected_level, qualification=qualification)
         st.session_state.submitted = False
+        st.session_state.pop("last_tracked_qid", None)
         st.rerun()
 
     question = quiz.get("current_question")
@@ -110,6 +186,10 @@ else:
                 correct = abs(float(user_answer) - float(str(question.correct_answer))) < 0.01
             except (ValueError, TypeError):
                 correct = user_answer.lower() == str(question.correct_answer).strip().lower()
+
+            if user_id and st.session_state.get("last_tracked_qid") != question.qid:
+                save_practice_attempt(user_id, qualification, topic, question_type, correct)
+                st.session_state.last_tracked_qid = question.qid
 
             if correct:
                 st.success("✅ Correct!")

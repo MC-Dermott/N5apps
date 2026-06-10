@@ -16,6 +16,10 @@ from topics.finance_statistics.national_insurance import (
 )
 from topics.finance_statistics.wages import generate_wages_question, generate_wages_l1, generate_wages_l2
 from topics.finance_statistics.commission import generate_commission_question
+from topics.finance_statistics.loans import generate_loans_question
+from topics.finance_statistics.mortgages import generate_mortgages_question
+from topics.finance_statistics.budgeting import generate_budgeting_question
+from topics.finance_statistics.reverse_percentage import generate_reverse_percentage_question
 from topics.geometry_measure.pythagoras import generate_pythagoras_question, generate_pythagoras_question_n4
 from topics.geometry_measure.circle_area import generate_circle_area_question, generate_circle_area_question_n4
 from topics.geometry_measure.gradient import generate_gradient_question, generate_gradient_question_n4
@@ -27,6 +31,8 @@ from topics.geometry_measure.time_zones import (
     generate_time_zone_l2,
     generate_time_zone_l3,
 )
+from topics.statistics.standard_deviation import generate_standard_deviation_question
+from topics.statistics.probability import generate_probability_question
 
 _N5_TOPICS = {
     "Numeracy": {
@@ -69,9 +75,23 @@ _N4_TOPICS = {
     },
 }
 
+_HIGHER_TOPICS = {
+    "Finance": {
+        "Loans": generate_loans_question,
+        "Mortgages": generate_mortgages_question,
+        "Budgeting": generate_budgeting_question,
+        "Reverse Percentages": generate_reverse_percentage_question,
+    },
+    "Statistics": {
+        "Standard Deviation": generate_standard_deviation_question,
+        "Probability": generate_probability_question,
+    },
+}
+
 QUAL_REGISTRY = {
-    "National 5": _N5_TOPICS,
     "National 4": _N4_TOPICS,
+    "National 5": _N5_TOPICS,
+    "Higher": _HIGHER_TOPICS,
 }
 
 # Kept for any code that referenced TOPIC_REGISTRY directly
@@ -104,9 +124,12 @@ _N5_LEVELS = {
 
 _N4_LEVELS = {}
 
+_HIGHER_LEVELS = {}
+
 _QUAL_LEVELS = {
-    "National 5": _N5_LEVELS,
     "National 4": _N4_LEVELS,
+    "National 5": _N5_LEVELS,
+    "Higher": _HIGHER_LEVELS,
 }
 
 
