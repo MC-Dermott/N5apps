@@ -1,5 +1,5 @@
 import streamlit as st
-from core.auth.auth import login, signup
+from core.auth.auth import login, signup, reset_password
 
 
 def render_auth():
@@ -53,3 +53,29 @@ def render_auth():
                     st.session_state.user = result
                     st.session_state.pop("show_auth", None)
                     st.rerun()
+
+
+def render_change_password(user):
+    st.title("Change Password")
+    with st.form("change_password_form"):
+        current_pw  = st.text_input("Current password", type="password")
+        new_pw      = st.text_input("New password", type="password")
+        confirm_pw  = st.text_input("Confirm new password", type="password")
+        submitted   = st.form_submit_button("Update password", type="primary", use_container_width=True)
+
+    if submitted:
+        if not current_pw or not new_pw or not confirm_pw:
+            st.error("Please fill in all fields.")
+        elif not login(user["username"], current_pw):
+            st.error("Current password is incorrect.")
+        elif new_pw != confirm_pw:
+            st.error("New passwords do not match.")
+        elif len(new_pw) < 6:
+            st.error("Password must be at least 6 characters.")
+        else:
+            error = reset_password(user["id"], new_pw)
+            if error:
+                st.error(error)
+            else:
+                st.success("Password updated successfully.")
+                st.session_state.pop("show_change_password", None)

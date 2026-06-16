@@ -8,7 +8,7 @@ from core.ui.notes_ui import render_notes
 from core.ui.solution_ui import render_solution
 from core.ui.test_ui import render_test
 from core.ui.numeracy_assessment_ui import render_numeracy_assessment
-from core.ui.auth_ui import render_auth
+from core.ui.auth_ui import render_auth, render_change_password
 from core.ui.dashboard_ui import render_dashboard
 from core.db.tracker import save_practice_attempt
 
@@ -59,6 +59,9 @@ def _render_auth_button():
         if st.button("Log out", key="logout_corner"):
             _do_logout()
             st.rerun()
+        if st.button("Change password", key="change_pw_corner"):
+            st.session_state.show_change_password = True
+            st.rerun()
     else:
         if st.button("Log in / Sign up", key="login_corner"):
             st.session_state.show_auth = True
@@ -74,6 +77,14 @@ if st.session_state.get("show_auth"):
     st.stop()
 
 user = st.session_state.get("user")  # None if not logged in
+
+# --- Change password page ---
+if st.session_state.get("show_change_password") and user:
+    if st.button("← Back"):
+        st.session_state.pop("show_change_password", None)
+        st.rerun()
+    render_change_password(user)
+    st.stop()
 
 # --- Teacher dashboard ---
 if st.session_state.get("show_dashboard"):
