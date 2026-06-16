@@ -1,5 +1,6 @@
 import random
 import math
+from collections import Counter
 from core.models.question_model import Question
 
 NOTES = """
@@ -580,6 +581,99 @@ def _colour_spinner_question():
     )
 
 
+_NUMBER_SPINNER_CONFIGS = [
+    (4, 4, False), (5, 5, False), (6, 6, False), (6, 6, True),
+    (3, 4, False), (4, 6, False), (3, 6, False), (4, 4, True),
+    (3, 5, False), (5, 6, False),
+]
+
+
+def _two_number_spinners_question():
+    for _ in range(30):
+        n1, n2, use_dice = random.choice(_NUMBER_SPINNER_CONFIGS)
+        operation = random.choice(["sum", "product"])
+
+        outcomes = [(i, j) for i in range(1, n1 + 1) for j in range(1, n2 + 1)]
+        total = n1 * n2
+        computed = [(i, j, i + j if operation == "sum" else i * j) for i, j in outcomes]
+        all_results = [r for _, _, r in computed]
+        counts = Counter(all_results)
+
+        conditions = []
+
+        # Exact value (only where count >= 2 so the fraction isn't trivially small)
+        for val, count in sorted(counts.items()):
+            if count >= 2:
+                pairs = [(i, j) for i, j, r in computed if r == val]
+                conditions.append({"desc": f"a {operation} of {val}", "fav": count, "pairs": pairs})
+
+        # Even / odd
+        even_pairs = [(i, j) for i, j, r in computed if r % 2 == 0]
+        odd_pairs  = [(i, j) for i, j, r in computed if r % 2 == 1]
+        if 0 < len(even_pairs) < total:
+            conditions.append({"desc": f"an even {operation}", "fav": len(even_pairs), "pairs": even_pairs})
+        if 0 < len(odd_pairs) < total:
+            conditions.append({"desc": f"an odd {operation}", "fav": len(odd_pairs), "pairs": odd_pairs})
+
+        # Prime result
+        primes = set(_primes_up_to(max(all_results)))
+        prime_pairs = [(i, j) for i, j, r in computed if r in primes]
+        if 0 < len(prime_pairs) < total:
+            conditions.append({"desc": f"a prime {operation}", "fav": len(prime_pairs), "pairs": prime_pairs})
+
+        if conditions:
+            break
+
+    c = random.choice(conditions)
+    fav   = c["fav"]
+    pairs = c["pairs"]
+    answer = _frac(fav, total)
+    op_sym = "+" if operation == "sum" else "×"
+
+    if len(pairs) <= 10:
+        pairs_str = ", ".join(f"({a},{b})" for a, b in pairs)
+    else:
+        pairs_str = ", ".join(f"({a},{b})" for a, b in pairs[:9]) + ", ..."
+
+    if use_dice:
+        if n1 == n2:
+            intro = f"Two {n1}-sided dice are rolled."
+        else:
+            intro = f"A {n1}-sided die and a {n2}-sided die are rolled."
+    else:
+        if n1 == n2:
+            intro = f"Two {n1}-sided spinners are spun, each numbered 1 to {n1}."
+        else:
+            intro = (f"A {n1}-sided spinner (numbered 1 to {n1}) and "
+                     f"a {n2}-sided spinner (numbered 1 to {n2}) are spun.")
+
+    cond_bare = c["desc"].removeprefix("a ").removeprefix("an ")
+
+    scaffold = [
+        {"prompt": f"How many total outcomes are there ({n1} × {n2})?", "answer": total},
+        {"prompt": f"List all pairs (a, b) where a {op_sym} b gives {cond_bare}", "answer": fav},
+        {"prompt": "Write the probability as a simplified fraction", "answer": answer},
+    ]
+    worked = [
+        f"Total outcomes = {n1} × {n2} = {total}",
+        f"Pairs where {operation} is {cond_bare}: {{{pairs_str}}} → {fav} outcome{'s' if fav != 1 else ''}",
+        f"P({c['desc']}) = {fav}/{total} = {answer}",
+    ]
+    return Question(
+        question_text=(
+            f"{intro}\n\n"
+            f"Calculate the probability of getting {c['desc']}.\n\n"
+            f"Give your answer as a fraction in its simplest form."
+        ),
+        correct_answer=answer,
+        topic="Numeracy",
+        question_type="Probability",
+        scaffold_steps=scaffold,
+        worked_solution=worked,
+        notes=NOTES,
+    )
+
+
 # ─────────────────────────────────────────────────────────────────
 # Public dispatchers
 # ─────────────────────────────────────────────────────────────────
@@ -598,6 +692,7 @@ def generate_probability_l2():
         _two_spinners_question,
         _tombola_vs_dice_question,
         _colour_spinner_question,
+        _two_number_spinners_question,
     ])()
 
 
