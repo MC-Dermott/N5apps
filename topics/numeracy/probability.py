@@ -72,6 +72,44 @@ def _tombola_breakdown(threshold):
 # Level 1 sub-generators
 # ─────────────────────────────────────────────────────────────────
 
+_BAG_COLOURS = ["red", "blue", "green", "yellow", "purple", "orange", "white", "black"]
+
+
+def _balls_in_bag_question():
+    c1, c2 = random.sample(_BAG_COLOURS, 2)
+    n1 = random.randint(1, 10)
+    n2 = random.randint(1, 10)
+    total = n1 + n2
+    ask = random.choice([c1, c2])
+    fav = n1 if ask == c1 else n2
+    answer = _frac(fav, total)
+
+    scaffold = [
+        {"prompt": f"How many {ask} balls are in the bag?", "answer": fav},
+        {"prompt": "How many balls are in the bag in total?", "answer": total},
+        {"prompt": "Write the probability as a simplified fraction", "answer": answer},
+    ]
+    worked = [
+        f"Total balls = {n1} {c1} + {n2} {c2} = {total}",
+        f"P({ask}) = {fav}/{total} = {answer}",
+    ]
+    return Question(
+        question_text=(
+            f"A bag contains {n1} {c1} ball{'s' if n1 != 1 else ''} "
+            f"and {n2} {c2} ball{'s' if n2 != 1 else ''}. "
+            f"A ball is chosen at random.\n\n"
+            f"Calculate the probability of picking a {ask} ball.\n\n"
+            f"Give your answer as a fraction in its simplest form."
+        ),
+        correct_answer=answer,
+        topic="Numeracy",
+        question_type="Probability",
+        scaffold_steps=scaffold,
+        worked_solution=worked,
+        notes=NOTES,
+    )
+
+
 _CARD_SCENARIOS = [
     {
         "text": "picking a red Queen from a standard deck of 52 cards",
@@ -548,7 +586,7 @@ def _colour_spinner_question():
 
 def generate_probability_l1():
     return random.choice([
-        _cards_question,
+        _balls_in_bag_question,
         _single_die_question,
         _spinner_question,
     ])()
