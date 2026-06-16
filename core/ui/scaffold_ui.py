@@ -12,15 +12,30 @@ def _build_duration_str(h, m):
     return f"{h_word} {m_word}"
 
 
-def _is_correct(user_input, expected):
+def _parse_numeric(s):
+    s = str(s).strip().replace(",", "")
     try:
-        student = float(str(user_input).replace(",", "").strip())
-        exp = float(expected)
+        return float(s)
+    except ValueError:
+        if "/" in s:
+            try:
+                num, den = s.split("/", 1)
+                return float(num.strip()) / float(den.strip())
+            except (ValueError, ZeroDivisionError):
+                pass
+    return None
+
+
+def _is_correct(user_input, expected):
+    student = _parse_numeric(str(user_input))
+    exp = _parse_numeric(expected)
+    if student is not None and exp is not None:
         if abs(exp) < 1e-9:
             return abs(student) < 0.01
+        if abs(exp) <= 1.0:
+            return abs(student - exp) <= 0.005
         return abs(student - exp) / abs(exp) <= 0.02
-    except (ValueError, TypeError, AttributeError):
-        return str(user_input).strip().lower() == str(expected).strip().lower()
+    return str(user_input).strip().lower() == str(expected).strip().lower()
 
 
 def render_scaffold(question, suffix=""):

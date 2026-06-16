@@ -14,6 +14,29 @@ from core.db.tracker import save_practice_attempt
 
 initialise_session()
 
+
+def _parse_numeric(s):
+    s = str(s).strip().replace(",", "")
+    try:
+        return float(s)
+    except ValueError:
+        if "/" in s:
+            try:
+                num, den = s.split("/", 1)
+                return float(num.strip()) / float(den.strip())
+            except (ValueError, ZeroDivisionError):
+                pass
+    return None
+
+
+def _answers_match(user, expected):
+    u = _parse_numeric(user)
+    e = _parse_numeric(expected)
+    if u is not None and e is not None:
+        return abs(u - e) < 0.01
+    return str(user).strip().lower() == str(expected).strip().lower()
+
+
 st.set_page_config(page_title="Applications of Maths Practice")
 
 if "submitted" not in st.session_state:
@@ -201,10 +224,7 @@ else:
 
         if st.session_state.submitted:
             user_answer = top_answer.strip()
-            try:
-                correct = abs(float(user_answer) - float(str(question.correct_answer))) < 0.01
-            except (ValueError, TypeError):
-                correct = user_answer.lower() == str(question.correct_answer).strip().lower()
+            correct = _answers_match(user_answer, question.correct_answer)
 
             if user_id and st.session_state.get("last_tracked_qid") != question.qid:
                 save_practice_attempt(user_id, qualification, topic, question_type, correct)
