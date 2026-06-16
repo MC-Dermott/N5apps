@@ -551,13 +551,13 @@ def generate_probability_l1():
         _cards_question,
         _single_die_question,
         _spinner_question,
-        _two_dice_question,
-        _two_spinners_question,
     ])()
 
 
 def generate_probability_l2():
     return random.choice([
+        _two_dice_question,
+        _two_spinners_question,
         _tombola_vs_dice_question,
         _colour_spinner_question,
     ])()
