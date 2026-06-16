@@ -1,5 +1,10 @@
 from topics.numeracy.fractions import generate_fraction_question, generate_fraction_question_n4
 from topics.numeracy.percentages import generate_percentage_question, generate_percentage_question_n4
+from topics.numeracy.probability import (
+    generate_probability_question as generate_numeracy_probability_question,
+    generate_probability_l1 as generate_numeracy_probability_l1,
+    generate_probability_l2 as generate_numeracy_probability_l2,
+)
 from topics.finance_statistics.simple_interest import generate_simple_interest_question, generate_simple_interest_question_n4
 from topics.finance_statistics.appreciation import generate_appreciation_question, generate_appreciation_question_n4
 from topics.finance_statistics.hire_purchase import (
@@ -33,11 +38,23 @@ from topics.geometry_measure.time_zones import (
 )
 from topics.statistics.standard_deviation import generate_standard_deviation_question
 from topics.statistics.probability import generate_probability_question
+from topics.numeracy_assessment.compound_percentages import generate_compound_percentages
+from topics.numeracy_assessment.fractions import generate_fractions as generate_num_fractions
+from topics.numeracy_assessment.liquid_volume import generate_liquid_volume
+from topics.numeracy_assessment.foreign_currency import generate_foreign_currency
+from topics.numeracy_assessment.time_zones_reading_tables import generate_time_zones_reading_tables
+from topics.numeracy_assessment.reading_scale import generate_reading_scale
+from topics.numeracy_assessment.ratio import generate_ratio
+from topics.numeracy_assessment.probability import generate_probability as generate_num_probability
+from topics.numeracy_assessment.stem_and_leaf import generate_stem_and_leaf
+from topics.numeracy_assessment.reading_bar_charts import generate_reading_bar_charts
+from topics.numeracy_assessment.pie_charts import generate_pie_charts
 
 _N5_TOPICS = {
     "Numeracy": {
         "Fractions": generate_fraction_question,
         "Percentages": generate_percentage_question,
+        "Probability": generate_numeracy_probability_question,
     },
     "Finance and Statistics": {
         "Simple Interest": generate_simple_interest_question,
@@ -75,6 +92,26 @@ _N4_TOPICS = {
     },
 }
 
+_N5_NUMERACY_TOPICS = {
+    "Numbers and Money": {
+        "Compound Percentages": generate_compound_percentages,
+        "Fractions": generate_num_fractions,
+        "Ratio": generate_ratio,
+        "Foreign Currency": generate_foreign_currency,
+        "Liquid Volume": generate_liquid_volume,
+    },
+    "Data and Analysis": {
+        "Stem and Leaf": generate_stem_and_leaf,
+        "Pie Charts": generate_pie_charts,
+        "Reading Bar Charts": generate_reading_bar_charts,
+        "Probability": generate_num_probability,
+    },
+    "Time and Measurement": {
+        "Reading Scale": generate_reading_scale,
+        "Time Zones and Reading Tables": generate_time_zones_reading_tables,
+    },
+}
+
 _HIGHER_TOPICS = {
     "Finance": {
         "Loans": generate_loans_question,
@@ -92,12 +129,19 @@ QUAL_REGISTRY = {
     "National 4": _N4_TOPICS,
     "National 5": _N5_TOPICS,
     "Higher": _HIGHER_TOPICS,
+    "N5 Numeracy": _N5_NUMERACY_TOPICS,
 }
 
 # Kept for any code that referenced TOPIC_REGISTRY directly
 TOPIC_REGISTRY = _N5_TOPICS
 
 _N5_LEVELS = {
+    "Numeracy": {
+        "Probability": {
+            "Level 1": generate_numeracy_probability_l1,
+            "Level 2": generate_numeracy_probability_l2,
+        },
+    },
     "Finance and Statistics": {
         "Hire Purchase": {
             "Level 1": generate_hire_purchase_l1,
@@ -126,11 +170,33 @@ _N4_LEVELS = {}
 
 _HIGHER_LEVELS = {}
 
+_N5_NUMERACY_LEVELS = {}
+
 _QUAL_LEVELS = {
     "National 4": _N4_LEVELS,
     "National 5": _N5_LEVELS,
     "Higher": _HIGHER_LEVELS,
+    "N5 Numeracy": _N5_NUMERACY_LEVELS,
 }
+
+# Assessment sequence: one of each type in canonical order
+_NUMERACY_ASSESSMENT_GENERATORS = [
+    generate_compound_percentages,
+    generate_liquid_volume,
+    generate_foreign_currency,
+    generate_time_zones_reading_tables,
+    generate_reading_scale,
+    generate_num_fractions,
+    generate_ratio,
+    generate_num_probability,
+    generate_stem_and_leaf,
+    generate_reading_bar_charts,
+    generate_pie_charts,
+]
+
+
+def generate_numeracy_assessment():
+    return [gen() for gen in _NUMERACY_ASSESSMENT_GENERATORS]
 
 
 def get_levels(topic, question_type, qualification="National 5"):

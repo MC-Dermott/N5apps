@@ -62,6 +62,12 @@ def render_question(question, suffix="default"):
             question.metadata["diagram_params"],
             question.metadata.get("unit", "cm"),
         )
+    elif question.metadata.get("diagram") == "bar_chart":
+        _render_bar_chart(question.metadata["diagram_params"])
+    elif question.metadata.get("diagram") == "pie_chart":
+        _render_pie_chart(question.metadata["diagram_params"])
+    elif question.metadata.get("diagram") == "blood_pressure":
+        _render_blood_pressure(question.metadata["diagram_params"])
 
     if question.metadata.get("answer_type") == "duration":
         return _render_duration_input(question.qid, suffix)
@@ -361,6 +367,118 @@ def _render_cylinder_diagram(p, unit):
     ax.set_ylim(-ey * 2.5, vh + ey * 4.5)
     ax.set_aspect("equal")
     ax.axis("off")
+    fig.patch.set_facecolor("white")
+    plt.tight_layout()
+    st.pyplot(fig, use_container_width=False)
+    plt.close(fig)
+
+
+def _render_bar_chart(p):
+    categories = p["categories"]
+    g1 = p["group1_data"]
+    g2 = p["group2_data"]
+    g1_name = p["group1_name"]
+    g2_name = p["group2_name"]
+
+    x = np.arange(len(categories))
+    width = 0.38
+
+    fig, ax = plt.subplots(figsize=(9, 5))
+    ax.bar(x - width / 2, g1, width, label=g1_name, color="#2c3e50")
+    ax.bar(x + width / 2, g2, width, label=g2_name, color="#95a5a6")
+
+    max_val = max(max(g1), max(g2))
+    ax.set_ylim(0, max_val + 5)
+    ax.set_xticks(x)
+    ax.set_xticklabels(categories)
+    ax.set_xlabel(p.get("x_label", "Category"), fontsize=11)
+    ax.set_ylabel(p.get("y_label", "Frequency"), fontsize=11)
+    ax.set_title(p.get("title", "Bar Chart"), fontsize=13, fontweight="bold")
+    ax.legend(loc="upper right")
+    ax.yaxis.set_major_locator(plt.MultipleLocator(5))
+    ax.grid(axis="y", linestyle="--", alpha=0.5)
+    fig.patch.set_facecolor("white")
+    plt.tight_layout()
+    st.pyplot(fig, use_container_width=False)
+    plt.close(fig)
+
+
+def _render_pie_chart(p):
+    categories = p["categories"]
+    angles = p["angles"]
+    ref_cat = p["ref_cat"]
+    ref_count = p["ref_count"]
+    ask_cat = p["ask_cat"]
+
+    colors = ["#3498db", "#2ecc71", "#e74c3c", "#f39c12", "#9b59b6", "#1abc9c"][:len(categories)]
+
+    fig, ax = plt.subplots(figsize=(7, 5))
+    wedges, _ = ax.pie(
+        angles,
+        labels=categories,
+        colors=colors,
+        startangle=90,
+        counterclock=False,
+        wedgeprops={"edgecolor": "white", "linewidth": 2},
+    )
+
+    for wedge, angle in zip(wedges, angles):
+        theta = np.radians((wedge.theta1 + wedge.theta2) / 2)
+        r = 0.6
+        ax.text(r * np.cos(theta), r * np.sin(theta), f"{angle}°",
+                ha="center", va="center", fontsize=10, fontweight="bold", color="white")
+
+    ax.set_title(
+        f"Given: {ref_count} people chose {ref_cat}   |   Find: how many chose {ask_cat}",
+        fontsize=10, pad=12,
+    )
+    fig.patch.set_facecolor("white")
+    plt.tight_layout()
+    st.pyplot(fig, use_container_width=False)
+    plt.close(fig)
+
+
+def _render_blood_pressure(p):
+    systolic = p["systolic"]
+    diastolic = p["diastolic"]
+
+    fig, ax = plt.subplots(figsize=(6, 6))
+
+    # Red background (high blood pressure — whole chart)
+    ax.add_patch(patches.Rectangle((40, 70), 60, 120, facecolor="#e74c3c", alpha=0.6, zorder=1))
+
+    # Pre-high (yellow): diastolic 80–90, systolic 120–140
+    ax.add_patch(patches.Rectangle((80, 120), 10, 20, facecolor="#f39c12", alpha=0.9, zorder=2))
+    ax.text(85, 130, "Pre-high\nblood\npressure", ha="center", va="center",
+            fontsize=7, zorder=5, color="black")
+
+    # Ideal (green): diastolic 60–80, systolic 90–120
+    ax.add_patch(patches.Rectangle((60, 90), 20, 30, facecolor="#27ae60", alpha=0.9, zorder=2))
+    ax.text(70, 105, "Ideal\nblood\npressure", ha="center", va="center",
+            fontsize=7, zorder=5, color="white")
+
+    # Low (purple): diastolic 40–60, systolic 70–90
+    ax.add_patch(patches.Rectangle((40, 70), 20, 20, facecolor="#8e44ad", alpha=0.9, zorder=2))
+    ax.text(50, 80, "Low", ha="center", va="center", fontsize=8, zorder=5, color="white")
+
+    ax.text(90, 170, "High blood pressure", ha="center", va="center",
+            fontsize=9, color="white", zorder=5, fontweight="bold")
+
+    # Mark the reading
+    ax.plot(diastolic, systolic, "ko", markersize=10, zorder=10)
+    ax.plot(diastolic, systolic, "wo", markersize=5, zorder=11)
+    ax.axhline(systolic, color="black", linestyle="--", linewidth=0.8, alpha=0.5, zorder=6)
+    ax.axvline(diastolic, color="black", linestyle="--", linewidth=0.8, alpha=0.5, zorder=6)
+
+    ax.set_xlim(40, 100)
+    ax.set_ylim(70, 190)
+    ax.set_xlabel("Diastolic", fontsize=12)
+    ax.set_ylabel("Systolic", fontsize=12)
+    ax.set_title("Blood Pressure Chart", fontsize=13, fontweight="bold")
+    ax.xaxis.set_major_locator(plt.MultipleLocator(10))
+    ax.yaxis.set_major_locator(plt.MultipleLocator(10))
+    ax.grid(True, linestyle="--", alpha=0.3, zorder=0)
+
     fig.patch.set_facecolor("white")
     plt.tight_layout()
     st.pyplot(fig, use_container_width=False)

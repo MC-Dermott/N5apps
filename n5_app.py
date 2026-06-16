@@ -1,12 +1,13 @@
 import streamlit as st
 
-from core.engine.session_manager import initialise_session, reset_test
+from core.engine.session_manager import initialise_session, reset_test, reset_numeracy_assessment
 from core.engine.question_factory import generate_question, get_levels, QUAL_REGISTRY
 from core.ui.question_ui import render_question
 from core.ui.scaffold_ui import render_scaffold
 from core.ui.notes_ui import render_notes
 from core.ui.solution_ui import render_solution
 from core.ui.test_ui import render_test
+from core.ui.numeracy_assessment_ui import render_numeracy_assessment
 from core.ui.auth_ui import render_auth
 from core.ui.dashboard_ui import render_dashboard
 from core.db.tracker import save_practice_attempt
@@ -24,6 +25,7 @@ def _do_logout():
                 "last_topic", "last_question_type", "last_tracked_qid", "show_dashboard"]:
         st.session_state.pop(key, None)
     reset_test()
+    reset_numeracy_assessment()
 
 
 def _render_auth_button():
@@ -80,7 +82,7 @@ if "qualification" not in st.session_state:
     st.write("Choose your level to get started.")
     st.write("")
 
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4 = st.columns(4)
     with col1:
         if st.button("National 4", use_container_width=True):
             st.session_state.qualification = "National 4"
@@ -92,6 +94,10 @@ if "qualification" not in st.session_state:
     with col3:
         if st.button("Higher", use_container_width=True):
             st.session_state.qualification = "Higher"
+            st.rerun()
+    with col4:
+        if st.button("N5 Numeracy", use_container_width=True):
+            st.session_state.qualification = "N5 Numeracy"
             st.rerun()
     st.stop()
 
@@ -112,22 +118,37 @@ if st.button("← Change Level"):
     st.session_state.pop("qualification", None)
     st.session_state.submitted = False
     reset_test()
+    reset_numeracy_assessment()
     st.rerun()
 
 if st.session_state.get("last_qualification") != qualification:
     st.session_state.last_qualification = qualification
     st.session_state.submitted = False
     reset_test()
+    reset_numeracy_assessment()
 
 st.divider()
 
 # --- Mode and topic selection ---
-mode = st.radio("Mode", ["Practice", "Test"], horizontal=True, index=0)
+_mode_options = (
+    ["Practice", "Test", "Practice Assessment"]
+    if qualification == "N5 Numeracy"
+    else ["Practice", "Test"]
+)
+mode = st.radio("Mode", _mode_options, horizontal=True, index=0)
 
 if st.session_state.mode != mode:
     st.session_state.mode = mode
     st.session_state.submitted = False
     reset_test()
+    if mode != "Practice Assessment":
+        reset_numeracy_assessment()
+
+# --- N5 Numeracy Practice Assessment shortcut ---
+user_id = user["id"] if user else None
+if mode == "Practice Assessment":
+    render_numeracy_assessment(user_id=user_id)
+    st.stop()
 
 st.divider()
 
@@ -158,8 +179,6 @@ if levels:
     selected_level = None if level_choice == "All Levels" else level_choice
 
 # --- Mode routing ---
-user_id = user["id"] if user else None
-
 if mode == "Test":
     render_test(topic, question_type, level=selected_level, qualification=qualification, user_id=user_id)
 

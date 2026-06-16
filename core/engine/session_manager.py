@@ -16,6 +16,10 @@ def reset_test():
     st.session_state.test = _empty_test()
 
 
+def reset_numeracy_assessment():
+    st.session_state.numeracy_assessment = _empty_test()
+
+
 def initialise_session():
     if "quiz" not in st.session_state:
         st.session_state.quiz = {
@@ -25,3 +29,5 @@ def initialise_session():
         st.session_state.mode = "Practice"
     if "test" not in st.session_state:
         st.session_state.test = _empty_test()
+    if "numeracy_assessment" not in st.session_state:
+        st.session_state.numeracy_assessment = _empty_test()
