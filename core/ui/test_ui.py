@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 
 from core.engine.question_factory import generate_question
 from core.engine.session_manager import reset_test
@@ -69,7 +70,13 @@ def _render_summary(test):
 
     st.markdown(f"## Result: {score} / {_NUM_QUESTIONS}")
     if score == _NUM_QUESTIONS:
-        st.success("Perfect score! Excellent work!")
+        st.success("Perfect score! Excellent work! 🎉 You've unlocked a game — enjoy!")
+        components.iframe(
+            "https://scratch.mit.edu/projects/971774487/embed",
+            width=490,
+            height=410,
+            scrolling=False,
+        )
     elif score >= 3:
         st.info(f"Good effort — {score} out of {_NUM_QUESTIONS} correct.")
     else:
