@@ -1,3 +1,5 @@
+import time
+
 import streamlit as st
 import streamlit.components.v1 as components
 
@@ -42,6 +44,8 @@ def render_test(topic, question_type, level=None, qualification="National 5", us
         if not test.get("saved") and user_id:
             save_test_result(user_id, qualification, topic, question_type, sum(test["results"]), _NUM_QUESTIONS)
             test["saved"] = True
+        if sum(test["results"]) == _NUM_QUESTIONS and "game_unlock_time" not in test:
+            test["game_unlock_time"] = time.time()
         _render_summary(test)
         if st.button("Start New Test", type="primary"):
             reset_test()
@@ -70,13 +74,41 @@ def _render_summary(test):
 
     st.markdown(f"## Result: {score} / {_NUM_QUESTIONS}")
     if score == _NUM_QUESTIONS:
-        st.success("Perfect score! Excellent work! 🎉 You've unlocked a game — enjoy!")
-        components.iframe(
-            "https://scratch.mit.edu/projects/971774487/embed",
-            width=490,
-            height=410,
-            scrolling=False,
-        )
+        st.success("Perfect score! 🎉 You've unlocked a game — enjoy!")
+        remaining = max(0, 60 - int(time.time() - test.get("game_unlock_time", time.time())))
+        if remaining > 0:
+            components.html(f"""
+                <div id="game-wrap">
+                    <iframe src="https://scratch.mit.edu/projects/971774487/embed"
+                        width="490" height="410" frameborder="0"
+                        scrolling="no" allowfullscreen></iframe>
+                    <p id="timer-text" style="font-family:sans-serif;text-align:center;margin:6px 0 0;">
+                        ⏱ Game available for <span id="secs">{remaining}</span> seconds
+                    </p>
+                </div>
+                <div id="game-over" style="display:none;text-align:center;padding:24px;">
+                    <p style="font-family:sans-serif;color:#666;font-size:1.1em;">
+                        Time's up! Start a new test to keep practising.
+                    </p>
+                </div>
+                <script>
+                var s = {remaining};
+                var el = document.getElementById('secs');
+                var wrap = document.getElementById('game-wrap');
+                var over = document.getElementById('game-over');
+                var iv = setInterval(function() {{
+                    s--;
+                    el.textContent = s;
+                    if (s <= 0) {{
+                        clearInterval(iv);
+                        wrap.style.display = 'none';
+                        over.style.display = 'block';
+                    }}
+                }}, 1000);
+                </script>
+            """, height=460)
+        else:
+            st.info("Time's up! Start a new test to keep practising.")
     elif score >= 3:
         st.info(f"Good effort — {score} out of {_NUM_QUESTIONS} correct.")
     else:
