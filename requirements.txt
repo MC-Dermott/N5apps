@@ -4,3 +4,4 @@ numpy
 pandas
 supabase
 bcrypt
+plotly
