@@ -10,6 +10,7 @@ from core.ui.test_ui import render_test
 from core.ui.numeracy_assessment_ui import render_numeracy_assessment
 from core.ui.auth_ui import render_auth, render_change_password
 from core.ui.dashboard_ui import render_dashboard
+from core.ui.student_dashboard_ui import render_student_dashboard
 from core.db.tracker import save_practice_attempt
 
 initialise_session()
@@ -45,7 +46,8 @@ if "submitted" not in st.session_state:
 
 def _do_logout():
     for key in ["user", "qualification", "submitted", "last_qualification",
-                "last_topic", "last_question_type", "last_tracked_qid", "show_dashboard"]:
+                "last_topic", "last_question_type", "last_tracked_qid",
+                "show_dashboard", "show_student_dashboard"]:
         st.session_state.pop(key, None)
     reset_test()
     reset_numeracy_assessment()
@@ -87,6 +89,19 @@ if st.session_state.get("show_change_password") and user:
     render_change_password(user)
     st.stop()
 
+# --- Student progress dashboard ---
+if st.session_state.get("show_student_dashboard"):
+    st.title("Applications of Maths Practice")
+    col_back, col_corner = st.columns([5, 1])
+    with col_back:
+        if st.button("← Back"):
+            st.session_state.pop("show_student_dashboard", None)
+            st.rerun()
+    with col_corner:
+        _render_auth_button()
+    render_student_dashboard(user)
+    st.stop()
+
 # --- Teacher dashboard ---
 if st.session_state.get("show_dashboard"):
     st.title("Applications of Maths Practice")
@@ -113,6 +128,11 @@ if "qualification" not in st.session_state:
             st.session_state.show_dashboard = True
             st.rerun()
         st.write("")
+
+    if st.button("📈 My Progress", use_container_width=True):
+        st.session_state.show_student_dashboard = True
+        st.rerun()
+    st.write("")
 
     st.write("Choose your level to get started.")
     st.write("")
