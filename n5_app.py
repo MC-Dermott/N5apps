@@ -62,10 +62,6 @@ def _render_auth_button():
         if st.button("Change password", key="change_pw_corner"):
             st.session_state.show_change_password = True
             st.rerun()
-    else:
-        if st.button("Log in / Sign up", key="login_corner"):
-            st.session_state.show_auth = True
-            st.rerun()
 
 
 # --- Auth page ---
@@ -77,6 +73,11 @@ if st.session_state.get("show_auth"):
     st.stop()
 
 user = st.session_state.get("user")  # None if not logged in
+
+# --- Login gate: block all access until authenticated ---
+if not user:
+    render_auth()
+    st.stop()
 
 # --- Change password page ---
 if st.session_state.get("show_change_password") and user:
