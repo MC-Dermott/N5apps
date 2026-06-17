@@ -33,17 +33,20 @@ def reset_password(user_id: str, new_password: str) -> "str | None":
         return f"Reset failed: {e}"
 
 
-def signup(username: str, password: str, role: str = "student") -> "dict | str":
+def signup(username: str, password: str, role: str = "student", class_code: str = "") -> "dict | str":
     """Returns user dict on success, error string on failure."""
     try:
         sb = get_supabase()
         if sb.table("users").select("id").eq("username", username).execute().data:
             return "That username is already taken."
-        result = sb.table("users").insert({
+        row = {
             "username": username,
             "password_hash": _hash(password),
             "role": role,
-        }).execute()
+        }
+        if class_code:
+            row["class_code"] = class_code.strip().upper()
+        result = sb.table("users").insert(row).execute()
         return result.data[0] if result.data else "Signup failed — please try again."
     except Exception as e:
         return f"Signup failed: {e}"

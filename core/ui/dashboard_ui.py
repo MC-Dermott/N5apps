@@ -6,7 +6,7 @@ from core.auth.auth import reset_password
 
 def _fetch_all():
     sb = get_supabase()
-    users = sb.table("users").select("id,username,role,created_at").eq("role", "student").order("username").execute().data
+    users = sb.table("users").select("id,username,role,class_code,created_at").eq("role", "student").order("username").execute().data
     attempts = sb.table("question_attempts").select("*").execute().data
     tests = sb.table("test_results").select("*").execute().data
     return users, attempts, tests
@@ -16,14 +16,35 @@ def render_dashboard():
     st.header("Teacher Dashboard")
 
     try:
-        users, attempts, tests = _fetch_all()
+        all_users, attempts, tests = _fetch_all()
     except Exception as e:
         st.error(f"Could not load data: {e}")
         return
 
-    if not users:
+    if not all_users:
         st.info("No students have signed up yet.")
         return
+
+    # --- Class filter ---
+    class_codes = sorted(set(u.get("class_code") or "" for u in all_users))
+    class_codes = [c for c in class_codes if c]
+    if class_codes:
+        filter_options = ["All classes"] + class_codes
+        selected_class = st.selectbox("Class", filter_options, label_visibility="collapsed",
+                                      key="dashboard_class_filter")
+        st.caption(f"Showing: **{selected_class}**")
+    else:
+        selected_class = "All classes"
+
+    users = (
+        [u for u in all_users if (u.get("class_code") or "") == selected_class]
+        if selected_class != "All classes"
+        else all_users
+    )
+
+    user_ids = {u["id"] for u in users}
+    attempts = [a for a in attempts if a["user_id"] in user_ids]
+    tests = [t for t in tests if t["user_id"] in user_ids]
 
     # --- Overview metrics ---
     col1, col2, col3 = st.columns(3)
@@ -36,6 +57,7 @@ def render_dashboard():
     # --- Summary table ---
     st.subheader("Student Overview")
 
+    show_class_col = selected_class == "All classes" and bool(class_codes)
     rows = []
     for u in users:
         uid = u["id"]
@@ -48,13 +70,16 @@ def render_dashboard():
             f"{sum(t['score'] for t in ut) / sum(t['total'] for t in ut) * 100:.0f}%"
             if ut else "—"
         )
-        rows.append({
-            "Student": u["username"],
+        row = {"Student": u["username"]}
+        if show_class_col:
+            row["Class"] = u.get("class_code") or "—"
+        row.update({
             "Practice attempts": n,
             "Accuracy": accuracy,
             "Tests taken": len(ut),
             "Avg test score": avg_score,
         })
+        rows.append(row)
 
     st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
 
@@ -108,7 +133,7 @@ def render_dashboard():
 
     # --- Password reset ---
     st.subheader("Reset Password")
-    reset_student = st.selectbox("Student", [u["username"] for u in users], key="reset_select")
+    reset_student = st.selectbox("Student", [u["username"] for u in all_users], key="reset_select")
     with st.form("reset_password_form"):
         new_pw = st.text_input("New password", type="password")
         confirm_pw = st.text_input("Confirm new password", type="password")
@@ -121,7 +146,7 @@ def render_dashboard():
         elif len(new_pw) < 6:
             st.error("Password must be at least 6 characters.")
         else:
-            reset_uid = next(u["id"] for u in users if u["username"] == reset_student)
+            reset_uid = next(u["id"] for u in all_users if u["username"] == reset_student)
             error = reset_password(reset_uid, new_pw)
             if error:
                 st.error(error)

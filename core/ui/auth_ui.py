@@ -31,6 +31,11 @@ def render_auth():
             new_username = st.text_input("Choose a username")
             new_password = st.text_input("Choose a password", type="password")
             confirm = st.text_input("Confirm password", type="password")
+            class_code = st.text_input(
+                "Class code",
+                help="Enter the class code given to you by your teacher. Leave blank if you don't have one.",
+                placeholder="e.g. 5A",
+            )
             teacher_code = st.text_input(
                 "Teacher registration code",
                 help="Leave blank if you are a student.",
@@ -46,7 +51,7 @@ def render_auth():
             else:
                 expected_code = st.secrets.get("TEACHER_CODE", "")
                 role = "teacher" if (expected_code and teacher_code.strip() == expected_code) else "student"
-                result = signup(new_username.strip(), new_password, role)
+                result = signup(new_username.strip(), new_password, role, class_code.strip())
                 if isinstance(result, str):
                     st.error(result)
                 else:
