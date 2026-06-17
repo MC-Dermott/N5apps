@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 from core.db.client import get_supabase
 from core.auth.auth import reset_password
+from core.ui.student_dashboard_ui import render_progress_heatmaps
 
 
 def _fetch_all():
@@ -128,6 +129,12 @@ def render_dashboard():
             st.dataframe(tdf, use_container_width=True, hide_index=True)
         else:
             st.info("No tests taken yet.")
+
+    st.divider()
+
+    # --- Student progress heatmaps ---
+    st.subheader("Progress Heatmap")
+    render_progress_heatmaps(uid)
 
     st.divider()
 

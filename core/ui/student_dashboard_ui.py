@@ -53,17 +53,16 @@ def _heatmap(topics, qtypes, summary):
     return fig
 
 
-def render_student_dashboard(user):
-    st.header("My Progress")
-
+def render_progress_heatmaps(user_id):
+    """Render heatmaps for a given user_id (no page header)."""
     try:
-        tests = _fetch_tests(user["id"])
+        tests = _fetch_tests(user_id)
     except Exception as e:
         st.error(f"Could not load data: {e}")
         return
 
     if not tests:
-        st.info("Complete some tests to see your progress here.")
+        st.info("No tests taken yet.")
         return
 
     df = pd.DataFrame(tests)
@@ -85,3 +84,8 @@ def render_student_dashboard(user):
         st.plotly_chart(_heatmap(topics, qtypes, summary), use_container_width=True)
 
     st.caption("🟩 ≥ 70%   🟧 40 – 69%   🟥 < 40%   Grey = no tests taken")
+
+
+def render_student_dashboard(user):
+    st.header("My Progress")
+    render_progress_heatmaps(user["id"])
