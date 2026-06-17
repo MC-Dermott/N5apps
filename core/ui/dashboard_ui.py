@@ -131,6 +131,25 @@ def render_dashboard():
 
     st.divider()
 
+    # --- Assign class code ---
+    st.subheader("Assign Class Code")
+    assign_student = st.selectbox("Student", [u["username"] for u in all_users], key="assign_select")
+    assign_user = next(u for u in all_users if u["username"] == assign_student)
+    current_code = assign_user.get("class_code") or ""
+    with st.form("assign_class_form"):
+        new_code = st.text_input("Class code", value=current_code, placeholder="e.g. 5A")
+        submitted = st.form_submit_button("Save", type="primary")
+    if submitted:
+        try:
+            code_to_save = new_code.strip().upper() or None
+            get_supabase().table("users").update({"class_code": code_to_save}).eq("id", assign_user["id"]).execute()
+            st.success(f"Class code for **{assign_student}** updated to **{code_to_save or '(none)'}**.")
+            st.rerun()
+        except Exception as e:
+            st.error(f"Update failed: {e}")
+
+    st.divider()
+
     # --- Password reset ---
     st.subheader("Reset Password")
     reset_student = st.selectbox("Student", [u["username"] for u in all_users], key="reset_select")
