@@ -68,6 +68,8 @@ def render_question(question, suffix="default"):
         _render_pie_chart(question.metadata["diagram_params"])
     elif question.metadata.get("diagram") == "blood_pressure":
         _render_blood_pressure(question.metadata["diagram_params"])
+    elif question.metadata.get("diagram") == "ni_bands":
+        _render_ni_band_diagram(question.metadata["diagram_params"])
 
     if question.metadata.get("answer_type") == "duration":
         return _render_duration_input(question.qid, suffix)
@@ -479,6 +481,86 @@ def _render_blood_pressure(p):
     ax.yaxis.set_major_locator(plt.MultipleLocator(10))
     ax.grid(True, linestyle="--", alpha=0.3, zorder=0)
 
+    fig.patch.set_facecolor("white")
+    plt.tight_layout()
+    st.pyplot(fig, use_container_width=False)
+    plt.close(fig)
+
+
+def _render_ni_band_diagram(p):
+    income = p["income"]
+    PT = 12_570
+    UEL = 50_270
+
+    vis_max = max(income * 1.12, UEL * 1.35)
+
+    color_low = "#888780"
+    color_mid = "#378ADD"
+    color_top = "#E24B4A"
+
+    bar_l, bar_r = 0.0, 0.5
+    bar_w = bar_r - bar_l
+
+    fig, ax = plt.subplots(figsize=(5.5, 5))
+
+    # Background bar (unfilled portion)
+    ax.add_patch(patches.Rectangle(
+        (bar_l, 0), bar_w, vis_max,
+        facecolor="#f5f5f5", edgecolor="#ccc", linewidth=1, zorder=1
+    ))
+
+    # Fill each band up to income level
+    ax.add_patch(patches.Rectangle(
+        (bar_l, 0), bar_w, min(income, PT),
+        facecolor=color_low, edgecolor="none", zorder=2
+    ))
+    if income > PT:
+        ax.add_patch(patches.Rectangle(
+            (bar_l, PT), bar_w, min(income, UEL) - PT,
+            facecolor=color_mid, edgecolor="none", zorder=2
+        ))
+    if income > UEL:
+        ax.add_patch(patches.Rectangle(
+            (bar_l, UEL), bar_w, income - UEL,
+            facecolor=color_top, edgecolor="none", zorder=2
+        ))
+
+    # Dashed threshold lines
+    for thresh in (PT, UEL):
+        ax.plot([bar_l, bar_r], [thresh, thresh],
+                color="#222", linestyle="--", linewidth=1.5, zorder=3)
+
+    # Income marker line
+    ax.plot([bar_l, bar_r], [income, income],
+            color="#111", linewidth=2.5, zorder=4)
+
+    # £ labels to the left of the bar
+    min_gap = vis_max * 0.035
+    for val in (PT, UEL):
+        ax.text(-0.04, val, f"£{val:,}",
+                ha="right", va="center", fontsize=8.5, color="#444")
+    if not any(abs(income - v) < min_gap for v in (PT, UEL)):
+        ax.text(-0.04, income, f"£{income:,}",
+                ha="right", va="center", fontsize=9, fontweight="bold", color="#111")
+
+    # Band labels (coloured square marker + rate + range) to the right
+    lbl_x = bar_r + 0.12
+    offset = vis_max * 0.045
+    for y_c, color, rate, rng in [
+        ((UEL + vis_max) / 2, color_top, "2%",  "above £50,270"),
+        ((PT + UEL) / 2,      color_mid, "12%", "£12,570–£50,270"),
+        (PT / 2,              color_low, "0%",  "first £12,570"),
+    ]:
+        ax.plot(lbl_x, y_c, "s", color=color, markersize=10, zorder=5,
+                markeredgecolor="none")
+        ax.text(lbl_x + 0.08, y_c + offset * 0.3,
+                rate, ha="left", va="center", fontsize=12, fontweight="bold", color="#111")
+        ax.text(lbl_x + 0.08, y_c - offset * 0.7,
+                rng, ha="left", va="center", fontsize=9, color="#555")
+
+    ax.set_xlim(-0.35, 1.7)
+    ax.set_ylim(-vis_max * 0.04, vis_max * 1.04)
+    ax.axis("off")
     fig.patch.set_facecolor("white")
     plt.tight_layout()
     st.pyplot(fig, use_container_width=False)

@@ -89,7 +89,7 @@ def generate_ni_l1():
         scaffold_steps=scaffold_steps,
         worked_solution=worked,
         notes=NOTES,
-        metadata={"table": _NI_TABLE_MD},
+        metadata={"table": _NI_TABLE_MD, "diagram": "ni_bands", "diagram_params": {"income": income}},
     )
 
 
@@ -136,7 +136,7 @@ def generate_ni_l2():
         scaffold_steps=scaffold_steps,
         worked_solution=worked,
         notes=NOTES,
-        metadata={"table": _NI_TABLE_MD},
+        metadata={"table": _NI_TABLE_MD, "diagram": "ni_bands", "diagram_params": {"income": income}},
     )
 
 
@@ -260,7 +260,7 @@ def generate_ni_l3():
         scaffold_steps=scaffold_steps,
         worked_solution=worked,
         notes=NOTES,
-        metadata={"table": _NI_TABLE_MD},
+        metadata={"table": _NI_TABLE_MD, "diagram": "ni_bands", "diagram_params": {"income": income}},
     )
 
 
