@@ -36,6 +36,12 @@ from topics.geometry_measure.time_zones import (
     generate_time_zone_l2,
     generate_time_zone_l3,
 )
+from topics.geometry_measure.tolerance import (
+    generate_tolerance_question,
+    generate_tolerance_l1,
+    generate_tolerance_l2,
+    generate_tolerance_l3,
+)
 from topics.statistics.standard_deviation import generate_standard_deviation_question
 from topics.statistics.probability import generate_probability_question
 from topics.numeracy_assessment.compound_percentages import generate_compound_percentages
@@ -70,6 +76,7 @@ _N5_TOPICS = {
         "Gradient": generate_gradient_question,
         "Volume": generate_volume_question,
         "Time Zones": generate_time_zone_question,
+        "Tolerance": generate_tolerance_question,
     },
 }
 
@@ -162,7 +169,12 @@ _N5_LEVELS = {
             "Level 1": generate_time_zone_l1,
             "Level 2": generate_time_zone_l2,
             "Level 3": generate_time_zone_l3,
-        }
+        },
+        "Tolerance": {
+            "Level 1": generate_tolerance_l1,
+            "Level 2": generate_tolerance_l2,
+            "Level 3": generate_tolerance_l3,
+        },
     },
 }
 
