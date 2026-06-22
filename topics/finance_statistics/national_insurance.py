@@ -1,35 +1,11 @@
 import random
 from core.models.question_model import Question
 
-_PT  = 12570   # Primary Threshold (below → 0%, above → 12%)
-_UEL = 50270   # Upper Earnings Limit (above → 2%)
-
-_NI_TABLE_MD = """\
-| Annual Income | National Insurance Rate |
-|:---|:---|
-| Up to £12,570 | 0% |
-| £12,571 to £50,270 | 12% |
-| Over £50,270 | 2% (on earnings above £50,270 only) |
-"""
-
-NOTES = """
-**National Insurance (NI):**
-
-NI is a tax on earnings above a minimum threshold.
-
-**If annual income is between £12,570 and £50,270 (Level 1):**
-- NI = 12% × (income − £12,570)
-
-**If annual income is above £50,270 (Levels 2 & 3):**
-- NI on middle band = 12% × (£50,270 − £12,570) = 12% × £37,700 = **£4,524**
-- NI on upper band = 2% × (income − £50,270)
-- **Total NI = £4,524 + upper band NI**
-
-**Level 3 — Net Pay:**
-- Annual net pay = Gross pay − NI − Pension − Income Tax
-- Monthly net pay = Annual net pay ÷ 12
-- Weekly net pay = Annual net pay ÷ 52
-"""
+_PT_OPTIONS       = [10_000, 11_000, 12_000, 13_000]
+_UEL_OPTIONS      = list(range(45_000, 56_000, 1_000))
+_RATE_MID_OPTIONS = [10, 11, 12, 13]
+_RATE_TOP_OPTIONS = [2, 3, 4]
+_PENSION_PCTS     = [3, 4, 5, 6, 7, 8]
 
 _NAMES = [
     "David", "Sarah", "Michael", "Emma", "James",
@@ -37,48 +13,151 @@ _NAMES = [
     "Fraser", "Catriona", "Callum", "Eilidh", "Morag", "Alasdair",
 ]
 
-# L1: income = PT + k*1000; NI = 12% × k*1000 = 120k → always whole pounds
-_L1_K = [5, 10, 15, 20, 25, 30, 35]
 
-# L2/L3: income = UEL + j*1000; upper-band NI = 2% × j*1000 = 20j → always whole pounds
-_L2_J = [5, 10, 15, 20, 25, 30]
+def _gen_bands():
+    return (
+        random.choice(_PT_OPTIONS),
+        random.choice(_UEL_OPTIONS),
+        random.choice(_RATE_MID_OPTIONS),
+        random.choice(_RATE_TOP_OPTIONS),
+    )
 
-_PENSION_PCTS = [3, 4, 5, 6, 7, 8]
 
-_NI_MID = int(round(0.12 * (_UEL - _PT)))   # 4524, fixed for any L2/L3 question
+def _ni_mid(pt, uel, rate_mid):
+    return rate_mid * (uel - pt) // 100
 
 
-def _ni_l2(income):
-    return _NI_MID + int(round(0.02 * (income - _UEL)))
+def _make_table_md(pt, uel, rate_mid, rate_top):
+    return (
+        "| Annual Income | National Insurance Rate |\n"
+        "|:---|:---|\n"
+        f"| Up to £{pt:,} | 0% |\n"
+        f"| £{pt:,} to £{uel:,} | {rate_mid}% |\n"
+        f"| Over £{uel:,} | {rate_top}% (on earnings above £{uel:,} only) |\n"
+    )
+
+
+def _make_notes(pt, uel, rate_mid, rate_top):
+    ni_m = _ni_mid(pt, uel, rate_mid)
+    return (
+        f"**National Insurance (NI):**\n\n"
+        f"NI is a tax on earnings above a minimum threshold.\n\n"
+        f"**If annual income is between £{pt:,} and £{uel:,} (Level 1):**\n"
+        f"- NI = {rate_mid}% × (income − £{pt:,})\n\n"
+        f"**If annual income is above £{uel:,} (Levels 2 & 3):**\n"
+        f"- NI on middle band = {rate_mid}% × (£{uel:,} − £{pt:,}) = "
+        f"{rate_mid}% × £{uel - pt:,} = **£{ni_m:,}**\n"
+        f"- NI on upper band = {rate_top}% × (income − £{uel:,})\n"
+        f"- **Total NI = £{ni_m:,} + upper band NI**\n\n"
+        f"**Level 3 — Net Pay:**\n"
+        f"- Annual net pay = Gross pay − NI − Pension − Income Tax\n"
+        f"- Monthly net pay = Annual net pay ÷ 12\n"
+        f"- Weekly net pay = Annual net pay ÷ 52\n"
+    )
+
+
+def _diagram_params(income, pt, uel, rate_mid, rate_top):
+    return {"income": income, "pt": pt, "uel": uel,
+            "rate_mid": rate_mid, "rate_top": rate_top}
+
+
+def _period_label(period):
+    return {"annual": "per year", "monthly": "per month", "weekly": "per week"}[period]
+
+
+def _period_multiplier(period):
+    return {"annual": 1, "monthly": 12, "weekly": 52}[period]
+
+
+def _gen_l1_income(pt, uel):
+    """Return (period, income_annual, income_display) with income_annual in (pt, uel)."""
+    for _ in range(30):
+        period = random.choice(["annual", "monthly", "weekly"])
+        if period == "annual":
+            k_opts = [k for k in range(2, 50) if pt + k * 1000 < uel]
+            if k_opts:
+                k_nice = [k for k in k_opts if k % 5 == 0]
+                k = random.choice(k_nice or k_opts)
+                annual = pt + k * 1000
+                return "annual", annual, annual
+        elif period == "monthly":
+            # monthly = m*100, annual = m*1200; need pt < m*1200 < uel
+            lo = pt // 1200 + 1
+            hi = (uel - 1) // 1200
+            if lo <= hi:
+                m = random.choice(range(lo, hi + 1))
+                return "monthly", m * 1200, m * 100
+        else:
+            # weekly = w*50, annual = w*2600; need pt < w*2600 < uel
+            lo = pt // 2600 + 1
+            hi = (uel - 1) // 2600
+            if lo <= hi:
+                w = random.choice(range(lo, hi + 1))
+                return "weekly", w * 2600, w * 50
+    # fallback to annual
+    k_opts = [k for k in range(2, 50) if pt + k * 1000 < uel]
+    k = random.choice(k_opts)
+    return "annual", pt + k * 1000, pt + k * 1000
+
+
+def _gen_l2_income(uel):
+    """Return (period, income_annual, income_display) with income_annual > uel."""
+    for _ in range(30):
+        period = random.choice(["annual", "monthly", "weekly"])
+        if period == "annual":
+            j = random.choice(range(5, 36, 5))
+            return "annual", uel + j * 1000, uel + j * 1000
+        elif period == "monthly":
+            lo = uel // 1200 + 1
+            hi = lo + 15
+            m = random.choice(range(lo, hi + 1))
+            return "monthly", m * 1200, m * 100
+        else:
+            lo = uel // 2600 + 1
+            hi = lo + 10
+            w = random.choice(range(lo, hi + 1))
+            return "weekly", w * 2600, w * 50
+    return "annual", uel + 10_000, uel + 10_000
 
 
 # ===========================================================================
-# Level 1 — income in the 12% band only
+# Level 1 — income in the middle band only
 # ===========================================================================
 
 def generate_ni_l1():
-    k       = random.choice(_L1_K)
-    income  = _PT + k * 1000
-    taxable = k * 1000
-    ni      = 12 * k * 10        # = 120k, always integer
-    name    = random.choice(_NAMES)
+    pt, uel, rate_mid, rate_top = _gen_bands()
+    period, income, display = _gen_l1_income(pt, uel)
+    taxable = income - pt
+    ni = rate_mid * taxable // 100
+    name = random.choice(_NAMES)
+    mult = _period_multiplier(period)
+    plbl = _period_label(period)
 
     question_text = (
         f"Use the table above to calculate {name}'s annual National Insurance contributions. "
-        f"{name} earns £{income:,} per year."
+        f"{name} earns £{display:,} {plbl}."
     )
 
-    scaffold_steps = [
-        {"prompt": f"Find how much of {name}'s income falls in the 12% band "
-                   f"(earnings above £{_PT:,})",
+    scaffold_steps = []
+    if period != "annual":
+        scaffold_steps.append({
+            "prompt": f"Convert {name}'s {period} income to an annual figure (multiply by {mult})",
+            "answer": float(income),
+        })
+    scaffold_steps += [
+        {"prompt": f"Find how much of {name}'s annual income falls in the {rate_mid}% band "
+                   f"(earnings above £{pt:,})",
          "answer": float(taxable)},
-        {"prompt": "Calculate 12% of that amount to find the total NI",
+        {"prompt": f"Calculate {rate_mid}% of that amount to find the total annual NI",
          "answer": float(ni)},
     ]
 
-    worked = [
-        f"Income above £{_PT:,} = £{income:,} − £{_PT:,} = £{taxable:,}",
-        f"NI = 12% × £{taxable:,} = £{ni:,}",
+    worked = []
+    if period != "annual":
+        worked.append(f"Annual income = £{display:,} × {mult} = £{income:,}")
+    worked += [
+        f"Income above £{pt:,} = £{income:,} − £{pt:,} = £{taxable:,}",
+        f"NI = {rate_mid}% × £{taxable:,} = £{ni:,}",
     ]
 
     return Question(
@@ -88,44 +167,60 @@ def generate_ni_l1():
         question_type="National Insurance",
         scaffold_steps=scaffold_steps,
         worked_solution=worked,
-        notes=NOTES,
-        metadata={"table": _NI_TABLE_MD, "diagram": "ni_bands", "diagram_params": {"income": income}},
+        notes=_make_notes(pt, uel, rate_mid, rate_top),
+        metadata={
+            "table": _make_table_md(pt, uel, rate_mid, rate_top),
+            "diagram": "ni_bands",
+            "diagram_params": _diagram_params(income, pt, uel, rate_mid, rate_top),
+        },
     )
 
 
 # ===========================================================================
-# Level 2 — income above the UEL (two-band calculation)
+# Level 2 — income above the UEL
 # ===========================================================================
 
 def generate_ni_l2():
-    j      = random.choice(_L2_J)
-    income = _UEL + j * 1000
-    ni_top = 20 * j              # 2% × j*1000, always integer
-    ni     = _NI_MID + ni_top
-    name   = random.choice(_NAMES)
+    pt, uel, rate_mid, rate_top = _gen_bands()
+    period, income, display = _gen_l2_income(uel)
+    ni_m = _ni_mid(pt, uel, rate_mid)
+    ni_top = rate_top * (income - uel) // 100
+    ni = ni_m + ni_top
+    name = random.choice(_NAMES)
+    mult = _period_multiplier(period)
+    plbl = _period_label(period)
 
     question_text = (
         f"Use the table above to calculate {name}'s annual National Insurance contributions. "
-        f"{name} earns £{income:,} per year."
+        f"{name} earns £{display:,} {plbl}."
     )
 
-    scaffold_steps = [
+    scaffold_steps = []
+    if period != "annual":
+        scaffold_steps.append({
+            "prompt": f"Convert {name}'s {period} income to an annual figure (multiply by {mult})",
+            "answer": float(income),
+        })
+    scaffold_steps += [
         {"prompt": f"Calculate the NI on the middle band: "
-                   f"12% on earnings from £{_PT:,} to £{_UEL:,}",
-         "answer": float(_NI_MID)},
+                   f"{rate_mid}% on earnings from £{pt:,} to £{uel:,}",
+         "answer": float(ni_m)},
         {"prompt": f"Calculate the NI on the upper band: "
-                   f"2% on earnings above £{_UEL:,}",
+                   f"{rate_top}% on earnings above £{uel:,}",
          "answer": float(ni_top)},
         {"prompt": "Add both amounts to find the total annual NI",
          "answer": float(ni)},
     ]
 
-    worked = [
-        f"Middle band (12%): £{_UEL:,} − £{_PT:,} = £{_UEL - _PT:,}",
-        f"NI on middle band = 12% × £{_UEL - _PT:,} = £{_NI_MID:,}",
-        f"Upper band (2%): £{income:,} − £{_UEL:,} = £{income - _UEL:,}",
-        f"NI on upper band = 2% × £{income - _UEL:,} = £{ni_top:,}",
-        f"Total NI = £{_NI_MID:,} + £{ni_top:,} = £{ni:,}",
+    worked = []
+    if period != "annual":
+        worked.append(f"Annual income = £{display:,} × {mult} = £{income:,}")
+    worked += [
+        f"Middle band ({rate_mid}%): £{uel:,} − £{pt:,} = £{uel - pt:,}",
+        f"NI on middle band = {rate_mid}% × £{uel - pt:,} = £{ni_m:,}",
+        f"Upper band ({rate_top}%): £{income:,} − £{uel:,} = £{income - uel:,}",
+        f"NI on upper band = {rate_top}% × £{income - uel:,} = £{ni_top:,}",
+        f"Total NI = £{ni_m:,} + £{ni_top:,} = £{ni:,}",
     ]
 
     return Question(
@@ -135,25 +230,30 @@ def generate_ni_l2():
         question_type="National Insurance",
         scaffold_steps=scaffold_steps,
         worked_solution=worked,
-        notes=NOTES,
-        metadata={"table": _NI_TABLE_MD, "diagram": "ni_bands", "diagram_params": {"income": income}},
+        notes=_make_notes(pt, uel, rate_mid, rate_top),
+        metadata={
+            "table": _make_table_md(pt, uel, rate_mid, rate_top),
+            "diagram": "ni_bands",
+            "diagram_params": _diagram_params(income, pt, uel, rate_mid, rate_top),
+        },
     )
 
 
 # ===========================================================================
-# Level 3 — monthly or weekly net pay (NI + pension % + income tax £)
+# Level 3 — monthly or weekly net pay
 # ===========================================================================
 
-def _l3_params():
-    """Return parameters for a valid L3 question with a whole-pound net pay per period."""
+def _l3_params(pt, uel, rate_mid, rate_top):
+    ni_m = _ni_mid(pt, uel, rate_mid)
+
     for _ in range(500):
-        j           = random.choice(_L2_J)
-        income      = _UEL + j * 1000
+        j           = random.choice(range(5, 36, 5))
+        income      = uel + j * 1000
+        ni_top      = rate_top * j * 10
+        ni          = ni_m + ni_top
         pension_pct = random.choice(_PENSION_PCTS)
-        pension     = round(pension_pct / 100 * income)   # whole pounds
-        ni_top      = 20 * j
-        ni          = _NI_MID + ni_top
-        subtotal    = income - ni - pension               # whole pounds
+        pension     = round(pension_pct / 100 * income)
+        subtotal    = income - ni - pension
 
         ask_monthly = random.choice([True, False])
         divisor     = 12 if ask_monthly else 52
@@ -161,18 +261,14 @@ def _l3_params():
         lo          = 1500 if ask_monthly else 350
         hi          = 4500 if ask_monthly else 1050
 
-        # Income tax should be roughly 8–28% of gross
         min_tax = int(0.08 * income)
         max_tax = int(0.28 * income)
 
-        # net_period = target; tax = subtotal - divisor*target
-        # → divisor*target = subtotal - tax → target in [(subtotal-max_tax)/div, (subtotal-min_tax)/div]
         k_min = max(lo, (subtotal - max_tax + divisor - 1) // divisor)
         k_max = min(hi, (subtotal - min_tax) // divisor)
         if k_min > k_max:
             continue
 
-        # Snap to step multiples within range
         k_snap_min = ((k_min + step - 1) // step) * step
         k_snap_max = (k_max // step) * step
         if k_snap_min > k_snap_max:
@@ -184,28 +280,29 @@ def _l3_params():
             continue
 
         return {
-            "income":      income,
-            "ni_top":      ni_top,
-            "ni":          ni,
-            "pension_pct": pension_pct,
-            "pension":     pension,
-            "tax":         tax,
-            "net_annual":  divisor * target,
-            "net_period":  target,
-            "ask_monthly": ask_monthly,
-            "divisor":     divisor,
+            "income": income, "ni_top": ni_top, "ni": ni, "ni_m": ni_m,
+            "pension_pct": pension_pct, "pension": pension, "tax": tax,
+            "net_annual": divisor * target, "net_period": target,
+            "ask_monthly": ask_monthly, "divisor": divisor,
         }
-
     return None
 
 
 def generate_ni_l3():
-    p = _l3_params()
+    pt, uel, rate_mid, rate_top = _gen_bands()
+    p = _l3_params(pt, uel, rate_mid, rate_top)
     if p is None:
         raise RuntimeError("Could not generate valid Level 3 NI question parameters")
 
-    name        = random.choice(_NAMES)
+    # Choose how income is stated
+    period = random.choice(["annual", "monthly", "weekly"])
     income      = p["income"]
+    mult        = _period_multiplier(period)
+    plbl        = _period_label(period)
+    display     = income if period == "annual" else income // mult
+
+    name        = random.choice(_NAMES)
+    ni_m        = p["ni_m"]
     ni_top      = p["ni_top"]
     ni          = p["ni"]
     pension_pct = p["pension_pct"]
@@ -214,22 +311,33 @@ def generate_ni_l3():
     net_annual  = p["net_annual"]
     net_period  = p["net_period"]
     divisor     = p["divisor"]
-    period_name = "monthly" if p["ask_monthly"] else "weekly"
+    pay_period  = "monthly" if p["ask_monthly"] else "weekly"
+
+    if period == "annual":
+        income_phrase = f"a gross annual salary of £{income:,}"
+    else:
+        income_phrase = f"a gross {period} salary of £{display:,}"
 
     question_text = (
-        f"{name} has a gross annual salary of £{income:,}. "
+        f"{name} has {income_phrase}. "
         f"They pay National Insurance (as shown in the table above), "
-        f"a pension contribution of {pension_pct}% of their gross salary, "
+        f"a pension contribution of {pension_pct}% of their gross annual salary, "
         f"and income tax of £{tax:,} per year. "
-        f"Calculate {name}'s {period_name} net pay."
+        f"Calculate {name}'s {pay_period} net pay."
     )
 
-    scaffold_steps = [
+    scaffold_steps = []
+    if period != "annual":
+        scaffold_steps.append({
+            "prompt": f"Convert {name}'s {period} salary to an annual figure (multiply by {mult})",
+            "answer": float(income),
+        })
+    scaffold_steps += [
         {"prompt": f"Calculate the NI on the middle band: "
-                   f"12% on earnings from £{_PT:,} to £{_UEL:,}",
-         "answer": float(_NI_MID)},
+                   f"{rate_mid}% on earnings from £{pt:,} to £{uel:,}",
+         "answer": float(ni_m)},
         {"prompt": f"Calculate the NI on the upper band: "
-                   f"2% on earnings above £{_UEL:,}",
+                   f"{rate_top}% on earnings above £{uel:,}",
          "answer": float(ni_top)},
         {"prompt": "Add both NI amounts to find total annual NI",
          "answer": float(ni)},
@@ -237,19 +345,22 @@ def generate_ni_l3():
          "answer": float(pension)},
         {"prompt": "Calculate annual net pay (gross − NI − pension − income tax)",
          "answer": float(net_annual)},
-        {"prompt": f"Divide by {divisor} to find {period_name} net pay",
+        {"prompt": f"Divide by {divisor} to find {pay_period} net pay",
          "answer": float(net_period)},
     ]
 
-    worked = [
-        f"Middle band (12%): £{_UEL:,} − £{_PT:,} = £{_UEL - _PT:,}",
-        f"NI on middle band = 12% × £{_UEL - _PT:,} = £{_NI_MID:,}",
-        f"Upper band (2%): £{income:,} − £{_UEL:,} = £{income - _UEL:,}",
-        f"NI on upper band = 2% × £{income - _UEL:,} = £{ni_top:,}",
-        f"Total NI = £{_NI_MID:,} + £{ni_top:,} = £{ni:,}",
+    worked = []
+    if period != "annual":
+        worked.append(f"Annual salary = £{display:,} × {mult} = £{income:,}")
+    worked += [
+        f"Middle band ({rate_mid}%): £{uel:,} − £{pt:,} = £{uel - pt:,}",
+        f"NI on middle band = {rate_mid}% × £{uel - pt:,} = £{ni_m:,}",
+        f"Upper band ({rate_top}%): £{income:,} − £{uel:,} = £{income - uel:,}",
+        f"NI on upper band = {rate_top}% × £{income - uel:,} = £{ni_top:,}",
+        f"Total NI = £{ni_m:,} + £{ni_top:,} = £{ni:,}",
         f"Pension = {pension_pct}% × £{income:,} = £{pension:,}",
         f"Annual net pay = £{income:,} − £{ni:,} − £{pension:,} − £{tax:,} = £{net_annual:,}",
-        f"{period_name.capitalize()} net pay = £{net_annual:,} ÷ {divisor} = £{net_period:,}",
+        f"{pay_period.capitalize()} net pay = £{net_annual:,} ÷ {divisor} = £{net_period:,}",
     ]
 
     return Question(
@@ -259,13 +370,17 @@ def generate_ni_l3():
         question_type="National Insurance",
         scaffold_steps=scaffold_steps,
         worked_solution=worked,
-        notes=NOTES,
-        metadata={"table": _NI_TABLE_MD, "diagram": "ni_bands", "diagram_params": {"income": income}},
+        notes=_make_notes(pt, uel, rate_mid, rate_top),
+        metadata={
+            "table": _make_table_md(pt, uel, rate_mid, rate_top),
+            "diagram": "ni_bands",
+            "diagram_params": _diagram_params(income, pt, uel, rate_mid, rate_top),
+        },
     )
 
 
 # ===========================================================================
-# Default dispatcher (no level selected → Level 1)
+# Default dispatcher
 # ===========================================================================
 
 def generate_ni_question():

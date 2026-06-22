@@ -486,9 +486,11 @@ def _render_blood_pressure(p):
 
 
 def _render_ni_band_diagram(p):
-    income = p["income"]
-    PT = 12_570
-    UEL = 50_270
+    income   = p["income"]
+    PT       = p["pt"]
+    UEL      = p["uel"]
+    rate_mid = p["rate_mid"]
+    rate_top = p["rate_top"]
 
     vis_max = max(income * 1.12, UEL * 1.35)
 
@@ -545,9 +547,9 @@ def _render_ni_band_diagram(p):
     lbl_x = bar_r + 0.12
     offset = vis_max * 0.045
     for y_c, color, rate, rng in [
-        ((UEL + vis_max) / 2, color_top, "2%",  "above £50,270"),
-        ((PT + UEL) / 2,      color_mid, "12%", "£12,570–£50,270"),
-        (PT / 2,              color_low, "0%",  "first £12,570"),
+        ((UEL + vis_max) / 2, color_top, f"{rate_top}%", f"above £{UEL:,}"),
+        ((PT + UEL) / 2,      color_mid, f"{rate_mid}%", f"£{PT:,}–£{UEL:,}"),
+        (PT / 2,              color_low, "0%",            f"first £{PT:,}"),
     ]:
         ax.plot(lbl_x, y_c, "s", color=color, markersize=10, zorder=5,
                 markeredgecolor="none")
