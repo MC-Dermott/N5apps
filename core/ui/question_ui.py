@@ -68,8 +68,6 @@ def render_question(question, suffix="default"):
         _render_pie_chart(question.metadata["diagram_params"])
     elif question.metadata.get("diagram") == "blood_pressure":
         _render_blood_pressure(question.metadata["diagram_params"])
-    elif question.metadata.get("diagram") == "ni_bands":
-        _render_ni_band_diagram(question.metadata["diagram_params"])
 
     if question.metadata.get("answer_type") == "duration":
         return _render_duration_input(question.qid, suffix)

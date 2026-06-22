@@ -1,4 +1,5 @@
 import streamlit as st
+from core.ui.question_ui import _render_ni_band_diagram
 
 
 def _build_duration_str(h, m):
@@ -42,6 +43,8 @@ def render_scaffold(question, suffix=""):
     if not question.scaffold_steps:
         return
     with st.expander("🔍 Step-by-step scaffold"):
+        if question.metadata.get("diagram") == "ni_bands":
+            _render_ni_band_diagram(question.metadata["diagram_params"])
         for i, step in enumerate(question.scaffold_steps):
             st.markdown(f"**Step {i + 1}:** {step['prompt']}")
 
