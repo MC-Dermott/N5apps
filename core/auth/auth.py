@@ -1,5 +1,9 @@
+import logging
+
 import bcrypt
 from core.db.client import get_supabase
+
+logger = logging.getLogger(__name__)
 
 
 def _hash(password: str) -> str:
@@ -15,11 +19,19 @@ def login(username: str, password: str) -> dict | None:
     try:
         result = get_supabase().table("users").select("*").eq("username", username).execute()
     except Exception:
+        logger.exception(
+            "Login lookup failed for username=%r (Supabase/config error, not a bad password)",
+            username,
+        )
         return None
     if not result.data:
+        logger.info("Login failed: no user found for username=%r", username)
         return None
     user = result.data[0]
-    return user if _verify(password, user["password_hash"]) else None
+    if not _verify(password, user["password_hash"]):
+        logger.info("Login failed: password mismatch for username=%r", username)
+        return None
+    return user
 
 
 def reset_password(user_id: str, new_password: str) -> "str | None":
@@ -30,6 +42,7 @@ def reset_password(user_id: str, new_password: str) -> "str | None":
         }).eq("id", user_id).execute()
         return None
     except Exception as e:
+        logger.exception("Password reset failed for user_id=%r", user_id)
         return f"Reset failed: {e}"
 
 
@@ -49,4 +62,5 @@ def signup(username: str, password: str, role: str = "student", class_code: str 
         result = sb.table("users").insert(row).execute()
         return result.data[0] if result.data else "Signup failed — please try again."
     except Exception as e:
+        logger.exception("Signup failed for username=%r", username)
         return f"Signup failed: {e}"

@@ -1,4 +1,8 @@
+import logging
+
 import streamlit as st
+
+logging.basicConfig(level=logging.INFO)
 
 from core.engine.session_manager import initialise_session, reset_test, reset_numeracy_assessment
 from core.engine.question_factory import generate_question, get_levels, QUAL_REGISTRY
