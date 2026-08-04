@@ -1,6 +1,8 @@
+import hmac
 import logging
 
 import bcrypt
+import streamlit as st
 from core.db.client import get_supabase
 
 logger = logging.getLogger(__name__)
@@ -32,6 +34,29 @@ def login(username: str, password: str) -> dict | None:
         logger.info("Login failed: password mismatch for username=%r", username)
         return None
     return user
+
+
+def login_as_admin(key: str) -> dict | None:
+    """Bypasses the password check for the configured admin account, given a matching
+    ADMIN_KEY secret. Requires both ADMIN_KEY and ADMIN_USERNAME to be set in secrets;
+    returns None (and does nothing) if either is missing or the key doesn't match."""
+    expected_key = st.secrets.get("ADMIN_KEY", "")
+    admin_username = st.secrets.get("ADMIN_USERNAME", "")
+    if not expected_key or not admin_username or not key:
+        return None
+    if not hmac.compare_digest(key, expected_key):
+        logger.warning("Admin bypass attempted with an incorrect key")
+        return None
+    try:
+        result = get_supabase().table("users").select("*").eq("username", admin_username).execute()
+    except Exception:
+        logger.exception("Admin bypass lookup failed for username=%r", admin_username)
+        return None
+    if not result.data:
+        logger.warning("Admin bypass configured for username=%r but no such user exists", admin_username)
+        return None
+    logger.info("Admin bypass login succeeded for username=%r", admin_username)
+    return result.data[0]
 
 
 def reset_password(user_id: str, new_password: str) -> "str | None":

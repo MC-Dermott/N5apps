@@ -13,6 +13,7 @@ from core.ui.solution_ui import render_solution
 from core.ui.test_ui import render_test
 from core.ui.numeracy_assessment_ui import render_numeracy_assessment
 from core.ui.auth_ui import render_auth, render_change_password
+from core.auth.auth import login_as_admin
 from core.ui.dashboard_ui import render_dashboard
 from core.ui.student_dashboard_ui import render_student_dashboard
 from core.db.tracker import save_practice_attempt
@@ -79,6 +80,16 @@ if st.session_state.get("show_auth"):
     st.stop()
 
 user = st.session_state.get("user")  # None if not logged in
+
+# --- Admin bypass: visiting the app with ?admin_key=<ADMIN_KEY secret> in the URL
+# logs you straight in as the configured admin account, skipping the login form. ---
+if not user:
+    admin_key = st.query_params.get("admin_key")
+    if admin_key:
+        admin_user = login_as_admin(admin_key)
+        if admin_user:
+            st.session_state.user = admin_user
+            user = admin_user
 
 # --- Login gate: block all access until authenticated ---
 if not user:
