@@ -1,4 +1,5 @@
 import time
+from pathlib import Path
 
 import streamlit as st
 import streamlit.components.v1 as components
@@ -10,6 +11,15 @@ from core.ui.solution_ui import render_solution
 from core.db.tracker import save_test_result
 
 _NUM_QUESTIONS = 5
+_GAME_HTML_PATH = Path(__file__).parent / "assets" / "geometry_dash.html"
+_game_html_cache = None
+
+
+def _load_game_html():
+    global _game_html_cache
+    if _game_html_cache is None:
+        _game_html_cache = _GAME_HTML_PATH.read_text(encoding="utf-8")
+    return _game_html_cache
 
 
 def _is_correct(user_input, expected):
@@ -77,36 +87,34 @@ def _render_summary(test):
         st.success("Perfect score! 🎉 You've unlocked a game — enjoy!")
         remaining = max(0, 60 - int(time.time() - test.get("game_unlock_time", time.time())))
         if remaining > 0:
-            components.html(f"""
-                <div id="game-wrap">
-                    <iframe src="https://scratch.mit.edu/projects/971774487/embed"
-                        width="490" height="410" frameborder="0"
-                        scrolling="no" allowfullscreen></iframe>
-                    <p id="timer-text" style="font-family:sans-serif;text-align:center;margin:6px 0 0;">
-                        ⏱ Game available for <span id="secs">{remaining}</span> seconds
-                    </p>
-                </div>
-                <div id="game-over" style="display:none;text-align:center;padding:24px;">
-                    <p style="font-family:sans-serif;color:#666;font-size:1.1em;">
-                        Time's up! Start a new test to keep practising.
-                    </p>
+            timer_block = f"""
+                <div id="n5-timer-text" style="font-family:sans-serif;text-align:center;color:#eaeaea;margin:6px 0 0;">
+                    ⏱ Game available for <span id="n5-secs">{remaining}</span> seconds
                 </div>
                 <script>
-                var s = {remaining};
-                var el = document.getElementById('secs');
-                var wrap = document.getElementById('game-wrap');
-                var over = document.getElementById('game-over');
-                var iv = setInterval(function() {{
-                    s--;
-                    el.textContent = s;
-                    if (s <= 0) {{
-                        clearInterval(iv);
-                        wrap.style.display = 'none';
-                        over.style.display = 'block';
-                    }}
-                }}, 1000);
+                (function() {{
+                    var s = {remaining};
+                    var secsEl = document.getElementById('n5-secs');
+                    var timerText = document.getElementById('n5-timer-text');
+                    var wrap = document.getElementById('wrap');
+                    var overlay = document.createElement('div');
+                    overlay.style.cssText = 'position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(10,10,20,0.92);color:#fff;font-family:sans-serif;font-size:1.1em;text-align:center;z-index:9999;border-radius:8px;padding:20px;';
+                    overlay.textContent = "Time's up! Start a new test to keep practising.";
+                    wrap.appendChild(overlay);
+                    var iv = setInterval(function() {{
+                        s--;
+                        if (secsEl) secsEl.textContent = s;
+                        if (s <= 0) {{
+                            clearInterval(iv);
+                            overlay.style.display = 'flex';
+                            timerText.style.display = 'none';
+                        }}
+                    }}, 1000);
+                }})();
                 </script>
-            """, height=460)
+            </body>"""
+            game_page = _load_game_html().replace("</body>", timer_block)
+            components.html(game_page, height=460, scrolling=False)
         else:
             st.info("Time's up! Start a new test to keep practising.")
     elif score >= 3:
