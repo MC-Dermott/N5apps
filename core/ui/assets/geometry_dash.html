@@ -2307,10 +2307,37 @@
     }
   }
 
+  // Physics (gravity, jump velocity, scroll speed) is written as one fixed
+  // step per callback, tuned for a steady 60Hz. Embedding this in a nested,
+  // sandboxed iframe (e.g. Streamlit's components.html) means callbacks can
+  // land at well under 60/s even though the page never looks "frozen" -
+  // without compensation that reads as the whole game moving in slow motion.
+  // A fixed-timestep accumulator decouples simulated time from paint rate:
+  // however few real callbacks arrive, we run enough update() steps to keep
+  // pace with the actual wall clock, only the visual smoothness suffers.
+  const STEP_MS = 1000 / 60;
+  const MAX_STEPS_PER_CALLBACK = 5; // avoid a spiral of death after a long stall
+  let lastFrameTime = null;
+  let stepAccumulator = 0;
+
   function loop() {
-    update();
-    updateParticles();
-    updateCameos();
+    const now = performance.now();
+    if (lastFrameTime === null) lastFrameTime = now;
+    let elapsed = now - lastFrameTime;
+    lastFrameTime = now;
+    if (elapsed > 250) elapsed = 250; // clamp huge gaps (backgrounded tab, devtools pause, ...)
+    stepAccumulator += elapsed;
+
+    let steps = 0;
+    while (stepAccumulator >= STEP_MS && steps < MAX_STEPS_PER_CALLBACK) {
+      update();
+      updateParticles();
+      updateCameos();
+      stepAccumulator -= STEP_MS;
+      steps++;
+    }
+    if (steps === MAX_STEPS_PER_CALLBACK) stepAccumulator = 0; // drop backlog rather than spiral
+
     drawBackground();
     drawObstacles();
     drawPlayer();
