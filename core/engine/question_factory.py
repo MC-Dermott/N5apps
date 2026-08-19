@@ -1,5 +1,10 @@
 from topics.numeracy.fractions import generate_fraction_question, generate_fraction_question_n4
-from topics.numeracy.percentages import generate_percentage_question, generate_percentage_question_n4
+from topics.numeracy.percentages import (
+    generate_percentage_question,
+    generate_percentage_question_n4,
+    generate_percentage_l1,
+    generate_percentage_l2,
+)
 from topics.numeracy.probability import (
     generate_probability_question as generate_numeracy_probability_question,
     generate_probability_l1 as generate_numeracy_probability_l1,
@@ -144,6 +149,10 @@ TOPIC_REGISTRY = _N5_TOPICS
 
 _N5_LEVELS = {
     "Numeracy": {
+        "Percentages": {
+            "Level 1": generate_percentage_l1,
+            "Level 2": generate_percentage_l2,
+        },
         "Probability": {
             "Level 1": generate_numeracy_probability_l1,
             "Level 2": generate_numeracy_probability_l2,
