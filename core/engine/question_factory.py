@@ -38,6 +38,11 @@ from topics.finance_statistics.loans import generate_loans_question
 from topics.finance_statistics.mortgages import generate_mortgages_question
 from topics.finance_statistics.budgeting import generate_budgeting_question
 from topics.finance_statistics.reverse_percentage import generate_reverse_percentage_question
+from topics.finance_statistics.interest import (
+    generate_interest_question,
+    generate_interest_l1,
+    generate_interest_l2,
+)
 from topics.geometry_measure.pythagoras import generate_pythagoras_question, generate_pythagoras_question_n4
 from topics.geometry_measure.circle_area import generate_circle_area_question, generate_circle_area_question_n4
 from topics.geometry_measure.gradient import generate_gradient_question, generate_gradient_question_n4
@@ -139,6 +144,7 @@ _HIGHER_TOPICS = {
         "Mortgages": generate_mortgages_question,
         "Budgeting": generate_budgeting_question,
         "Reverse Percentages": generate_reverse_percentage_question,
+        "Interest": generate_interest_question,
     },
     "Statistics": {
         "Standard Deviation": generate_standard_deviation_question,
@@ -204,7 +210,14 @@ _N5_LEVELS = {
 
 _N4_LEVELS = {}
 
-_HIGHER_LEVELS = {}
+_HIGHER_LEVELS = {
+    "Finance": {
+        "Interest": {
+            "Level 1": generate_interest_l1,
+            "Level 2": generate_interest_l2,
+        },
+    },
+}
 
 _N5_NUMERACY_LEVELS = {}
 
