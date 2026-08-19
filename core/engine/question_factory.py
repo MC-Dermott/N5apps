@@ -80,6 +80,7 @@ from topics.numeracy_assessment.pie_charts import generate_pie_charts
 _N5_TOPICS = {
     "Numeracy": {
         "Fractions": generate_fraction_question,
+        "Fractions (Exam Style)": generate_fraction_exam_style,
         "Percentages": generate_percentage_question,
         "Probability": generate_numeracy_probability_question,
     },
@@ -123,7 +124,6 @@ _N4_TOPICS = {
 _N5_NUMERACY_TOPICS = {
     "Numbers and Money": {
         "Compound Percentages": generate_compound_percentages,
-        "Fractions": generate_num_fractions,
         "Fractions (Exam Style)": generate_fraction_exam_style,
         "Ratio": generate_ratio,
         "Foreign Currency": generate_foreign_currency,
@@ -172,6 +172,11 @@ _N5_LEVELS = {
             "Subtract Fractions": generate_fraction_subtraction,
             "Improper Fractions": generate_improper_fraction_conversion,
             "Simplify Fractions": generate_fraction_simplification,
+        },
+        "Fractions (Exam Style)": {
+            "Level 1": generate_fraction_exam_l1,
+            "Level 2": generate_fraction_exam_l2,
+            "Level 3": generate_fraction_exam_l3,
         },
         "Percentages": {
             "Level 1": generate_percentage_l1,
