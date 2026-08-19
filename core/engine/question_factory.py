@@ -116,6 +116,7 @@ _N5_NUMERACY_TOPICS = {
     "Numbers and Money": {
         "Compound Percentages": generate_compound_percentages,
         "Fractions": generate_num_fractions,
+        "Fractions (Exam Style)": generate_fraction_exam_style,
         "Ratio": generate_ratio,
         "Foreign Currency": generate_foreign_currency,
         "Liquid Volume": generate_liquid_volume,
@@ -162,7 +163,6 @@ _N5_LEVELS = {
             "Subtract Fractions": generate_fraction_subtraction,
             "Improper Fractions": generate_improper_fraction_conversion,
             "Simplify Fractions": generate_fraction_simplification,
-            "Exam Style": generate_fraction_exam_style,
         },
         "Percentages": {
             "Level 1": generate_percentage_l1,
