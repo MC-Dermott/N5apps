@@ -2,6 +2,10 @@ from topics.numeracy.fractions import (
     generate_fraction_question,
     generate_fraction_question_n4,
     generate_fraction_exam_style,
+    generate_fraction_addition,
+    generate_fraction_subtraction,
+    generate_improper_fraction_conversion,
+    generate_fraction_simplification,
 )
 from topics.numeracy.percentages import (
     generate_percentage_question,
@@ -154,6 +158,10 @@ TOPIC_REGISTRY = _N5_TOPICS
 _N5_LEVELS = {
     "Numeracy": {
         "Fractions": {
+            "Add Fractions": generate_fraction_addition,
+            "Subtract Fractions": generate_fraction_subtraction,
+            "Improper Fractions": generate_improper_fraction_conversion,
+            "Simplify Fractions": generate_fraction_simplification,
             "Exam Style": generate_fraction_exam_style,
         },
         "Percentages": {

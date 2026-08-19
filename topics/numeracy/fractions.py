@@ -407,6 +407,231 @@ def generate_fraction_exam_style():
     ])()
 
 
+# ---------------------------------------------------------------------------
+# Add Fractions
+# ---------------------------------------------------------------------------
+
+ADD_SUB_NOTES = """
+**Adding and Subtracting Fractions:**
+
+1. Find the **lowest common denominator (LCD)** of the fractions
+2. Convert each fraction to an equivalent fraction with the LCD
+3. **Add or subtract** the numerators, keeping the denominator the same
+4. **Simplify** your answer if possible
+
+**Example:** 2/3 + 1/4
+- LCD of 3 and 4 = 12
+- 2/3 = 8/12, 1/4 = 3/12
+- 8/12 + 3/12 = **11/12**
+"""
+
+
+def _sample_addition_fracs(pool, n_terms, max_den=100):
+    fracs = total = None
+    for _ in range(50):
+        fracs = _sample_distinct_denominators(pool, n_terms)
+        total = sum((Fraction(n, d) for n, d in fracs), Fraction(0))
+        if total.denominator > 1 and total.denominator <= max_den:
+            break
+    return fracs, total
+
+
+def generate_fraction_addition():
+    n_terms = random.choices([2, 3], weights=[80, 20])[0]
+    fracs, total = _sample_addition_fracs(_EXAM_FRACTION_POOL, n_terms)
+
+    lcd, equiv_lines, add_line = _lcm_lines(fracs)
+    answer_str = _fstr(total)
+    terms_str = " + ".join(f"{n}/{d}" for n, d in fracs)
+    raw_num = sum(n * (lcd // d) for n, d in fracs)
+
+    question_text = (
+        f"Calculate {terms_str}.\n\n"
+        f"Give your answer as a fraction in its simplest form."
+    )
+
+    scaffold_steps = [
+        {"prompt": f"Find the lowest common denominator of {terms_str}", "answer": float(lcd)},
+        {"prompt": "Add the fractions using equivalent fractions over the common denominator", "answer": answer_str},
+    ]
+
+    worked = list(equiv_lines) + [add_line]
+    if total.denominator != lcd:
+        worked.append(f"Simplify: {raw_num}/{lcd} = {answer_str}")
+
+    return Question(
+        question_text=question_text,
+        correct_answer=answer_str,
+        topic="Numeracy",
+        question_type="Fractions",
+        scaffold_steps=scaffold_steps,
+        worked_solution=worked,
+        notes=ADD_SUB_NOTES,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Subtract Fractions
+# ---------------------------------------------------------------------------
+
+def _subtract_lines(a, b):
+    n1, d1 = a
+    n2, d2 = b
+    lcd = math.lcm(d1, d2)
+    e1 = n1 * (lcd // d1)
+    e2 = n2 * (lcd // d2)
+    equiv_lines = [f"{n1}/{d1} = {e1}/{lcd}", f"{n2}/{d2} = {e2}/{lcd}"]
+    raw_num = e1 - e2
+    sub_line = f"{e1}/{lcd} − {e2}/{lcd} = {raw_num}/{lcd}"
+    result = Fraction(raw_num, lcd)
+    return lcd, equiv_lines, sub_line, raw_num, result
+
+
+def _sample_subtraction_fracs(pool, max_den=100):
+    a = b = result = None
+    lcd = raw_num = None
+    equiv_lines = sub_line = None
+    for _ in range(50):
+        a = random.choice(pool)
+        b = random.choice(pool)
+        if a[1] == b[1] or Fraction(*a) <= Fraction(*b):
+            continue
+        lcd, equiv_lines, sub_line, raw_num, result = _subtract_lines(a, b)
+        if result.denominator > 1 and result.denominator <= max_den:
+            return a, b, lcd, equiv_lines, sub_line, raw_num, result
+    return a, b, lcd, equiv_lines, sub_line, raw_num, result
+
+
+def generate_fraction_subtraction():
+    a, b, lcd, equiv_lines, sub_line, raw_num, result = _sample_subtraction_fracs(_EXAM_FRACTION_POOL)
+    answer_str = _fstr(result)
+
+    question_text = (
+        f"Calculate {a[0]}/{a[1]} − {b[0]}/{b[1]}.\n\n"
+        f"Give your answer as a fraction in its simplest form."
+    )
+
+    scaffold_steps = [
+        {"prompt": f"Find the lowest common denominator of {a[0]}/{a[1]} and {b[0]}/{b[1]}", "answer": float(lcd)},
+        {"prompt": "Subtract the fractions using equivalent fractions over the common denominator", "answer": answer_str},
+    ]
+
+    worked = list(equiv_lines) + [sub_line]
+    if result.denominator != lcd:
+        worked.append(f"Simplify: {raw_num}/{lcd} = {answer_str}")
+
+    return Question(
+        question_text=question_text,
+        correct_answer=answer_str,
+        topic="Numeracy",
+        question_type="Fractions",
+        scaffold_steps=scaffold_steps,
+        worked_solution=worked,
+        notes=ADD_SUB_NOTES,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Improper Fractions — convert a whole number to an improper fraction
+# ---------------------------------------------------------------------------
+
+IMPROPER_NOTES = """
+**Converting a Whole Number to an Improper Fraction:**
+
+Multiply the whole number by the denominator you want to use — that gives the numerator.
+
+**Example:** Write 4 as an improper fraction with a denominator of 5.
+- 4 × 5 = 20
+- 4 = **20/5**
+"""
+
+_IMPROPER_DENOMINATORS = [2, 3, 4, 5, 6, 7, 8, 9, 10, 12]
+
+
+def generate_improper_fraction_conversion():
+    denominator = random.choice(_IMPROPER_DENOMINATORS)
+    whole = random.randint(2, 9)
+    numerator = whole * denominator
+
+    question_text = f"Write {whole} as an improper fraction with a denominator of {denominator}."
+
+    scaffold_steps = [
+        {
+            "prompt": f"Multiply the whole number by the denominator ({whole} × {denominator})",
+            "answer": float(numerator),
+        },
+    ]
+
+    worked = [
+        f"{whole} = {whole}/1",
+        f"Multiply top and bottom by {denominator}: {whole}/1 = {numerator}/{denominator}",
+    ]
+
+    return Question(
+        question_text=question_text,
+        correct_answer=f"{numerator}/{denominator}",
+        topic="Numeracy",
+        question_type="Fractions",
+        scaffold_steps=scaffold_steps,
+        worked_solution=worked,
+        notes=IMPROPER_NOTES,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Simplify Fractions
+# ---------------------------------------------------------------------------
+
+SIMPLIFY_NOTES = """
+**Simplifying Fractions:**
+
+1. Find the **highest common factor (HCF)** of the numerator and denominator
+2. **Divide** both the numerator and denominator by the HCF
+
+**Example:** Simplify 18/24.
+- HCF of 18 and 24 = 6
+- 18 ÷ 6 = 3, 24 ÷ 6 = 4
+- 18/24 = **3/4**
+"""
+
+_IMPROPER_COPRIME_PAIRS = [
+    (3, 2), (5, 3), (5, 4), (7, 3), (7, 4), (7, 5), (8, 3), (9, 4), (9, 5), (11, 6),
+]
+
+_SIMPLIFY_BASE_PAIRS = _EXAM_FRACTION_POOL + _IMPROPER_COPRIME_PAIRS
+
+
+def generate_fraction_simplification():
+    reduced_n, reduced_d = random.choice(_SIMPLIFY_BASE_PAIRS)
+    factor = random.randint(2, 9)
+    n, d = reduced_n * factor, reduced_d * factor
+    hcf = math.gcd(n, d)
+    answer_str = f"{reduced_n}/{reduced_d}"
+
+    question_text = f"Simplify {n}/{d} to its simplest form."
+
+    scaffold_steps = [
+        {"prompt": f"Find the highest common factor of {n} and {d}", "answer": float(hcf)},
+        {"prompt": "Divide both the numerator and denominator by the highest common factor", "answer": answer_str},
+    ]
+
+    worked = [
+        f"HCF of {n} and {d} = {hcf}",
+        f"{n} ÷ {hcf} = {reduced_n}, {d} ÷ {hcf} = {reduced_d}",
+        f"{n}/{d} = {answer_str}",
+    ]
+
+    return Question(
+        question_text=question_text,
+        correct_answer=answer_str,
+        topic="Numeracy",
+        question_type="Fractions",
+        scaffold_steps=scaffold_steps,
+        worked_solution=worked,
+        notes=SIMPLIFY_NOTES,
+    )
+
+
 def generate_fraction_question():
     numerator, denominator = random.choice(FRACTION_PAIRS)
     multiplier = random.randint(3, 15)
