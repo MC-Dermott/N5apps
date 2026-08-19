@@ -2,6 +2,9 @@ from topics.numeracy.fractions import (
     generate_fraction_question,
     generate_fraction_question_n4,
     generate_fraction_exam_style,
+    generate_fraction_exam_l1,
+    generate_fraction_exam_l2,
+    generate_fraction_exam_l3,
     generate_fraction_addition,
     generate_fraction_subtraction,
     generate_improper_fraction_conversion,
@@ -219,7 +222,15 @@ _HIGHER_LEVELS = {
     },
 }
 
-_N5_NUMERACY_LEVELS = {}
+_N5_NUMERACY_LEVELS = {
+    "Numbers and Money": {
+        "Fractions (Exam Style)": {
+            "Level 1": generate_fraction_exam_l1,
+            "Level 2": generate_fraction_exam_l2,
+            "Level 3": generate_fraction_exam_l3,
+        },
+    },
+}
 
 _QUAL_LEVELS = {
     "National 4": _N4_LEVELS,

@@ -90,10 +90,6 @@ _EXAM_FRACTION_POOL = [
     (1, 12), (5, 12), (7, 12), (11, 12),
 ]
 
-_EXAM_LARGE_FRACTION_POOL = [
-    (1, 2), (2, 3), (3, 4), (3, 5), (4, 5), (5, 6), (5, 8), (7, 8), (7, 10), (9, 10),
-]
-
 
 def _fstr(frac):
     return f"{frac.numerator}/{frac.denominator}"
@@ -109,7 +105,7 @@ def _sample_distinct_denominators(pool, n):
 
 def _pick_valid_combo(pool, n_terms, whole, max_den=100):
     fracs = total = remainder = None
-    for _ in range(50):
+    for _ in range(400):
         fracs = _sample_distinct_denominators(pool, n_terms)
         total = sum((Fraction(n, d) for n, d in fracs), Fraction(0))
         remainder = Fraction(whole) - total
@@ -151,22 +147,23 @@ _OCCASIONS = [
     "a bake sale", "a picnic", "a celebration",
 ]
 
-_ORDINALS = ["first", "second", "third"]
-_NUMBER_WORDS = {2: "two", 3: "three"}
+_NUMBER_WORDS = {1: "one", 2: "two", 3: "three"}
 
 
-def _cake_leftover_question():
-    n_terms = random.choices([2, 3], weights=[70, 30])[0]
+def _cake_leftover_question(n_terms, whole):
     ctx = random.choice(_ITEM_CONTEXTS)
     name = random.choice(_EXAM_NAMES)
     occasion = random.choice(_OCCASIONS)
     groups = random.sample(_ITEM_GROUPS, n_terms)
-    fracs, total, remainder = _pick_valid_combo(_EXAM_LARGE_FRACTION_POOL, n_terms, n_terms)
+    fracs, total, remainder = _pick_valid_combo(_EXAM_FRACTION_POOL, n_terms, whole)
 
-    lines = [f"{name} bought {_NUMBER_WORDS[n_terms]} identical {ctx['plural']} for {occasion}."]
-    for i, (grp, (num, den)) in enumerate(zip(groups, fracs)):
-        lines.append(f"{grp.capitalize()} ate {num}/{den} of the {_ORDINALS[i]} {ctx['item']}.")
-    lines.append(f"Calculate the **total** amount of {ctx['item']} left over.")
+    lines = [f"{name} bought {_NUMBER_WORDS[whole]} identical {ctx['plural']} for {occasion}."]
+    for grp, (num, den) in zip(groups, fracs):
+        lines.append(f"{grp.capitalize()} ate {num}/{den} of a {ctx['item']}.")
+    lines.append(
+        f"Calculate the **total** amount of {ctx['item']} left over "
+        f"from the {_NUMBER_WORDS[whole]} {ctx['plural']}."
+    )
     lines.append(f"Give your answer as a fraction of a {ctx['item']}.")
     question_text = "\n\n".join(lines)
 
@@ -178,13 +175,13 @@ def _cake_leftover_question():
     scaffold_steps = [
         {"prompt": f"Find the lowest common denominator of {eaten_list_str}", "answer": float(lcd)},
         {"prompt": "Add the fractions eaten, using equivalent fractions over the common denominator", "answer": eaten_str},
-        {"prompt": f"Subtract the total eaten from {n_terms} to find the amount left over", "answer": answer_str},
+        {"prompt": f"Subtract the total eaten from {whole} to find the amount left over", "answer": answer_str},
     ]
 
     worked = equiv_lines + [
         add_line,
         f"Total eaten = {eaten_str}",
-        f"Amount left over = {n_terms} − {eaten_str} = {answer_str}",
+        f"Amount left over = {whole} − {eaten_str} = {answer_str}",
     ]
 
     return Question(
@@ -209,8 +206,7 @@ _INGREDIENTS = [
 ]
 
 
-def _recipe_mix_question():
-    n_terms = random.choices([2, 3], weights=[70, 30])[0]
+def _recipe_mix_question(n_terms):
     dish = random.choice(_DISHES)
     ingredients = random.sample(_INGREDIENTS, n_terms + 1)
     given_ingredients = ingredients[:n_terms]
@@ -258,8 +254,7 @@ _ROLES = [
 ]
 
 
-def _election_votes_question():
-    n_terms = random.choices([2, 3], weights=[75, 25])[0]
+def _election_votes_question(n_terms):
     role = random.choice(_ROLES)
     candidates = random.sample(_EXAM_NAMES, n_terms + 1)
     given_candidates = candidates[:n_terms]
@@ -306,8 +301,7 @@ _CROPS = [
 ]
 
 
-def _field_crops_question():
-    n_terms = random.choices([2, 3], weights=[70, 30])[0]
+def _field_crops_question(n_terms):
     crops = random.sample(_CROPS, n_terms + 1)
     given_crops = crops[:n_terms]
     remainder_crop = crops[n_terms]
@@ -354,8 +348,7 @@ _ACTIVITIES = [
 ]
 
 
-def _daily_routine_question():
-    n_terms = random.choices([2, 3], weights=[70, 30])[0]
+def _daily_routine_question(n_terms):
     name = random.choice(_EXAM_NAMES)
     activities = random.sample(_ACTIVITIES, n_terms + 1)
     given_activities = activities[:n_terms]
@@ -397,13 +390,40 @@ def _daily_routine_question():
     )
 
 
+_PARTS_OF_WHOLE_FNS = [
+    _recipe_mix_question,
+    _election_votes_question,
+    _field_crops_question,
+    _daily_routine_question,
+]
+
+
+def generate_fraction_exam_l1():
+    """Add 2 fractions, subtract from 1."""
+    fn = random.choice(_PARTS_OF_WHOLE_FNS)
+    return fn(2)
+
+
+def generate_fraction_exam_l2():
+    """Add 2 fractions, subtract from 2 or 3."""
+    whole = random.choice([2, 3])
+    return _cake_leftover_question(2, whole)
+
+
+def generate_fraction_exam_l3():
+    """Add 3 fractions, subtract from 1, 2 or 3."""
+    whole = random.choice([1, 2, 3])
+    if whole == 1:
+        fn = random.choice(_PARTS_OF_WHOLE_FNS)
+        return fn(3)
+    return _cake_leftover_question(3, whole)
+
+
 def generate_fraction_exam_style():
     return random.choice([
-        _cake_leftover_question,
-        _recipe_mix_question,
-        _election_votes_question,
-        _field_crops_question,
-        _daily_routine_question,
+        generate_fraction_exam_l1,
+        generate_fraction_exam_l2,
+        generate_fraction_exam_l3,
     ])()
 
 
