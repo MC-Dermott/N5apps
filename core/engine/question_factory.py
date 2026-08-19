@@ -1,4 +1,8 @@
-from topics.numeracy.fractions import generate_fraction_question, generate_fraction_question_n4
+from topics.numeracy.fractions import (
+    generate_fraction_question,
+    generate_fraction_question_n4,
+    generate_fraction_exam_style,
+)
 from topics.numeracy.percentages import (
     generate_percentage_question,
     generate_percentage_question_n4,
@@ -149,6 +153,9 @@ TOPIC_REGISTRY = _N5_TOPICS
 
 _N5_LEVELS = {
     "Numeracy": {
+        "Fractions": {
+            "Exam Style": generate_fraction_exam_style,
+        },
         "Percentages": {
             "Level 1": generate_percentage_l1,
             "Level 2": generate_percentage_l2,
