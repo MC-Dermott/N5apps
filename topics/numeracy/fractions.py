@@ -526,51 +526,60 @@ def generate_fraction_addition():
 # Subtract Fractions
 # ---------------------------------------------------------------------------
 
-def _subtract_lines(a, b):
-    n1, d1 = a
-    n2, d2 = b
-    lcd = math.lcm(d1, d2)
-    e1 = n1 * (lcd // d1)
-    e2 = n2 * (lcd // d2)
-    equiv_lines = [f"{n1}/{d1} = {e1}/{lcd}", f"{n2}/{d2} = {e2}/{lcd}"]
-    raw_num = e1 - e2
-    sub_line = f"{e1}/{lcd} − {e2}/{lcd} = {raw_num}/{lcd}"
-    result = Fraction(raw_num, lcd)
-    return lcd, equiv_lines, sub_line, raw_num, result
+SUBTRACT_NOTES = """
+**Subtracting Fractions (Cross-Multiply Method):**
 
+To subtract two fractions with different denominators:
 
-def _sample_subtraction_fracs(pool, max_den=100):
-    a = b = result = None
-    lcd = raw_num = None
-    equiv_lines = sub_line = None
-    for _ in range(50):
-        a = random.choice(pool)
-        b = random.choice(pool)
-        if a[1] == b[1] or Fraction(*a) <= Fraction(*b):
-            continue
-        lcd, equiv_lines, sub_line, raw_num, result = _subtract_lines(a, b)
-        if result.denominator > 1 and result.denominator <= max_den:
-            return a, b, lcd, equiv_lines, sub_line, raw_num, result
-    return a, b, lcd, equiv_lines, sub_line, raw_num, result
+1. Multiply the **first fraction** by the second fraction's denominator (top and bottom)
+2. Multiply the **second fraction** by the first fraction's denominator (top and bottom)
+3. **Subtract** the two new fractions — they now share a denominator
+4. **Simplify** your answer if possible
+
+**Example:** 3/4 − 1/3
+- 3/4 × 3/3 = 9/12
+- 1/3 × 4/4 = 4/12
+- 9/12 − 4/12 = **5/12**
+"""
 
 
 def generate_fraction_subtraction():
-    a, b, lcd, equiv_lines, sub_line, raw_num, result = _sample_subtraction_fracs(_EXAM_FRACTION_POOL)
+    pool = _EXAM_FRACTION_POOL
+    n1 = d1 = n2 = d2 = None
+    for _ in range(400):
+        a, b = random.sample(pool, 2)
+        if a[1] == b[1] or Fraction(*a) <= Fraction(*b):
+            continue
+        n1, d1 = a
+        n2, d2 = b
+        p = d1 * d2
+        new_num1 = n1 * d2
+        new_num2 = n2 * d1
+        raw_num = new_num1 - new_num2
+        result = Fraction(raw_num, p)
+        if result.numerator > 0 and result.denominator > 1 and result.denominator <= 100:
+            break
+
     answer_str = _fstr(result)
 
     question_text = (
-        f"Calculate {a[0]}/{a[1]} − {b[0]}/{b[1]}.\n\n"
+        f"Calculate {n1}/{d1} − {n2}/{d2}.\n\n"
         f"Give your answer as a fraction in its simplest form."
     )
 
     scaffold_steps = [
-        {"prompt": f"Find the lowest common denominator of {a[0]}/{a[1]} and {b[0]}/{b[1]}", "answer": float(lcd)},
-        {"prompt": "Subtract the fractions using equivalent fractions over the common denominator", "answer": answer_str},
+        {"prompt": f"Multiply {n1}/{d1} by {d2}/{d2} to get an equivalent fraction", "answer": f"{new_num1}/{p}"},
+        {"prompt": f"Multiply {n2}/{d2} by {d1}/{d1} to get an equivalent fraction", "answer": f"{new_num2}/{p}"},
+        {"prompt": "Subtract the two new fractions", "answer": answer_str},
     ]
 
-    worked = list(equiv_lines) + [sub_line]
-    if result.denominator != lcd:
-        worked.append(f"Simplify: {raw_num}/{lcd} = {answer_str}")
+    worked = [
+        f"{n1}/{d1} × {d2}/{d2} = {new_num1}/{p}",
+        f"{n2}/{d2} × {d1}/{d1} = {new_num2}/{p}",
+        f"{new_num1}/{p} − {new_num2}/{p} = {raw_num}/{p}",
+    ]
+    if result.denominator != p:
+        worked.append(f"Simplify: {raw_num}/{p} = {answer_str}")
 
     return Question(
         question_text=question_text,
@@ -579,7 +588,7 @@ def generate_fraction_subtraction():
         question_type="Fractions",
         scaffold_steps=scaffold_steps,
         worked_solution=worked,
-        notes=ADD_SUB_NOTES,
+        notes=SUBTRACT_NOTES,
     )
 
 
