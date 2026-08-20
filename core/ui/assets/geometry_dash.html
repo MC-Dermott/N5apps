@@ -221,6 +221,8 @@
 (function() {
   const canvas = document.getElementById('game');
   const ctx = canvas.getContext('2d');
+  let n5Stopped = false;
+  window.n5StopGame = function() { n5Stopped = true; };
   const hudScore = document.getElementById('hudScore');
   const hudLevel = document.getElementById('hudLevel');
   const bestEl = document.getElementById('best');
@@ -830,7 +832,7 @@
   }
 
   function jump() {
-    if (state === 'menu') return;
+    if (n5Stopped || state === 'menu') return;
     ensureAudio();
     if (state === 'dead' || state === 'complete') { retryLevel(); return; }
     if (state === 'ready') {
@@ -2321,6 +2323,7 @@
   let stepAccumulator = 0;
 
   function loop() {
+    if (n5Stopped) return;
     const now = performance.now();
     if (lastFrameTime === null) lastFrameTime = now;
     let elapsed = now - lastFrameTime;

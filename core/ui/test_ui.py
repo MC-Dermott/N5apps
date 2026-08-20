@@ -97,16 +97,16 @@ def _render_summary(test):
                     var secsEl = document.getElementById('n5-secs');
                     var timerText = document.getElementById('n5-timer-text');
                     var wrap = document.getElementById('wrap');
-                    var overlay = document.createElement('div');
-                    overlay.style.cssText = 'position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(10,10,20,0.92);color:#fff;font-family:sans-serif;font-size:1.1em;text-align:center;z-index:9999;border-radius:8px;padding:20px;';
-                    overlay.textContent = "Time's up! Start a new test to keep practising.";
-                    wrap.appendChild(overlay);
                     var iv = setInterval(function() {{
                         s--;
                         if (secsEl) secsEl.textContent = s;
                         if (s <= 0) {{
                             clearInterval(iv);
-                            overlay.style.display = 'flex';
+                            if (window.n5StopGame) window.n5StopGame();
+                            wrap.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;' +
+                                'min-height:380px;background:rgba(10,10,20,0.97);color:#fff;font-family:sans-serif;' +
+                                'font-size:1.1em;text-align:center;border-radius:8px;padding:20px;">' +
+                                "Time's up! Pick another set of questions to play again." + '</div>';
                             timerText.style.display = 'none';
                         }}
                     }}, 1000);
