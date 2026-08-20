@@ -7,6 +7,7 @@ from topics.numeracy.fractions import (
     generate_fraction_exam_l3,
     generate_fraction_addition,
     generate_fraction_subtraction,
+    generate_fraction_three,
     generate_improper_fraction_conversion,
     generate_fraction_simplification,
 )
@@ -81,6 +82,7 @@ _N5_TOPICS = {
     "Numeracy": {
         "Fractions": generate_fraction_question,
         "Fractions (Exam Style)": generate_fraction_exam_style,
+        "3 Fractions": generate_fraction_three,
         "Percentages": generate_percentage_question,
         "Probability": generate_numeracy_probability_question,
     },

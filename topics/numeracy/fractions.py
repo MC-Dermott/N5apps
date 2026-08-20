@@ -456,28 +456,60 @@ def _sample_addition_fracs(pool, n_terms, max_den=100):
     return fracs, total
 
 
-def generate_fraction_addition():
-    n_terms = random.choices([2, 3], weights=[80, 20])[0]
-    fracs, total = _sample_addition_fracs(_EXAM_FRACTION_POOL, n_terms)
+ADD_NOTES = """
+**Adding Fractions (Cross-Multiply Method):**
 
-    lcd, equiv_lines, add_line = _lcm_lines(fracs)
+To add two fractions with different denominators:
+
+1. Multiply the **first fraction** by the second fraction's denominator (top and bottom)
+2. Multiply the **second fraction** by the first fraction's denominator (top and bottom)
+3. **Add** the two new fractions together — they now share a denominator
+4. **Simplify** your answer if possible
+
+**Example:** 2/3 + 1/4
+- 2/3 × 4/4 = 8/12
+- 1/4 × 3/3 = 3/12
+- 8/12 + 3/12 = **11/12**
+"""
+
+
+def generate_fraction_addition():
+    pool = _EXAM_FRACTION_POOL
+    n1 = d1 = n2 = d2 = None
+    for _ in range(400):
+        a, b = random.sample(pool, 2)
+        if a[1] == b[1]:
+            continue
+        n1, d1 = a
+        n2, d2 = b
+        p = d1 * d2
+        new_num1 = n1 * d2
+        new_num2 = n2 * d1
+        raw_num = new_num1 + new_num2
+        total = Fraction(raw_num, p)
+        if total.denominator > 1 and total.denominator <= 100:
+            break
+
     answer_str = _fstr(total)
-    terms_str = " + ".join(f"{n}/{d}" for n, d in fracs)
-    raw_num = sum(n * (lcd // d) for n, d in fracs)
 
     question_text = (
-        f"Calculate {terms_str}.\n\n"
+        f"Calculate {n1}/{d1} + {n2}/{d2}.\n\n"
         f"Give your answer as a fraction in its simplest form."
     )
 
     scaffold_steps = [
-        {"prompt": f"Find the lowest common denominator of {terms_str}", "answer": float(lcd)},
-        {"prompt": "Add the fractions using equivalent fractions over the common denominator", "answer": answer_str},
+        {"prompt": f"Multiply {n1}/{d1} by {d2}/{d2} to get an equivalent fraction", "answer": f"{new_num1}/{p}"},
+        {"prompt": f"Multiply {n2}/{d2} by {d1}/{d1} to get an equivalent fraction", "answer": f"{new_num2}/{p}"},
+        {"prompt": "Add the two new fractions together", "answer": answer_str},
     ]
 
-    worked = list(equiv_lines) + [add_line]
-    if total.denominator != lcd:
-        worked.append(f"Simplify: {raw_num}/{lcd} = {answer_str}")
+    worked = [
+        f"{n1}/{d1} × {d2}/{d2} = {new_num1}/{p}",
+        f"{n2}/{d2} × {d1}/{d1} = {new_num2}/{p}",
+        f"{new_num1}/{p} + {new_num2}/{p} = {raw_num}/{p}",
+    ]
+    if total.denominator != p:
+        worked.append(f"Simplify: {raw_num}/{p} = {answer_str}")
 
     return Question(
         question_text=question_text,
@@ -486,7 +518,7 @@ def generate_fraction_addition():
         question_type="Fractions",
         scaffold_steps=scaffold_steps,
         worked_solution=worked,
-        notes=ADD_SUB_NOTES,
+        notes=ADD_NOTES,
     )
 
 
@@ -549,6 +581,113 @@ def generate_fraction_subtraction():
         worked_solution=worked,
         notes=ADD_SUB_NOTES,
     )
+
+
+# ---------------------------------------------------------------------------
+# 3 Fractions — adding or subtracting three fractions
+# ---------------------------------------------------------------------------
+
+def _three_subtract_lines(fracs):
+    a, b, c = fracs
+    dens = [d for _, d in fracs]
+    lcd = math.lcm(*dens)
+    ea = a[0] * (lcd // a[1])
+    eb = b[0] * (lcd // b[1])
+    ec = c[0] * (lcd // c[1])
+    equiv_lines = [
+        f"{a[0]}/{a[1]} = {ea}/{lcd}",
+        f"{b[0]}/{b[1]} = {eb}/{lcd}",
+        f"{c[0]}/{c[1]} = {ec}/{lcd}",
+    ]
+    raw_num = ea - eb - ec
+    combine_line = f"{ea}/{lcd} − {eb}/{lcd} − {ec}/{lcd} = {raw_num}/{lcd}"
+    return lcd, equiv_lines, combine_line, raw_num
+
+
+def _sample_three_subtraction_fracs(pool, max_den=100):
+    a = b = c = None
+    lcd = equiv_lines = combine_line = raw_num = None
+    for _ in range(400):
+        a, b, c = random.sample(pool, 3)
+        if len({a[1], b[1], c[1]}) < 3:
+            continue
+        lcd, equiv_lines, combine_line, raw_num = _three_subtract_lines([a, b, c])
+        if raw_num <= 0:
+            continue
+        result = Fraction(raw_num, lcd)
+        if result.denominator > 1 and result.denominator <= max_den:
+            return a, b, c, lcd, equiv_lines, combine_line, raw_num, result
+    result = Fraction(raw_num, lcd)
+    return a, b, c, lcd, equiv_lines, combine_line, raw_num, result
+
+
+def _three_fraction_addition():
+    fracs, total = _sample_addition_fracs(_EXAM_FRACTION_POOL, 3)
+
+    lcd, equiv_lines, add_line = _lcm_lines(fracs)
+    answer_str = _fstr(total)
+    terms_str = " + ".join(f"{n}/{d}" for n, d in fracs)
+    raw_num = sum(n * (lcd // d) for n, d in fracs)
+
+    question_text = (
+        f"Calculate {terms_str}.\n\n"
+        f"Give your answer as a fraction in its simplest form."
+    )
+
+    scaffold_steps = [
+        {"prompt": f"Find the lowest common denominator of {terms_str}", "answer": float(lcd)},
+        {"prompt": "Add the fractions using equivalent fractions over the common denominator", "answer": answer_str},
+    ]
+
+    worked = list(equiv_lines) + [add_line]
+    if total.denominator != lcd:
+        worked.append(f"Simplify: {raw_num}/{lcd} = {answer_str}")
+
+    return Question(
+        question_text=question_text,
+        correct_answer=answer_str,
+        topic="Numeracy",
+        question_type="3 Fractions",
+        scaffold_steps=scaffold_steps,
+        worked_solution=worked,
+        notes=ADD_SUB_NOTES,
+    )
+
+
+def _three_fraction_subtraction():
+    a, b, c, lcd, equiv_lines, combine_line, raw_num, result = _sample_three_subtraction_fracs(_EXAM_FRACTION_POOL)
+    answer_str = _fstr(result)
+
+    question_text = (
+        f"Calculate {a[0]}/{a[1]} − {b[0]}/{b[1]} − {c[0]}/{c[1]}.\n\n"
+        f"Give your answer as a fraction in its simplest form."
+    )
+
+    scaffold_steps = [
+        {
+            "prompt": f"Find the lowest common denominator of {a[0]}/{a[1]}, {b[0]}/{b[1]} and {c[0]}/{c[1]}",
+            "answer": float(lcd),
+        },
+        {"prompt": "Subtract the fractions using equivalent fractions over the common denominator", "answer": answer_str},
+    ]
+
+    worked = list(equiv_lines) + [combine_line]
+    if result.denominator != lcd:
+        worked.append(f"Simplify: {raw_num}/{lcd} = {answer_str}")
+
+    return Question(
+        question_text=question_text,
+        correct_answer=answer_str,
+        topic="Numeracy",
+        question_type="3 Fractions",
+        scaffold_steps=scaffold_steps,
+        worked_solution=worked,
+        notes=ADD_SUB_NOTES,
+    )
+
+
+def generate_fraction_three():
+    return random.choice([_three_fraction_addition, _three_fraction_subtraction])()
 
 
 # ---------------------------------------------------------------------------
