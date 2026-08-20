@@ -1,4 +1,5 @@
 import calendar
+import math
 import random
 from core.models.question_model import Question
 
@@ -22,6 +23,24 @@ different date ranges, and rates may be quoted **per month** or **per year**.
 
 If more than one deposit is made, grow **each deposit separately** from its
 own deposit date to the final date, then **add the grown amounts together**.
+"""
+
+MIN_DEPOSIT_NOTES = """
+**Finding the Minimum Deposit for a Savings Goal:**
+
+This is the reverse of growing a deposit forward: instead of growing a known
+deposit to find the balance, you're given the **target balance** and need to
+find the **deposit** that would grow to it.
+
+1. Calculate the **growth multiplier** — what £1 would grow to over the
+   period, using the effective interest rate(s) that apply
+2. **Divide** the savings goal by this multiplier
+3. **Round UP** to the nearest penny — rounding down would leave the goal
+   just short
+
+**Example:** £1 grows to £1.0532 over the period. Savings goal is £6000.
+- Minimum deposit = £6000 ÷ 1.0532 = £5699.9367...
+- Round UP to the nearest penny = **£5699.94**
 """
 
 _NAMES = ["Alex", "Jamie", "Sam", "Jordan", "Casey", "Morgan", "Riley", "Taylor"]
@@ -284,5 +303,67 @@ def generate_interest_l2():
     )
 
 
+# ---------------------------------------------------------------------------
+# Level 3 — minimum deposit required to reach a savings goal
+# ---------------------------------------------------------------------------
+
+def generate_interest_l3():
+    name = random.choice(_NAMES)
+    start_year, start_month, start_mi = _random_start()
+    offsets = _random_period_offsets()
+    periods, rows = _build_rate_periods(start_mi, offsets)
+    table_md = _rate_table_md(rows)
+
+    open_offset = offsets[-1]
+    target_offset = open_offset + random.randint(12, 36)
+
+    oy, om = _mi_to_ym(start_mi + open_offset)
+    open_str = _date_str(oy, om)
+    ty, tm = _mi_to_ym(start_mi + target_offset)
+    target_str = _date_str(ty, tm)
+
+    goal = random.choice(range(2000, 15001, 500))
+
+    multiplier, lines, _ = _grow_amount_with_steps(1, open_offset, target_offset, periods)
+    exact_deposit = goal / multiplier
+    min_deposit = math.ceil(exact_deposit * 100 - 1e-9) / 100
+
+    question_text = (
+        f"{name} opened a savings account on {open_str}.\n\n"
+        f"The effective rates of interest for the savings account are as follows:\n\n"
+        f"{table_md}\n\n"
+        f"{name} has a savings goal of £{goal:,} by {target_str}.\n\n"
+        f"Calculate the minimum deposit {name} should have made on {open_str} "
+        f"to achieve this savings goal."
+    )
+
+    scaffold_steps = [
+        {
+            "prompt": f"Calculate the growth multiplier for £1 held from {open_str} to {target_str}",
+            "answer": round(multiplier, 4),
+        },
+        {
+            "prompt": "Divide the savings goal by this multiplier, then round UP to the nearest penny",
+            "answer": min_deposit,
+        },
+    ]
+
+    worked = lines + [
+        f"£1 grows to £{_fmt_money(multiplier)} by {target_str}",
+        f"£{goal:,} ÷ {_fmt_money(multiplier)} = £{_fmt_money(exact_deposit)}",
+        f"Minimum deposit (rounded up to the nearest penny) = £{_fmt_money(min_deposit)}",
+    ]
+
+    return Question(
+        question_text=question_text,
+        correct_answer=min_deposit,
+        topic="Finance",
+        question_type="Interest",
+        scaffold_steps=scaffold_steps,
+        worked_solution=worked,
+        notes=MIN_DEPOSIT_NOTES,
+    )
+
+
 def generate_interest_question():
-    return random.choice([generate_interest_l1, generate_interest_l2])()
+    return random.choice([generate_interest_l1, generate_interest_l2, generate_interest_l3])()
