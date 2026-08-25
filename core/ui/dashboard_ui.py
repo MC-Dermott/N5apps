@@ -13,6 +13,45 @@ def _fetch_all():
     return users, attempts, tests
 
 
+def _last_session_summary(ua, ut):
+    """Summarise all activity (practice + tests) on the student's most recent active date."""
+    events = [
+        {"time": pd.to_datetime(a["attempted_at"]), "type": "attempt", "question_type": a["question_type"]}
+        for a in ua
+    ] + [
+        {"time": pd.to_datetime(t["taken_at"]), "type": "test", "question_type": t["question_type"],
+         "score": t["score"], "total": t["total"]}
+        for t in ut
+    ]
+    if not events:
+        return None
+
+    events.sort(key=lambda e: e["time"], reverse=True)
+    last_date = events[0]["time"].date()
+    session = [e for e in events if e["time"].date() == last_date]
+
+    question_types = []
+    for e in session:
+        if e["question_type"] not in question_types:
+            question_types.append(e["question_type"])
+
+    test_events = [e for e in session if e["type"] == "test"]
+    if test_events:
+        score = sum(e["score"] for e in test_events)
+        total = sum(e["total"] for e in test_events)
+        test_success = f"{score}/{total} ({score / total * 100:.0f}%)"
+    else:
+        test_success = "—"
+
+    return {
+        "last_active": session[0]["time"],
+        "question_types": ", ".join(question_types),
+        "attempts": sum(1 for e in session if e["type"] == "attempt"),
+        "tests": len(test_events),
+        "test_success": test_success,
+    }
+
+
 def render_dashboard():
     st.header("Teacher Dashboard")
 
@@ -55,8 +94,9 @@ def render_dashboard():
 
     st.divider()
 
-    # --- Summary table ---
+    # --- Summary table: most recent session per student ---
     st.subheader("Student Overview")
+    st.caption("Summary of each student's activity on the last date they used the app.")
 
     show_class_col = selected_class == "All classes" and bool(class_codes)
     rows = []
@@ -64,22 +104,27 @@ def render_dashboard():
         uid = u["id"]
         ua = [a for a in attempts if a["user_id"] == uid]
         ut = [t for t in tests if t["user_id"] == uid]
-        n = len(ua)
-        correct = sum(1 for a in ua if a["correct"])
-        accuracy = f"{correct / n * 100:.0f}%" if n else "—"
-        avg_score = (
-            f"{sum(t['score'] for t in ut) / sum(t['total'] for t in ut) * 100:.0f}%"
-            if ut else "—"
-        )
+        summary = _last_session_summary(ua, ut)
+
         row = {"Student": u["username"]}
         if show_class_col:
             row["Class"] = u.get("class_code") or "—"
-        row.update({
-            "Practice attempts": n,
-            "Accuracy": accuracy,
-            "Tests taken": len(ut),
-            "Avg test score": avg_score,
-        })
+        if summary:
+            row.update({
+                "Last active": summary["last_active"].strftime("%d %b %Y %H:%M"),
+                "Question types covered": summary["question_types"],
+                "Practice attempts": summary["attempts"],
+                "Tests taken": summary["tests"],
+                "Test success": summary["test_success"],
+            })
+        else:
+            row.update({
+                "Last active": "—",
+                "Question types covered": "—",
+                "Practice attempts": 0,
+                "Tests taken": 0,
+                "Test success": "—",
+            })
         rows.append(row)
 
     st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
