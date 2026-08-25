@@ -10,6 +10,11 @@ NOTES = """
 
 **Tip:** Add up all expenses first, then subtract from income.
 If the result is positive → surplus. If negative → deficit.
+
+**Example:** Income = £1,800. Expenses: Rent £650, Food £250, Transport £100, Phone £30.
+- Total expenditure = £650 + £250 + £100 + £30 = £1,030
+- Income − Expenditure = £1,800 − £1,030 = £770
+- Result is positive → **surplus of £770**
 """
 
 _NAMES = ["Alex", "Jamie", "Sam", "Jordan", "Casey", "Morgan", "Riley", "Taylor"]

@@ -11,6 +11,9 @@ In a right-angled triangle: **a² + b² = c²**  (where **c** is the hypotenuse)
 - **Finding a shorter side:** a = √(c² − b²)
 
 **Common Pythagorean triples:** 3-4-5 · 5-12-13 · 8-15-17
+
+**Example:** A right-angled triangle has shorter sides 6 and 8. Find the hypotenuse.
+- c = √(6² + 8²) = √(36 + 64) = √100 = **10**
 """
 
 TRIPLES = [
@@ -94,6 +97,10 @@ at right angles to the base, you need two steps:
 **Finding a shorter side:** a = √(c² − b²)
 
 **Finding the longest side:** c = √(a² + b²)
+
+**Example:** Triangle ABD has AD = 5, AB = 13. Triangle BDC has DC = 8.
+- Height BD = √(13² − 5²) = √(169 − 25) = √144 = 12
+- AC = √(12² + 8²) = √(144 + 64) = √208 ≈ **14.4**
 """
 
 # (AD, BD, AB, DC, AC) — exact Pythagorean triples in both sub-triangles
@@ -287,6 +294,10 @@ In each right-angled triangle:
 - The **height** is the other shorter side
 
 Use Pythagoras: **height² = sloping side² − half base²**
+
+**Example:** An isosceles triangle has base 10 and sloping sides of 13.
+- Half base = 10 ÷ 2 = 5
+- Height = √(13² − 5²) = √(169 − 25) = √144 = **12**
 """
 
 # (h, half_base, s) — height, half-base, sloping side; all exact Pythagorean triples

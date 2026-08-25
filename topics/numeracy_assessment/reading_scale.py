@@ -20,6 +20,11 @@ Blood pressure is measured as two numbers:
 **Note:** If *either* reading is in the High zone, the overall category is High.
 
 Type your answer as: **low** / **ideal** / **pre-high** / **high**
+
+**Example:** A reading of Systolic = 110, Diastolic = 70.
+- Systolic 110 falls in the Ideal range (90–120)
+- Diastolic 70 falls in the Ideal range (60–80)
+- Overall category: **ideal**
 """
 
 # Each zone: name, systolic range (lo, hi), diastolic range (lo, hi)

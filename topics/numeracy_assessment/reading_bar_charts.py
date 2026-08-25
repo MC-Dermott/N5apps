@@ -10,6 +10,9 @@ NOTES = """
 - When bars fall between grid lines, **estimate** to the nearest value shown
 
 *Tip: Label each bar value as you read it, then add them up.*
+
+**Example:** A chart shows Boys' bars of 8, 12, 6, 10 and 4 across five categories.
+- Total for Boys = 8 + 12 + 6 + 10 + 4 = **40**
 """
 
 _SCENARIOS = [

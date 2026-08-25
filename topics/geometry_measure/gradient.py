@@ -14,6 +14,10 @@ Gradient measures how steep a slope is.
 **Useful conversions:**
 - 1 m = 100 cm → divide cm by 100 to get m
 - 1 km = 1000 m → multiply km by 1000 to get m
+
+**Example:** A ramp rises 30 cm over a horizontal distance of 6 m.
+- Convert: 30 cm = 0.3 m
+- Gradient = 0.3 ÷ 6 = **0.05**
 """
 
 # ---------------------------------------------------------------------------

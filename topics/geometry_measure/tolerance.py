@@ -162,6 +162,11 @@ Convert the tolerance to the same unit as the measurements before calculating mi
 **Finding the fraction:**
 Count how many measurements fall within [minimum, maximum], then write as a fraction:
   fraction = (number within range) ÷ (total measurements)
+
+**Example:** A bolt has a target length of 50 mm with a tolerance of ± 2 mm.
+- Minimum = 50 − 2 = 48 mm
+- Maximum = 50 + 2 = 52 mm
+A bolt measuring 51 mm is **within tolerance** (48 ≤ 51 ≤ 52).
 """
 
 

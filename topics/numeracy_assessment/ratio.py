@@ -16,6 +16,12 @@ If quantity ratio A:B:C = 1:4:6 and total = 4000:
 - Counts: A = 1 × share, B = 4 × share, C = 6 × share
 
 **Total revenue** = (Count A × Price A) + (Count B × Price B) + (Count C × Price C)
+
+**Example:** Price ratio A:B:C = 5:2:1, with C = £6.
+- Unit = £6 ÷ 1 = £6, so A = £30, B = £12, C = £6
+Quantity ratio A:B:C = 1:4:6, total sold = 4,400.
+- Each share = 4,400 ÷ 11 = 400, so A = 400, B = 1,600, C = 2,400
+- Revenue = (400 × £30) + (1,600 × £12) + (2,400 × £6) = £12,000 + £19,200 + £14,400 = **£45,600**
 """
 
 _EVENTS = [

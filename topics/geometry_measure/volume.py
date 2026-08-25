@@ -11,6 +11,9 @@ SPHERE_NOTES = """
 - If you are given the diameter: r = diameter ÷ 2
 
 Give your answer to 2 decimal places.
+
+**Example:** A sphere has radius 6 cm.
+- V = (4/3) × π × 6³ = (4/3) × π × 216 ≈ **904.78 cm³**
 """
 
 CONE_NOTES = """
@@ -23,6 +26,9 @@ CONE_NOTES = """
 - If you are given the diameter: r = diameter ÷ 2
 
 Give your answer to 2 decimal places.
+
+**Example:** A cone has radius 4 cm and height 9 cm.
+- V = (1/3) × π × 4² × 9 = (1/3) × π × 144 ≈ **150.80 cm³**
 """
 
 CYLINDER_NOTES = """
@@ -35,6 +41,9 @@ CYLINDER_NOTES = """
 - If you are given the diameter: r = diameter ÷ 2
 
 Give your answer to 2 decimal places.
+
+**Example:** A cylinder has radius 5 cm and height 10 cm.
+- V = π × 5² × 10 = π × 250 ≈ **785.40 cm³**
 """
 
 # ---------------------------------------------------------------------------

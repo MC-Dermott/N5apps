@@ -20,6 +20,14 @@ Any hours worked **above** the contracted hours are **overtime**.
 **Level 2 — Net Pay:**
 
 Net pay = Gross pay − Income Tax − National Insurance − Pension
+
+**Example (Level 1):** Contracted 35 hours at £12.00/hour, time and a half overtime.
+Worked 38 hours in total.
+- Basic pay = £12.00 × 35 = £420.00
+- Overtime hours = 38 − 35 = 3
+- Overtime rate = £12.00 × 1.5 = £18.00
+- Overtime pay = £18.00 × 3 = £54.00
+- Gross pay = £420.00 + £54.00 = **£474.00**
 """
 
 _NAMES = [

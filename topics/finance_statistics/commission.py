@@ -11,6 +11,12 @@ Commission is often only paid on sales **above** a threshold amount.
 1. Excess sales = total sales − threshold
 2. Commission = commission rate % × excess sales
 3. **Gross pay = basic salary + commission**
+
+**Example:** Basic salary £1,500, plus 5% commission on sales over £10,000.
+Sales this month = £14,000.
+- Excess sales = £14,000 − £10,000 = £4,000
+- Commission = 5% × £4,000 = £200
+- Gross pay = £1,500 + £200 = **£1,700**
 """
 
 _NAMES = [

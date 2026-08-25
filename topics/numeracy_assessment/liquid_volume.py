@@ -15,6 +15,12 @@ Key conversions:
 2. Add the empty bottle weight → total weight per full bottle
 3. Multiply by bottles per tray, then by number of trays → total weight (g)
 4. Convert to kg (÷ 1000) and compare to van capacity
+
+**Example:** 250 ml bottles, each empty bottle weighs 20 g, packed 24 per tray, 10 trays ordered.
+- Weight per full bottle = 250 g + 20 g = 270 g
+- Total bottles = 24 × 10 = 240
+- Total weight = 240 × 270 g = 64,800 g = 64.8 kg
+- 64.8 kg ≤ 1000 kg → **Yes**, it can be delivered in one van load.
 """
 
 _PRODUCTS = [

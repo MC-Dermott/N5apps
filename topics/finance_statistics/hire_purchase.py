@@ -23,6 +23,11 @@ Rearrangements:
 - Final installment = total HP price − deposit − (monthly installment × number of months)
 
 HP always costs **more** than the cash price.
+
+**Example (Level 1):** A laptop costs £800 cash. Deposit = 20% of £800 = £160,
+then 24 monthly installments. Total HP price = £1,040.
+- Amount remaining = £1,040 − £160 = £880
+- Monthly installment = £880 ÷ 24 = **£36.67**
 """
 
 # Items with realistic cash price ranges (multiples of 20 keep deposit % as whole £)

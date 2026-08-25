@@ -14,6 +14,10 @@ NOTES = """
 **Highest value:** scan both sides for the largest number.
 
 **Comparing means:** state both means and describe whether the measure increased or decreased.
+
+**Example:** Key: 6 | 3 = 63. Left side (Before Training) for stem 6: 8 5 2 → values 68, 65, 62.
+- Sum = 68 + 65 + 62 = 195
+- Mean = 195 ÷ 3 = **65**
 """
 
 _CONTEXTS = [

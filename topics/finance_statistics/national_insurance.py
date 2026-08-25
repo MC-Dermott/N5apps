@@ -73,6 +73,13 @@ def _make_notes(pt, uel, rate_mid, rate_top, period):
         + ("- Monthly net pay = Annual net pay ÷ 12\n"
            "- Weekly net pay = Annual net pay ÷ 52\n"
            if period == "annual" else "")
+        + (
+            "\n**Example:** Monthly income £5,000. PT = £1,000, UEL = £4,000, "
+            "mid rate 10%, upper rate 2%.\n"
+            "- NI on middle band = 10% × (£4,000 − £1,000) = £300\n"
+            "- NI on upper band = 2% × (£5,000 − £4,000) = £20\n"
+            "- Total NI = £300 + £20 = **£320**\n"
+        )
     )
 
 

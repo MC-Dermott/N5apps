@@ -13,6 +13,11 @@ Each sector's angle is proportional to its count.
 - Count = (sector_angle ÷ 360) × Total
 
 **Shortcut:** Count_B = known_count × (angle_B ÷ angle_known)
+
+**Example:** A pie chart sector for "Bus" has angle 60° and represents 30 people.
+The "Walk" sector has angle 150°.
+- Total = 30 × (360 ÷ 60) = 30 × 6 = 180
+- Walk count = (150 ÷ 360) × 180 = **75**
 """
 
 # Each scenario has categories with fixed angles (summing to 360),
