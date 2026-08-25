@@ -16,11 +16,24 @@ from topics.numeracy.percentages import (
     generate_percentage_question_n4,
     generate_percentage_l1,
     generate_percentage_l2,
+    generate_percentage_multiplier,
+    generate_percentage_single_change,
 )
 from topics.numeracy.probability import (
     generate_probability_question as generate_numeracy_probability_question,
     generate_probability_l1 as generate_numeracy_probability_l1,
     generate_probability_l2 as generate_numeracy_probability_l2,
+)
+from topics.numeracy.ratio import (
+    generate_ratio_question as generate_numeracy_ratio_question,
+    generate_ratio_l1 as generate_numeracy_ratio_l1,
+    generate_ratio_l2 as generate_numeracy_ratio_l2,
+)
+from topics.numeracy.direct_proportion import (
+    generate_direct_proportion_question,
+    generate_direct_proportion_l1,
+    generate_direct_proportion_l2,
+    generate_direct_proportion_l3,
 )
 from topics.finance_statistics.simple_interest import generate_simple_interest_question, generate_simple_interest_question_n4
 from topics.finance_statistics.appreciation import generate_appreciation_question, generate_appreciation_question_n4
@@ -86,6 +99,8 @@ _N5_TOPICS = {
         "3 Fractions": generate_fraction_three,
         "Percentages": generate_percentage_question,
         "Probability": generate_numeracy_probability_question,
+        "Ratio": generate_numeracy_ratio_question,
+        "Direct Proportion": generate_direct_proportion_question,
     },
     "Finance and Statistics": {
         "Simple Interest": generate_simple_interest_question,
@@ -182,12 +197,23 @@ _N5_LEVELS = {
             "Level 3": generate_fraction_exam_l3,
         },
         "Percentages": {
-            "Level 1": generate_percentage_l1,
-            "Level 2": generate_percentage_l2,
+            "Percentage of an Amount": generate_percentage_l1,
+            "One Percentage of Another": generate_percentage_l2,
+            "Calculating the Multiplier": generate_percentage_multiplier,
+            "Calculating Single Changes": generate_percentage_single_change,
         },
         "Probability": {
             "Level 1": generate_numeracy_probability_l1,
             "Level 2": generate_numeracy_probability_l2,
+        },
+        "Ratio": {
+            "Level 1": generate_numeracy_ratio_l1,
+            "Level 2": generate_numeracy_ratio_l2,
+        },
+        "Direct Proportion": {
+            "Level 1": generate_direct_proportion_l1,
+            "Level 2": generate_direct_proportion_l2,
+            "Level 3": generate_direct_proportion_l3,
         },
     },
     "Finance and Statistics": {
