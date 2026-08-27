@@ -18,6 +18,9 @@ from topics.numeracy.percentages import (
     generate_percentage_l2,
     generate_percentage_multiplier,
     generate_percentage_single_change,
+    generate_percentage_appreciation,
+    generate_percentage_depreciation,
+    generate_percentage_mixed_changes,
 )
 from topics.numeracy.probability import (
     generate_probability_question as generate_numeracy_probability_question,
@@ -201,6 +204,9 @@ _N5_LEVELS = {
             "One Percentage of Another": generate_percentage_l2,
             "Calculating the Multiplier": generate_percentage_multiplier,
             "Calculating Single Changes": generate_percentage_single_change,
+            "Appreciation": generate_percentage_appreciation,
+            "Depreciation": generate_percentage_depreciation,
+            "Mixed Changes": generate_percentage_mixed_changes,
         },
         "Probability": {
             "Level 1": generate_numeracy_probability_l1,

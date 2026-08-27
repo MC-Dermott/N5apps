@@ -54,6 +54,52 @@ NOTES_SINGLE_CHANGE = """
 - New price = £650 × 0.80 = **£520**
 """
 
+NOTES_APPRECIATION = """
+**Appreciation — Multiplier Method:**
+
+When a value appreciates (increases) by r% each year, the multiplier is:
+
+**Multiplier = (100 + r) ÷ 100**
+
+Apply the multiplier once for every year to find the value after several years.
+
+**Example:** A vintage guitar worth £800 appreciates by 10% per year.
+Find its value after 2 years.
+- Multiplier = (100 + 10) ÷ 100 = 110 ÷ 100 = 1.10
+- After year 1: £800 × 1.10 = £880.00
+- After year 2: £880.00 × 1.10 = **£968.00**
+"""
+
+NOTES_DEPRECIATION = """
+**Depreciation — Multiplier Method:**
+
+When a value depreciates (decreases) by r% each year, the multiplier is:
+
+**Multiplier = (100 − r) ÷ 100**
+
+Apply the multiplier once for every year to find the value after several years.
+
+**Example:** A car worth £12,000 depreciates by 15% per year.
+Find its value after 2 years.
+- Multiplier = (100 − 15) ÷ 100 = 85 ÷ 100 = 0.85
+- After year 1: £12,000 × 0.85 = £10,200.00
+- After year 2: £10,200.00 × 0.85 = **£8,670.00**
+"""
+
+NOTES_MIXED_CHANGES = """
+**Mixed Percentage Changes — Multiplier Method:**
+
+When an amount undergoes two different percentage changes, work out and apply a
+multiplier for each change in turn.
+
+- Increase of r%: multiplier = (100 + r) ÷ 100
+- Decrease of r%: multiplier = (100 − r) ÷ 100
+
+**Example:** A jacket costs £60. It is increased by 20%, then reduced by 10% in a sale.
+- First multiplier = (100 + 20) ÷ 100 = 120 ÷ 100 = 1.20 → £60 × 1.20 = £72.00
+- Second multiplier = (100 − 10) ÷ 100 = 90 ÷ 100 = 0.90 → £72.00 × 0.90 = **£64.80**
+"""
+
 _NAMES = [
     "Amy", "Callum", "Catriona", "Connor", "Douglas", "Eilidh",
     "Ewan", "Freya", "Hamish", "Isla", "Jamie", "Kirsty",
@@ -562,6 +608,191 @@ def generate_percentage_single_change():
 
 
 # ---------------------------------------------------------------------------
+# Appreciation
+# ---------------------------------------------------------------------------
+
+_APPRECIATION_CONTEXTS = [
+    {"item": "A vintage guitar", "noun": "value", "range": (300, 3000, 50)},
+    {"item": "A rare painting", "noun": "value", "range": (2000, 50000, 500)},
+    {"item": "A classic car", "noun": "value", "range": (5000, 40000, 500)},
+    {"item": "A plot of land", "noun": "value", "range": (20000, 150000, 1000)},
+    {"item": "An antique clock", "noun": "value", "range": (200, 5000, 100)},
+    {"item": "A coin collection", "noun": "value", "range": (500, 8000, 100)},
+    {"item": "A house", "noun": "value", "range": (80000, 300000, 1000)},
+]
+
+
+def generate_percentage_appreciation():
+    ctx = random.choice(_APPRECIATION_CONTEXTS)
+    lo, hi, step = ctx["range"]
+    initial = random.choice(range(lo, hi + 1, step))
+    rate = random.randint(2, 20)
+    years = random.choice([2, 3])
+    multiplier = round((100 + rate) / 100, 2)
+
+    values = [initial]
+    for _ in range(years):
+        values.append(round(values[-1] * multiplier, 2))
+    answer = values[-1]
+
+    question_text = (
+        f"{ctx['item']} is currently worth £{initial:,}.\n\n"
+        f"It appreciates in value by {rate}% per year.\n\n"
+        f"Calculate its {ctx['noun']} after {years} years."
+    )
+
+    scaffold_steps = [
+        {"prompt": f"Write the multiplier for a {rate}% increase: (100 + {rate}) ÷ 100",
+         "answer": multiplier},
+    ]
+    for i in range(1, years + 1):
+        scaffold_steps.append(
+            {"prompt": f"{ctx['noun'].capitalize()} after year {i} (previous {ctx['noun']} × multiplier)",
+             "answer": values[i]}
+        )
+
+    worked = [f"Multiplier = (100 + {rate}) ÷ 100 = {100 + rate} ÷ 100 = {multiplier}"]
+    for i in range(1, years + 1):
+        worked.append(f"After year {i}: £{values[i - 1]:,.2f} × {multiplier} = £{values[i]:,.2f}")
+
+    return Question(
+        question_text=question_text,
+        correct_answer=answer,
+        topic="Numeracy",
+        question_type="Percentages",
+        scaffold_steps=scaffold_steps,
+        worked_solution=worked,
+        notes=NOTES_APPRECIATION,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Depreciation
+# ---------------------------------------------------------------------------
+
+_DEPRECIATION_CONTEXTS = [
+    {"item": "A car", "noun": "value", "range": (5000, 30000, 500)},
+    {"item": "A laptop", "noun": "value", "range": (300, 2000, 50)},
+    {"item": "A tractor", "noun": "value", "range": (10000, 60000, 500)},
+    {"item": "A delivery van", "noun": "value", "range": (5000, 25000, 500)},
+    {"item": "A smartphone", "noun": "value", "range": (200, 1200, 50)},
+    {"item": "A piece of factory machinery", "noun": "value", "range": (10000, 80000, 500)},
+]
+
+
+def generate_percentage_depreciation():
+    ctx = random.choice(_DEPRECIATION_CONTEXTS)
+    lo, hi, step = ctx["range"]
+    initial = random.choice(range(lo, hi + 1, step))
+    rate = random.randint(2, 30)
+    years = random.choice([2, 3])
+    multiplier = round((100 - rate) / 100, 2)
+
+    values = [initial]
+    for _ in range(years):
+        values.append(round(values[-1] * multiplier, 2))
+    answer = values[-1]
+
+    question_text = (
+        f"{ctx['item']} is currently worth £{initial:,}.\n\n"
+        f"It depreciates in value by {rate}% per year.\n\n"
+        f"Calculate its {ctx['noun']} after {years} years."
+    )
+
+    scaffold_steps = [
+        {"prompt": f"Write the multiplier for a {rate}% decrease: (100 − {rate}) ÷ 100",
+         "answer": multiplier},
+    ]
+    for i in range(1, years + 1):
+        scaffold_steps.append(
+            {"prompt": f"{ctx['noun'].capitalize()} after year {i} (previous {ctx['noun']} × multiplier)",
+             "answer": values[i]}
+        )
+
+    worked = [f"Multiplier = (100 − {rate}) ÷ 100 = {100 - rate} ÷ 100 = {multiplier}"]
+    for i in range(1, years + 1):
+        worked.append(f"After year {i}: £{values[i - 1]:,.2f} × {multiplier} = £{values[i]:,.2f}")
+
+    return Question(
+        question_text=question_text,
+        correct_answer=answer,
+        topic="Numeracy",
+        question_type="Percentages",
+        scaffold_steps=scaffold_steps,
+        worked_solution=worked,
+        notes=NOTES_DEPRECIATION,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Mixed Changes — two different percentage changes applied in sequence
+# ---------------------------------------------------------------------------
+
+_MIXED_CONTEXTS = [
+    {"item": "A jacket", "verb_stem": "costs", "noun": "price", "range": (30, 200, 5)},
+    {"item": "A television", "verb_stem": "costs", "noun": "price", "range": (200, 1200, 20)},
+    {"item": "A gym membership", "verb_stem": "costs", "noun": "price", "range": (20, 80, 5)},
+    {"item": "A company's monthly revenue", "verb_stem": "is", "noun": "revenue", "range": (5000, 60000, 500)},
+    {"item": "A holiday package", "verb_stem": "costs", "noun": "price", "range": (300, 3000, 50)},
+]
+
+
+def generate_percentage_mixed_changes():
+    ctx = random.choice(_MIXED_CONTEXTS)
+    lo, hi, step = ctx["range"]
+    initial = random.choice(range(lo, hi + 1, step))
+
+    is_increase_1, is_increase_2 = random.sample([True, False], 2)
+    rate1 = random.randint(2, 30)
+    rate2 = random.randint(2, 30)
+
+    m1 = round((100 + rate1) / 100, 2) if is_increase_1 else round((100 - rate1) / 100, 2)
+    m2 = round((100 + rate2) / 100, 2) if is_increase_2 else round((100 - rate2) / 100, 2)
+
+    after_1 = round(initial * m1, 2)
+    final = round(after_1 * m2, 2)
+
+    verb1 = "increases" if is_increase_1 else "decreases"
+    verb2 = "increases" if is_increase_2 else "decreases"
+    sign1 = "+" if is_increase_1 else "−"
+    sign2 = "+" if is_increase_2 else "−"
+    op1 = 100 + rate1 if is_increase_1 else 100 - rate1
+    op2 = 100 + rate2 if is_increase_2 else 100 - rate2
+
+    question_text = (
+        f"{ctx['item']} {ctx['verb_stem']} £{initial:,}.\n\n"
+        f"It first {verb1} by {rate1}%, then {verb2} by {rate2}%.\n\n"
+        f"Calculate the final {ctx['noun']}."
+    )
+
+    scaffold_steps = [
+        {"prompt": f"Write the multiplier for the {rate1}% {'increase' if is_increase_1 else 'decrease'}: (100 {sign1} {rate1}) ÷ 100",
+         "answer": m1},
+        {"prompt": f"Apply the first multiplier to the original amount", "answer": after_1},
+        {"prompt": f"Write the multiplier for the {rate2}% {'increase' if is_increase_2 else 'decrease'}: (100 {sign2} {rate2}) ÷ 100",
+         "answer": m2},
+        {"prompt": "Apply the second multiplier to find the final amount", "answer": final},
+    ]
+
+    worked = [
+        f"First multiplier = (100 {sign1} {rate1}) ÷ 100 = {op1} ÷ 100 = {m1}",
+        f"After first change: £{initial:,} × {m1} = £{after_1:,.2f}",
+        f"Second multiplier = (100 {sign2} {rate2}) ÷ 100 = {op2} ÷ 100 = {m2}",
+        f"Final {ctx['noun']}: £{after_1:,.2f} × {m2} = £{final:,.2f}",
+    ]
+
+    return Question(
+        question_text=question_text,
+        correct_answer=final,
+        topic="Numeracy",
+        question_type="Percentages",
+        scaffold_steps=scaffold_steps,
+        worked_solution=worked,
+        notes=NOTES_MIXED_CHANGES,
+    )
+
+
+# ---------------------------------------------------------------------------
 # Default dispatcher
 # ---------------------------------------------------------------------------
 
@@ -571,4 +802,7 @@ def generate_percentage_question():
         generate_percentage_l2,
         generate_percentage_multiplier,
         generate_percentage_single_change,
+        generate_percentage_appreciation,
+        generate_percentage_depreciation,
+        generate_percentage_mixed_changes,
     ])()
