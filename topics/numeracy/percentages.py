@@ -641,13 +641,10 @@ def generate_percentage_appreciation():
         f"Calculate its {ctx['noun']} after {years} years."
     )
 
-    scaffold_steps = [
-        {"prompt": f"Write the multiplier for a {rate}% increase: (100 + {rate}) ÷ 100",
-         "answer": multiplier},
-    ]
+    scaffold_steps = []
     for i in range(1, years + 1):
         scaffold_steps.append(
-            {"prompt": f"{ctx['noun'].capitalize()} after year {i} (previous {ctx['noun']} × multiplier)",
+            {"prompt": f"{ctx['noun'].capitalize()} after year {i} (previous {ctx['noun']} × {multiplier})",
              "answer": values[i]}
         )
 
@@ -699,13 +696,10 @@ def generate_percentage_depreciation():
         f"Calculate its {ctx['noun']} after {years} years."
     )
 
-    scaffold_steps = [
-        {"prompt": f"Write the multiplier for a {rate}% decrease: (100 − {rate}) ÷ 100",
-         "answer": multiplier},
-    ]
+    scaffold_steps = []
     for i in range(1, years + 1):
         scaffold_steps.append(
-            {"prompt": f"{ctx['noun'].capitalize()} after year {i} (previous {ctx['noun']} × multiplier)",
+            {"prompt": f"{ctx['noun'].capitalize()} after year {i} (previous {ctx['noun']} × {multiplier})",
              "answer": values[i]}
         )
 
@@ -766,12 +760,8 @@ def generate_percentage_mixed_changes():
     )
 
     scaffold_steps = [
-        {"prompt": f"Write the multiplier for the {rate1}% {'increase' if is_increase_1 else 'decrease'}: (100 {sign1} {rate1}) ÷ 100",
-         "answer": m1},
-        {"prompt": f"Apply the first multiplier to the original amount", "answer": after_1},
-        {"prompt": f"Write the multiplier for the {rate2}% {'increase' if is_increase_2 else 'decrease'}: (100 {sign2} {rate2}) ÷ 100",
-         "answer": m2},
-        {"prompt": "Apply the second multiplier to find the final amount", "answer": final},
+        {"prompt": f"Apply the first multiplier ({m1}) to the original amount", "answer": after_1},
+        {"prompt": f"Apply the second multiplier ({m2}) to find the final amount", "answer": final},
     ]
 
     worked = [
