@@ -38,6 +38,11 @@ from topics.numeracy.direct_proportion import (
     generate_direct_proportion_l2,
     generate_direct_proportion_l3,
 )
+from topics.rounding.rounding import (
+    generate_rounding_decimal_places,
+    generate_rounding_money,
+    generate_rounding_significant_figures,
+)
 from topics.finance_statistics.simple_interest import generate_simple_interest_question, generate_simple_interest_question_n4
 from topics.finance_statistics.appreciation import generate_appreciation_question, generate_appreciation_question_n4
 from topics.finance_statistics.hire_purchase import (
@@ -120,6 +125,11 @@ _N5_TOPICS = {
         "Volume": generate_volume_question,
         "Time Zones": generate_time_zone_question,
         "Tolerance": generate_tolerance_question,
+    },
+    "Rounding": {
+        "Decimal Places": generate_rounding_decimal_places,
+        "Rounding Money": generate_rounding_money,
+        "Significant Figures": generate_rounding_significant_figures,
     },
 }
 
