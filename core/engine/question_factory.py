@@ -1,3 +1,5 @@
+import random
+
 from topics.numeracy.fractions import (
     generate_fraction_question,
     generate_fraction_question_n4,
@@ -28,12 +30,10 @@ from topics.numeracy.probability import (
     generate_probability_l2 as generate_numeracy_probability_l2,
 )
 from topics.numeracy.ratio import (
-    generate_ratio_question as generate_numeracy_ratio_question,
     generate_ratio_l1 as generate_numeracy_ratio_l1,
     generate_ratio_l2 as generate_numeracy_ratio_l2,
 )
 from topics.numeracy.direct_proportion import (
-    generate_direct_proportion_question,
     generate_direct_proportion_l1,
     generate_direct_proportion_l2,
     generate_direct_proportion_l3,
@@ -100,6 +100,16 @@ from topics.numeracy_assessment.stem_and_leaf import generate_stem_and_leaf
 from topics.numeracy_assessment.reading_bar_charts import generate_reading_bar_charts
 from topics.numeracy_assessment.pie_charts import generate_pie_charts
 
+def generate_ratio_and_proportion_question():
+    return random.choice([
+        generate_numeracy_ratio_l1,
+        generate_numeracy_ratio_l2,
+        generate_direct_proportion_l1,
+        generate_direct_proportion_l2,
+        generate_direct_proportion_l3,
+    ])()
+
+
 _N5_TOPICS = {
     "Numeracy": {
         "Fractions": generate_fraction_question,
@@ -107,8 +117,7 @@ _N5_TOPICS = {
         "3 Fractions": generate_fraction_three,
         "Percentages": generate_percentage_question,
         "Probability": generate_numeracy_probability_question,
-        "Ratio": generate_numeracy_ratio_question,
-        "Direct Proportion": generate_direct_proportion_question,
+        "Ratio and Direct Proportion": generate_ratio_and_proportion_question,
     },
     "Finance and Statistics": {
         "Simple Interest": generate_simple_interest_question,
@@ -222,14 +231,12 @@ _N5_LEVELS = {
             "Level 1": generate_numeracy_probability_l1,
             "Level 2": generate_numeracy_probability_l2,
         },
-        "Ratio": {
-            "Level 1": generate_numeracy_ratio_l1,
-            "Level 2": generate_numeracy_ratio_l2,
-        },
-        "Direct Proportion": {
-            "Level 1": generate_direct_proportion_l1,
-            "Level 2": generate_direct_proportion_l2,
-            "Level 3": generate_direct_proportion_l3,
+        "Ratio and Direct Proportion": {
+            "Ratio - Level 1": generate_numeracy_ratio_l1,
+            "Ratio - Level 2": generate_numeracy_ratio_l2,
+            "Direct Proportion - Level 1": generate_direct_proportion_l1,
+            "Direct Proportion - Level 2": generate_direct_proportion_l2,
+            "Direct Proportion - Level 3": generate_direct_proportion_l3,
         },
     },
     "Finance and Statistics": {
