@@ -26,8 +26,15 @@ registry.
      `get_levels()` for the UI's per-level selector).
    - National 4 / Higher / N5-Numeracy variants go in `_N4_TOPICS` / `_HIGHER_TOPICS` /
      `_N5_NUMERACY_TOPICS` the same way.
-3. Sanity-check: `venv/bin/python -c "from core.engine.question_factory import generate_question;
+3. **Stress-test with 100+ random iterations** before committing — check for exceptions,
+   absurd/negative values where they shouldn't occur, and formatting artifacts (e.g. Python's
+   `f"{x:g}"` silently producing `1e+07`-style output). Then sanity-check the registry wiring:
+   `venv/bin/python -c "from core.engine.question_factory import generate_question;
    print(generate_question('<Topic>', '<Question Type>', qualification='National 5'))"`.
+4. Commit and push automatically — don't ask each time — unless the change is risky (a merge of
+   existing question types, anything destructive, anything you're unsure Luke would want pushed
+   unreviewed), in which case stop and flag it. Stage only the files this run touched (never
+   `git add -A`).
 
 `topics/numeracy_assessment/` is a separate product surface (a fixed one-of-each-type "Practice
 Assessment" mode under the `"N5 Numeracy"` qualification key, listed in
@@ -59,11 +66,18 @@ class Question:
   diagram (e.g. pie charts, NI bands table) — check `core/ui/question_ui.py` and
   `core/ui/scaffold_ui.py` for diagram keys already handled before inventing a new one.
 
-## Worksheet/homework library (outside this repo)
+## Worksheet/homework library (outside this repo) — the full pipeline
 
 Worksheets and homework for these topics are filed under
 `/Users/luke/Library/CloudStorage/OneDrive-GlowScotland/Resources/Maths/Apps/<Level> Apps/`, e.g.
-for National 5: `Worksheets/<Topic>/Questions/` + `Worksheets/<Topic>/Solutions/`,
-and `HW/<Topic>/Questions/` + `HW/<Topic>/Solutions/`. The `process-worksheet` personal skill
-(`~/.claude/skills/process-worksheet/SKILL.md`) automates filing a new worksheet, generating a
-matching 45-minute homework, and adding new question types here in one pass.
+for National 5: `Worksheets/<Unit>/Questions/` + `Worksheets/<Unit>/Solutions/`, and
+`HW/<Unit>/Questions/` + `HW/<Unit>/Solutions/` (`<Unit>` = `Numeracy`, `Finance and Statistics`,
+`Geometry and Measure`, or `Rounding`; `<Topic>` — e.g. `Ratio` — is the filename stem inside
+that unit's folder).
+
+**The full pipeline** — filing a new worksheet, generating a matching homework, and adding new
+question types here in one pass — is documented at
+`/Users/luke/Library/CloudStorage/OneDrive-GlowScotland/Resources/Maths/Apps/CLAUDE.md` (with a
+per-level pointer file in each `<Level> Apps/` folder), mirroring the equivalent Physics pipeline
+at `Resources/Physics/CLAUDE.md`. Read that file when Luke attaches a worksheet — this file only
+covers this repo's own module contract and registry mechanism.
