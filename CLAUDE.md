@@ -63,8 +63,18 @@ class Question:
 - `worked_solution`: full worked-solution lines shown after submission (complete equations, not
   just the final answer).
 - `metadata["diagram"]` / `metadata["diagram_params"]`: only for questions needing a custom
-  diagram (e.g. pie charts, NI bands table) — check `core/ui/question_ui.py` and
-  `core/ui/scaffold_ui.py` for diagram keys already handled before inventing a new one.
+  diagram or interactive widget (e.g. pie charts, the banded-rate earnings simulator) — check
+  `core/ui/question_ui.py` and `core/ui/scaffold_ui.py` for diagram keys already handled before
+  inventing a new one. `"diagram": "tax_bands"` renders `core/ui/tax_bands_widget.py`'s
+  interactive simulator (income slider, live tax/take-home/effective-rate readout) inside the
+  scaffold expander — `diagram_params` is `{"bands": [(label, lower, upper_or_None, rate_pct),
+  ...], "max_income": ..., "initial_income": ...}`. Used by National Insurance (National 5) and
+  Income Tax and National Insurance (Higher); reuse it for any other banded-rate topic rather
+  than building a new widget. **When you build any new simulation/widget for a question type,
+  attach it the same way** — parameterise it from the question's own numbers (never hardcode a
+  demo example), dispatch on a new `"diagram"` key in `scaffold_ui.py`, and stress-test that the
+  widget actually builds from every generated question's `diagram_params`, not just that the
+  question itself is valid.
 
 ## Worksheet/homework library (outside this repo) — the full pipeline
 
