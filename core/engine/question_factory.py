@@ -70,6 +70,13 @@ from topics.finance_statistics.interest import (
     generate_interest_l3,
 )
 from topics.finance_statistics.savings_schedule import generate_savings_schedule_question
+from topics.finance_statistics.income_tax_ni import (
+    generate_tax_ni_question,
+    generate_gross_annual_pay,
+    generate_income_tax,
+    generate_higher_ni,
+    generate_net_monthly_income,
+)
 from topics.geometry_measure.pythagoras import generate_pythagoras_question, generate_pythagoras_question_n4
 from topics.geometry_measure.circle_area import generate_circle_area_question, generate_circle_area_question_n4
 from topics.geometry_measure.gradient import generate_gradient_question, generate_gradient_question_n4
@@ -190,6 +197,7 @@ _HIGHER_TOPICS = {
         "Reverse Percentages": generate_reverse_percentage_question,
         "Interest": generate_interest_question,
         "Savings Schedule": generate_savings_schedule_question,
+        "Income Tax and National Insurance": generate_tax_ni_question,
     },
     "Statistics": {
         "Standard Deviation": generate_standard_deviation_question,
@@ -278,6 +286,12 @@ _HIGHER_LEVELS = {
             "Level 1": generate_interest_l1,
             "Level 2": generate_interest_l2,
             "Level 3": generate_interest_l3,
+        },
+        "Income Tax and National Insurance": {
+            "Gross Annual Pay": generate_gross_annual_pay,
+            "Income Tax": generate_income_tax,
+            "National Insurance": generate_higher_ni,
+            "Net Monthly Income": generate_net_monthly_income,
         },
     },
 }

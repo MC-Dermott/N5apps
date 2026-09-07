@@ -84,8 +84,19 @@ def _make_notes(pt, uel, rate_mid, rate_top, period):
 
 
 def _diagram_params(income, pt, uel, rate_mid, rate_top):
-    return {"income": income, "pt": pt, "uel": uel,
-            "rate_mid": rate_mid, "rate_top": rate_top}
+    bands = [
+        ("0%", 0, pt, 0),
+        (f"{rate_mid}%", pt, uel, rate_mid),
+        (f"{rate_top}%", uel, None, rate_top),
+    ]
+    return {
+        "diagram": "tax_bands",
+        "diagram_params": {
+            "bands": bands,
+            "max_income": max(income * 1.12, uel * 1.35),
+            "initial_income": income,
+        },
+    }
 
 
 def _gen_l1_income(period, pt, uel):
@@ -153,8 +164,7 @@ def generate_ni_l1():
         notes=_make_notes(pt, uel, rate_mid, rate_top, period),
         metadata={
             "table": _make_table_md(pt, uel, rate_mid, rate_top, period),
-            "diagram": "ni_bands",
-            "diagram_params": _diagram_params(income, pt, uel, rate_mid, rate_top),
+            **_diagram_params(income, pt, uel, rate_mid, rate_top),
         },
     )
 
@@ -208,8 +218,7 @@ def generate_ni_l2():
         notes=_make_notes(pt, uel, rate_mid, rate_top, period),
         metadata={
             "table": _make_table_md(pt, uel, rate_mid, rate_top, period),
-            "diagram": "ni_bands",
-            "diagram_params": _diagram_params(income, pt, uel, rate_mid, rate_top),
+            **_diagram_params(income, pt, uel, rate_mid, rate_top),
         },
     )
 
@@ -378,8 +387,7 @@ def generate_ni_l3():
         notes=_make_notes(pt, uel, rate_mid, rate_top, period),
         metadata={
             "table": _make_table_md(pt, uel, rate_mid, rate_top, period),
-            "diagram": "ni_bands",
-            "diagram_params": _diagram_params(income, pt, uel, rate_mid, rate_top),
+            **_diagram_params(income, pt, uel, rate_mid, rate_top),
         },
     )
 
