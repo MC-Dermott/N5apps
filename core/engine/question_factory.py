@@ -69,6 +69,7 @@ from topics.finance_statistics.interest import (
     generate_interest_l2,
     generate_interest_l3,
 )
+from topics.finance_statistics.savings_schedule import generate_savings_schedule_question
 from topics.geometry_measure.pythagoras import generate_pythagoras_question, generate_pythagoras_question_n4
 from topics.geometry_measure.circle_area import generate_circle_area_question, generate_circle_area_question_n4
 from topics.geometry_measure.gradient import generate_gradient_question, generate_gradient_question_n4
@@ -188,6 +189,7 @@ _HIGHER_TOPICS = {
         "Budgeting": generate_budgeting_question,
         "Reverse Percentages": generate_reverse_percentage_question,
         "Interest": generate_interest_question,
+        "Savings Schedule": generate_savings_schedule_question,
     },
     "Statistics": {
         "Standard Deviation": generate_standard_deviation_question,

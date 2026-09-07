@@ -1,7 +1,10 @@
+import io
+
 import streamlit as st
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import numpy as np
+import openpyxl
 
 
 def _build_duration_str(h, m):
@@ -30,6 +33,43 @@ def _render_duration_input(qid, suffix):
         st.write("")
         st.markdown("mins")
     return _build_duration_str(h, m)
+
+
+def _extract_spreadsheet_answer(uploaded_file, sheet_name, cell_ref):
+    try:
+        wb = openpyxl.load_workbook(io.BytesIO(uploaded_file.getvalue()), data_only=True)
+        return wb[sheet_name][cell_ref].value
+    except Exception:
+        return None
+
+
+def _render_spreadsheet_input(question, suffix):
+    st.download_button(
+        "📥 Download spreadsheet",
+        data=question.metadata["spreadsheet_bytes"],
+        file_name=question.metadata.get("spreadsheet_filename", "question.xlsx"),
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        key=f"dl_{question.qid}_{suffix}",
+    )
+    uploaded = st.file_uploader(
+        "📤 Upload your completed spreadsheet",
+        type=["xlsx"],
+        key=f"up_{question.qid}_{suffix}",
+    )
+    if uploaded is None:
+        return ""
+
+    sheet_name, cell_ref = question.metadata["spreadsheet_answer_cell"]
+    value = _extract_spreadsheet_answer(uploaded, sheet_name, cell_ref)
+    if value is None:
+        st.warning(
+            "Couldn't read a value from that cell — make sure you've saved the file "
+            "(in Excel, Google Sheets, or LibreOffice) before uploading."
+        )
+        return ""
+
+    st.info(f"Detected answer from uploaded file: **{value}**")
+    return str(value)
 
 
 def render_question(question, suffix="default"):
@@ -71,6 +111,8 @@ def render_question(question, suffix="default"):
 
     if question.metadata.get("answer_type") == "duration":
         return _render_duration_input(question.qid, suffix)
+    if question.metadata.get("spreadsheet_bytes"):
+        return _render_spreadsheet_input(question, suffix)
     return st.text_input("Your answer", key=f"ans_{question.qid}_{suffix}")
 
 
