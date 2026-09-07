@@ -222,9 +222,9 @@ if mode == "Practice Assessment":
 
 st.divider()
 
-# --- Topic and question type selection ---
+# --- Unit and topic selection ---
 topic_registry = QUAL_REGISTRY[qualification]
-topic = st.selectbox("Choose Topic", list(topic_registry.keys()))
+topic = st.selectbox("Choose Unit", list(topic_registry.keys()))
 
 if st.session_state.get("last_topic") != topic:
     st.session_state.last_topic = topic
@@ -232,7 +232,7 @@ if st.session_state.get("last_topic") != topic:
     reset_test()
 
 question_types = list(topic_registry[topic].keys())
-question_type = st.selectbox("Choose Question Type", question_types)
+question_type = st.selectbox("Choose Topic", question_types)
 
 if st.session_state.get("last_question_type") != question_type:
     st.session_state.last_question_type = question_type
