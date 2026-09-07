@@ -172,7 +172,12 @@ def _build_workbook(scenario):
     return buf.getvalue(), target_cell
 
 
-def generate_savings_schedule_question():
+def _generate_scenario():
+    """Builds one randomised savings-schedule scenario: the input parameters, the full
+    computed month-by-month schedule, and the question text/scaffold/worked-solution derived
+    from it. Split out from `generate_savings_schedule_question()` so pipeline scripts (e.g.
+    building a multi-question homework spreadsheet) can reuse the same scenario/schedule
+    generation without duplicating the recurrence logic."""
     name = random.choice(_NAMES)
     pronoun, possessive = _PRONOUNS[name]
     item = random.choice(_SCENARIOS)
@@ -204,6 +209,7 @@ def generate_savings_schedule_question():
         "switch_date_last_day": switch_date_last_day,
         "initial_monthly_rate": initial_monthly_rate,
         "annual_rate": annual_rate,
+        "monthly_equiv_rate": monthly_equiv_rate,
         "payment_dates": payment_dates,
     }
 
@@ -213,6 +219,7 @@ def generate_savings_schedule_question():
         f"= (1 + {annual_rate / 100:.4f})^(1/12) − 1 = {monthly_equiv_rate * 100:.4f}% per month",
         f"{_date_str(deposit_date)}: opening deposit = £{_fmt_money(balance)}",
     ]
+    schedule_rows = []
     for pay_date in payment_dates:
         rate = initial_monthly_rate / 100 if pay_date < switch_date else monthly_equiv_rate
         interest = _excel_round(rate * balance, 2)
@@ -222,9 +229,11 @@ def generate_savings_schedule_question():
             f"{_date_str(pay_date)}: £{_fmt_money(balance)} + £{_fmt_money(interest)} interest "
             f"= £{_fmt_money(before)}; + £{payment} payment = £{_fmt_money(after)}"
         )
+        schedule_rows.append((pay_date, before, payment, after))
         balance = after
         target_before = before
 
+    scenario["schedule_rows"] = schedule_rows
     answer = round(target_before, 2)
 
     question_text = (
@@ -251,19 +260,31 @@ def generate_savings_schedule_question():
         },
     ]
 
-    spreadsheet_bytes, target_cell = _build_workbook(scenario)
+    return {
+        "scenario": scenario,
+        "name": name,
+        "question_text": question_text,
+        "scaffold_steps": scaffold_steps,
+        "worked_solution": worked,
+        "answer": answer,
+    }
+
+
+def generate_savings_schedule_question():
+    gen = _generate_scenario()
+    spreadsheet_bytes, target_cell = _build_workbook(gen["scenario"])
 
     return Question(
-        question_text=question_text,
-        correct_answer=answer,
+        question_text=gen["question_text"],
+        correct_answer=gen["answer"],
         topic="Finance",
         question_type="Savings Schedule",
-        scaffold_steps=scaffold_steps,
-        worked_solution=worked,
+        scaffold_steps=gen["scaffold_steps"],
+        worked_solution=gen["worked_solution"],
         notes=NOTES,
         metadata={
             "spreadsheet_bytes": spreadsheet_bytes,
-            "spreadsheet_filename": f"savings_schedule_{name.lower()}.xlsx",
+            "spreadsheet_filename": f"savings_schedule_{gen['name'].lower()}.xlsx",
             "spreadsheet_answer_cell": ("Savings", target_cell),
         },
     )
