@@ -112,6 +112,17 @@ what's left into euros at £1 = €1.15.
 - To euros: £364.70 × 1.15 = **€419.40**
 """
 
+NOTES_L5 = """
+**Calculating the Exchange Rate:**
+
+If you know how much of a foreign currency a given number of pounds converts to, find the rate
+by dividing the foreign amount by the pound amount — this gives the amount of foreign currency
+equivalent to £1.
+
+**Example:** £50 converts to €57.50. Calculate the exchange rate.
+- Rate = €57.50 ÷ £50 = **£1 = €1.15**
+"""
+
 
 # ── Level 1: basic exchange, either direction ────────────────────────────────
 
@@ -315,5 +326,49 @@ def generate_currency_l4():
     )
 
 
+# ── Level 5: calculate the exchange rate itself ─────────────────────────────
+
+def generate_currency_l5():
+    name, symbol, lo, hi, dp, note = _pick_currency()
+    rate = _rate(lo, hi, dp)
+    place = random.choice(_PLACES[symbol])
+    person = random.choice(_NAMES)
+    forward = random.choice([True, False])
+    gbp = random.choice(range(20, 500, 5))
+    foreign = round(gbp * rate, 2) if dp else round(gbp * rate)
+
+    if forward:
+        question_text = (
+            f"{person} changes £{gbp} into {name} before a trip to {place}, and receives "
+            f"{symbol}{_fmt(foreign, dp)}. Calculate the exchange rate, giving your answer in "
+            f"the form £1 = ? {name}."
+        )
+    else:
+        question_text = (
+            f"{person} changes {symbol}{_fmt(foreign, dp)} into pounds at the end of a trip to "
+            f"{place}, and receives £{gbp}. Calculate the exchange rate, giving your answer in "
+            f"the form £1 = ? {name}."
+        )
+
+    scaffold_steps = [
+        {"prompt": f"{symbol}{_fmt(foreign, dp)} ÷ £{gbp}", "answer": rate},
+    ]
+    worked = [
+        f"{symbol}{_fmt(foreign, dp)} ÷ {gbp} = {_fmt(rate, dp)}",
+        f"£1 = {symbol}{_fmt(rate, dp)}",
+    ]
+
+    return Question(
+        question_text=question_text,
+        correct_answer=rate,
+        topic="Numeracy",
+        question_type="Currency Exchange",
+        scaffold_steps=scaffold_steps,
+        worked_solution=worked,
+        notes=NOTES_L5,
+    )
+
+
 def generate_currency_question():
-    return random.choice([generate_currency_l1, generate_currency_l2, generate_currency_l3, generate_currency_l4])()
+    return random.choice([generate_currency_l1, generate_currency_l2, generate_currency_l3,
+                           generate_currency_l4, generate_currency_l5])()
