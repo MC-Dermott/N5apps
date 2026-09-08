@@ -13,6 +13,7 @@ _CURRENCIES = [
     ("US dollars", "$", 1.20, 1.35, 2, 10),
     ("Norwegian kroner", "kr", 12.00, 15.00, 2, 50),
     ("Japanese yen", "¥", 175, 200, 0, 1000),
+    ("Polish złoty", "zł", 4.70, 5.20, 2, 10),
 ]
 
 _PLACES = {
@@ -20,6 +21,7 @@ _PLACES = {
     "$": ["the USA", "Canada", "New York", "Florida"],
     "kr": ["Norway", "Bergen", "Oslo"],
     "¥": ["Japan", "Tokyo", "Kyoto"],
+    "zł": ["Poland", "Warsaw", "Kraków", "Gdańsk"],
 }
 
 _NAMES = [
@@ -39,6 +41,19 @@ def _fmt(val, dp):
 
 def _pick_currency():
     return random.choice(_CURRENCIES)
+
+
+def _pick_two_currencies():
+    return random.sample(_CURRENCIES, 2)
+
+
+def _rate_table_md(rateA, nameA, dpA, rateB, nameB, dpB):
+    return (
+        "| Pounds Sterling (£) | Other Currencies |\n"
+        "|:---|:---|\n"
+        f"| 1 | {_fmt(rateA, dpA)} {nameA} |\n"
+        f"| 1 | {_fmt(rateB, dpB)} {nameB} |\n"
+    )
 
 
 NOTES_L1 = """
@@ -75,6 +90,26 @@ any smaller leftover amount can't be exchanged.
 3. Round **down** to the nearest whole multiple the exchange accepts — the amount lost this way
    is the amount "left over".
 4. Convert the roundable amount back into pounds (÷ rate).
+"""
+
+NOTES_L4 = """
+**Converting Between Two Currencies:**
+
+You can't convert directly between two foreign currencies — exchange rates are always quoted
+against £1. Convert back through pounds as the "middle step":
+
+1. Convert the starting pounds into the first currency (× first rate).
+2. Subtract however much was spent.
+3. Convert what's left back into pounds (÷ first rate).
+4. Convert those pounds into the second currency (× second rate).
+
+**Example:** £640 → zlotys at £1 = 4.94 zł. Lorna spends 340 zł a day for 4 days, then changes
+what's left into euros at £1 = €1.15.
+- £640 × 4.94 = 3161.60 zł
+- Spent = 340 × 4 = 1360 zł
+- Remaining = 3161.60 − 1360 = 1801.60 zł
+- Back to pounds: 1801.60 ÷ 4.94 = £364.70
+- To euros: £364.70 × 1.15 = **€419.40**
 """
 
 
@@ -219,5 +254,66 @@ def generate_currency_l3():
     )
 
 
+# ── Level 4: change, spend, then convert what's left into a THIRD currency ──
+
+def generate_currency_l4():
+    (nameA, symbolA, loA, hiA, dpA, _noteA), (nameB, symbolB, loB, hiB, dpB, _noteB) = _pick_two_currencies()
+    rateA = _rate(loA, hiA, dpA)
+    rateB = _rate(loB, hiB, dpB)
+    place = random.choice(_PLACES[symbolA])
+    person = random.choice(_NAMES)
+    days = random.randint(3, 10)
+
+    for _ in range(50):
+        gbp = random.choice(range(150, 700, 10))
+        foreignA = round(gbp * rateA, 2) if dpA else round(gbp * rateA)
+        spend_frac = random.uniform(0.3, 0.6)
+        daily = round((foreignA * spend_frac) / days, 2) if dpA else round((foreignA * spend_frac) / days)
+        spent = round(daily * days, 2) if dpA else daily * days
+        remainingA = round(foreignA - spent, 2) if dpA else foreignA - spent
+        if remainingA > (10 if dpA else 100):
+            break
+
+    gbp_back = round(remainingA / rateA, 2)
+    foreignB = round(gbp_back * rateB, 2) if dpB else round(gbp_back * rateB)
+
+    question_text = (
+        f"{person} is travelling around Europe.\n\n"
+        f"Use the table above to help you.\n\n"
+        f"{person} converted £{gbp} into {nameA}.\n\n"
+        f"They were in {place} for {days} days.\n\n"
+        f"They spent {symbolA}{_fmt(daily, dpA)} each day they were in {place}.\n\n"
+        f"They converted their remaining {nameA} into {nameB}.\n\n"
+        f"Calculate how many {nameB} they received."
+    )
+
+    scaffold_steps = [
+        {"prompt": f"£{gbp} × {_fmt(rateA, dpA)}", "answer": foreignA},
+        {"prompt": f"Total {nameA} spent ({_fmt(daily, dpA)} × {days})", "answer": spent},
+        {"prompt": f"{nameA} remaining ({_fmt(foreignA, dpA)} − {_fmt(spent, dpA)})", "answer": remainingA},
+        {"prompt": f"Remaining {nameA} converted to £ ({_fmt(remainingA, dpA)} ÷ {_fmt(rateA, dpA)})",
+         "answer": gbp_back},
+        {"prompt": f"£{gbp_back:.2f} × {_fmt(rateB, dpB)}", "answer": foreignB},
+    ]
+    worked = [
+        f"£{gbp} × {_fmt(rateA, dpA)} = {symbolA}{_fmt(foreignA, dpA)}",
+        f"Spent = {_fmt(daily, dpA)} × {days} = {symbolA}{_fmt(spent, dpA)}",
+        f"Remaining = {symbolA}{_fmt(foreignA, dpA)} − {symbolA}{_fmt(spent, dpA)} = {symbolA}{_fmt(remainingA, dpA)}",
+        f"Back to pounds: {symbolA}{_fmt(remainingA, dpA)} ÷ {_fmt(rateA, dpA)} = £{gbp_back:.2f}",
+        f"To {nameB}: £{gbp_back:.2f} × {_fmt(rateB, dpB)} = {symbolB}{_fmt(foreignB, dpB)}",
+    ]
+
+    return Question(
+        question_text=question_text,
+        correct_answer=foreignB,
+        topic="Numeracy",
+        question_type="Currency Exchange",
+        scaffold_steps=scaffold_steps,
+        worked_solution=worked,
+        notes=NOTES_L4,
+        metadata={"table": _rate_table_md(rateA, nameA, dpA, rateB, nameB, dpB)},
+    )
+
+
 def generate_currency_question():
-    return random.choice([generate_currency_l1, generate_currency_l2, generate_currency_l3])()
+    return random.choice([generate_currency_l1, generate_currency_l2, generate_currency_l3, generate_currency_l4])()

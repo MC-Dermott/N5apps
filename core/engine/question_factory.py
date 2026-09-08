@@ -43,6 +43,7 @@ from topics.numeracy.currency_exchange import (
     generate_currency_l1,
     generate_currency_l2,
     generate_currency_l3,
+    generate_currency_l4,
 )
 from topics.rounding.rounding import (
     generate_rounding_decimal_places,
@@ -110,6 +111,7 @@ from topics.numeracy_assessment.foreign_currency import (
     generate_foreign_currency_l1,
     generate_foreign_currency_l2,
     generate_foreign_currency_l3,
+    generate_foreign_currency_l4,
 )
 from topics.numeracy_assessment.time_zones_reading_tables import generate_time_zones_reading_tables
 from topics.numeracy_assessment.reading_scale import generate_reading_scale
@@ -264,6 +266,7 @@ _N5_LEVELS = {
             "Level 1 — Basic Exchange": generate_currency_l1,
             "Level 2 — Changing, Spending, and Changing Back": generate_currency_l2,
             "Level 3 — Exchange with Restrictions": generate_currency_l3,
+            "Level 4 — Converting Between Two Currencies": generate_currency_l4,
         },
     },
     "Finance and Statistics": {
@@ -324,6 +327,7 @@ _N5_NUMERACY_LEVELS = {
             "Level 1 — Basic Exchange": generate_foreign_currency_l1,
             "Level 2 — Changing, Spending, and Changing Back": generate_foreign_currency_l2,
             "Level 3 — Holiday Spending Money": generate_foreign_currency_l3,
+            "Level 4 — Converting Between Two Currencies": generate_foreign_currency_l4,
         },
     },
 }
