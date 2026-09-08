@@ -38,6 +38,12 @@ from topics.numeracy.direct_proportion import (
     generate_direct_proportion_l2,
     generate_direct_proportion_l3,
 )
+from topics.numeracy.currency_exchange import (
+    generate_currency_question,
+    generate_currency_l1,
+    generate_currency_l2,
+    generate_currency_l3,
+)
 from topics.rounding.rounding import (
     generate_rounding_decimal_places,
     generate_rounding_money,
@@ -99,7 +105,12 @@ from topics.statistics.probability import generate_probability_question
 from topics.numeracy_assessment.compound_percentages import generate_compound_percentages
 from topics.numeracy_assessment.fractions import generate_fractions as generate_num_fractions
 from topics.numeracy_assessment.liquid_volume import generate_liquid_volume
-from topics.numeracy_assessment.foreign_currency import generate_foreign_currency
+from topics.numeracy_assessment.foreign_currency import (
+    generate_foreign_currency,
+    generate_foreign_currency_l1,
+    generate_foreign_currency_l2,
+    generate_foreign_currency_l3,
+)
 from topics.numeracy_assessment.time_zones_reading_tables import generate_time_zones_reading_tables
 from topics.numeracy_assessment.reading_scale import generate_reading_scale
 from topics.numeracy_assessment.ratio import generate_ratio
@@ -126,6 +137,7 @@ _N5_TOPICS = {
         "Percentages": generate_percentage_question,
         "Probability": generate_numeracy_probability_question,
         "Ratio and Direct Proportion": generate_ratio_and_proportion_question,
+        "Currency Exchange": generate_currency_question,
     },
     "Finance and Statistics": {
         "Simple Interest": generate_simple_interest_question,
@@ -248,6 +260,11 @@ _N5_LEVELS = {
             "Direct Proportion - Level 2": generate_direct_proportion_l2,
             "Direct Proportion - Level 3": generate_direct_proportion_l3,
         },
+        "Currency Exchange": {
+            "Level 1 — Basic Exchange": generate_currency_l1,
+            "Level 2 — Changing, Spending, and Changing Back": generate_currency_l2,
+            "Level 3 — Exchange with Restrictions": generate_currency_l3,
+        },
     },
     "Finance and Statistics": {
         "Hire Purchase": {
@@ -302,6 +319,11 @@ _N5_NUMERACY_LEVELS = {
             "Level 1": generate_fraction_exam_l1,
             "Level 2": generate_fraction_exam_l2,
             "Level 3": generate_fraction_exam_l3,
+        },
+        "Foreign Currency": {
+            "Level 1 — Basic Exchange": generate_foreign_currency_l1,
+            "Level 2 — Changing, Spending, and Changing Back": generate_foreign_currency_l2,
+            "Level 3 — Holiday Spending Money": generate_foreign_currency_l3,
         },
     },
 }
