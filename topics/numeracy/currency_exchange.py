@@ -340,14 +340,12 @@ def generate_currency_l5():
     if forward:
         question_text = (
             f"{person} changes £{gbp} into {name} before a trip to {place}, and receives "
-            f"{symbol}{_fmt(foreign, dp)}. Calculate the exchange rate, giving your answer in "
-            f"the form £1 = ? {name}."
+            f"{symbol}{_fmt(foreign, dp)}. How many {name} are equivalent to £1?"
         )
     else:
         question_text = (
             f"{person} changes {symbol}{_fmt(foreign, dp)} into pounds at the end of a trip to "
-            f"{place}, and receives £{gbp}. Calculate the exchange rate, giving your answer in "
-            f"the form £1 = ? {name}."
+            f"{place}, and receives £{gbp}. How many {name} are equivalent to £1?"
         )
 
     scaffold_steps = [
