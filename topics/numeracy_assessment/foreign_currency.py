@@ -37,15 +37,29 @@ NOTES_L3 = """
 
 # (currency name, symbol, destinations..., rate_lo, rate_hi, decimal places) — deliberately
 # mixed so a run of questions doesn't cluster on euros.
+# Last field is the smallest common banknote in that currency — Level 3's bank restriction uses
+# it instead of a blanket "nearest 10" regardless of currency: euros/dollars have 10-unit notes,
+# but Norway's smallest note is 50 kroner and Japan's is 1000 yen.
 _CURRENCIES = [
-    ("Euros", "€", ["Spain", "France", "Italy", "Germany", "Portugal"], 1.10, 1.30, 2),
-    ("US Dollars", "$", ["the USA", "Canada", "Florida", "New York"], 1.20, 1.35, 2),
-    ("Norwegian Kroner", "kr", ["Norway", "Bergen", "Oslo"], 12.00, 15.00, 2),
-    ("Japanese Yen", "¥", ["Japan", "Tokyo", "Kyoto"], 175, 200, 0),
+    ("Euros", "€", ["Spain", "France", "Italy", "Germany", "Portugal"], 1.10, 1.30, 2, 10),
+    ("US Dollars", "$", ["the USA", "Canada", "Florida", "New York"], 1.20, 1.35, 2, 10),
+    ("Norwegian Kroner", "kr", ["Norway", "Bergen", "Oslo"], 12.00, 15.00, 2, 50),
+    ("Japanese Yen", "¥", ["Japan", "Tokyo", "Kyoto"], 175, 200, 0, 1000),
 ]
 
 _NAMES = ["Mr Smith", "Mrs Jones", "Ms Brown", "Mr Patel", "Mrs Taylor",
           "Mr Wilson", "Ms Davis", "Mr Miltonio"]
+
+# Level 3 ("holiday spending money") scenario ranges, keyed by symbol — these have to scale
+# with the currency, not just its note size: e.g. "took 600-1200 yen" is meaningless holiday
+# money (about £3-6), so yen amounts need to be roughly 170x the euro-scale ones, matching its
+# exchange rate. (start_lo, start_hi, start_step, daily_lo, daily_hi, daily_step, remain_lo, remain_hi)
+_L3_RANGES = {
+    "€": (600, 1200, 50, 60, 120, 5, 20, 400),
+    "$": (650, 1300, 50, 65, 130, 5, 20, 400),
+    "kr": (7000, 14000, 100, 700, 1400, 50, 100, 2000),
+    "¥": (100_000, 200_000, 2000, 10_000, 20_000, 500, 2000, 40_000),
+}
 
 
 def _rate(lo, hi, dp):
@@ -60,7 +74,7 @@ def _fmt(val, dp):
 # ── Level 1: basic exchange, either direction ────────────────────────────────
 
 def generate_foreign_currency_l1():
-    currency, symbol, destinations, lo, hi, dp = random.choice(_CURRENCIES)
+    currency, symbol, destinations, lo, hi, dp, note = random.choice(_CURRENCIES)
     rate = _rate(lo, hi, dp)
     place = random.choice(destinations)
     person = random.choice(_NAMES)
@@ -101,7 +115,7 @@ def generate_foreign_currency_l1():
 # ── Level 2: change, spend, change back (no restriction) ────────────────────
 
 def generate_foreign_currency_l2():
-    currency, symbol, destinations, lo, hi, dp = random.choice(_CURRENCIES)
+    currency, symbol, destinations, lo, hi, dp, note = random.choice(_CURRENCIES)
     rate = _rate(lo, hi, dp)
     place = random.choice(destinations)
     person = random.choice(_NAMES)
@@ -147,18 +161,18 @@ def generate_foreign_currency_l2():
 # ── Level 3: holiday spending money, restricted round-down ──────────────────
 
 def generate_foreign_currency_l3():
-    currency, symbol, destinations, lo, hi, dp = random.choice(_CURRENCIES)
+    currency, symbol, destinations, lo, hi, dp, multiple = random.choice(_CURRENCIES)
     rate = _rate(lo, hi, dp)
     place = random.choice(destinations)
-    multiple = 10
+    start_lo, start_hi, start_step, daily_lo, daily_hi, daily_step, remain_lo, remain_hi = _L3_RANGES[symbol]
 
-    for _ in range(20):
-        start = random.choice(range(600, 1201, 50))
-        daily = random.choice(range(60, 121, 5))
+    for _ in range(30):
+        start = random.choice(range(start_lo, start_hi + 1, start_step))
+        daily = random.choice(range(daily_lo, daily_hi + 1, daily_step))
         days = random.randint(5, 10)
         spent = daily * days
         remaining = start - spent
-        if 20 <= remaining <= 400:
+        if remain_lo <= remaining <= remain_hi:
             break
 
     rounded = (remaining // multiple) * multiple

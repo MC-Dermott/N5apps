@@ -3,12 +3,16 @@ from core.models.question_model import Question
 
 # Currency pool shared across all three levels — deliberately mixed so a run of questions
 # doesn't default/cluster on euros the way the source worksheet's restricted-exchange section
-# did. (name, symbol, rate_lo, rate_hi, decimal places for a rate/amount in this currency)
+# did. (name, symbol, rate_lo, rate_hi, decimal places for a rate/amount in this currency,
+# smallest common banknote in that currency — used by Level 3's exchange restriction, since a
+# real bureau de change restricts to whole notes of that currency's own denominations, not a
+# blanket "nearest 10" regardless of currency: euros/dollars have 10-unit notes, but Norway's
+# smallest note is 50 kroner and Japan's is 1000 yen).
 _CURRENCIES = [
-    ("euros", "€", 1.10, 1.30, 2),
-    ("US dollars", "$", 1.20, 1.35, 2),
-    ("Norwegian kroner", "kr", 12.00, 15.00, 2),
-    ("Japanese yen", "¥", 175, 200, 0),
+    ("euros", "€", 1.10, 1.30, 2, 10),
+    ("US dollars", "$", 1.20, 1.35, 2, 10),
+    ("Norwegian kroner", "kr", 12.00, 15.00, 2, 50),
+    ("Japanese yen", "¥", 175, 200, 0, 1000),
 ]
 
 _PLACES = {
@@ -77,7 +81,7 @@ any smaller leftover amount can't be exchanged.
 # ── Level 1: basic exchange, either direction ────────────────────────────────
 
 def generate_currency_l1():
-    name, symbol, lo, hi, dp = _pick_currency()
+    name, symbol, lo, hi, dp, note = _pick_currency()
     rate = _rate(lo, hi, dp)
     place = random.choice(_PLACES[symbol])
     person = random.choice(_NAMES)
@@ -118,7 +122,7 @@ def generate_currency_l1():
 # ── Level 2: change, spend, change back ──────────────────────────────────────
 
 def generate_currency_l2():
-    name, symbol, lo, hi, dp = _pick_currency()
+    name, symbol, lo, hi, dp, note = _pick_currency()
     rate = _rate(lo, hi, dp)
     place = random.choice(_PLACES[symbol])
     person = random.choice(_NAMES)
@@ -164,11 +168,10 @@ def generate_currency_l2():
 # ── Level 3: change, spend, change back — restricted to whole notes ─────────
 
 def generate_currency_l3():
-    name, symbol, lo, hi, dp = _pick_currency()
+    name, symbol, lo, hi, dp, note = _pick_currency()
     rate = _rate(lo, hi, dp)
     place = random.choice(_PLACES[symbol])
     person = random.choice(_NAMES)
-    note = 10
 
     for _ in range(50):
         gbp = random.choice(range(100, 600, 10))
