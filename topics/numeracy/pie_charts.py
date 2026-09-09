@@ -23,29 +23,17 @@ Other segment's value = other angle × value per degree
 Total = 360 × value per degree
 """
 
-_WEDGE_BLUE = "#5b9bd5"
-_WEDGE_ORANGE = "#ed7d31"
-_WEDGE_GREEN = "#70ad47"
 _PALETTE = ["#5b9bd5", "#ed7d31", "#70ad47", "#ffc000", "#7030a0", "#c00000", "#4472c4", "#548235"]
 
 
-def _filler_wedges(total_degrees, used_colors):
-    """Split `total_degrees` of "everything else on the chart" into 2-3 distinctly coloured,
-    unlabelled wedges, so the pie reads as a full multi-segment chart rather than one coloured
-    slice against a blank remainder. Purely cosmetic — never affects the maths."""
-    if total_degrees <= 0:
-        return [], []
-    count = min(random.randint(2, 3), max(total_degrees, 1))
-    if count <= 1:
-        pieces = [total_degrees]
-    else:
-        cuts = sorted(random.sample(range(1, total_degrees), count - 1))
-        bounds = [0] + cuts + [total_degrees]
-        pieces = [bounds[i + 1] - bounds[i] for i in range(len(bounds) - 1)]
-    available = [c for c in _PALETTE if c not in used_colors]
-    random.shuffle(available)
-    colors = [available[i % len(available)] for i in range(len(pieces))]
-    return pieces, colors
+def _split_degrees(total, n):
+    """Split `total` degrees into exactly `n` positive-integer pieces (random cut points)."""
+    if n <= 1:
+        return [total]
+    cuts = sorted(random.sample(range(1, total), n - 1))
+    bounds = [0] + cuts + [total]
+    return [bounds[i + 1] - bounds[i] for i in range(len(bounds) - 1)]
+
 
 # ---------------------------------------------------------------------------
 # Level 1 — Fraction from the Angle
@@ -53,30 +41,43 @@ def _filler_wedges(total_degrees, used_colors):
 
 _L1_ANGLES = [24, 30, 36, 40, 45, 60, 72, 90, 120, 135, 144, 150, 160, 180, 200, 210, 225, 240, 270, 300]
 
-_L1_CONTEXTS = [
-    ("A survey of S1 pupils at Sir E Scott School asked how they travel to school", "By minibus"),
-    ("A survey of Tarbert fishermen recorded which species they landed most last week", "Langoustine"),
-    ("A survey of Harris Tweed mill workers asked their favourite pattern", "Herringbone"),
-    ("A survey of Scalpay crofters recorded which animals they keep", "Sheep"),
-    ("A survey of Leverburgh ceilidh-goers asked their favourite dance", "Strip the Willow"),
-    ("A survey of CalMac passengers on the Uig crossing asked how they were travelling", "On foot"),
-    ("A survey of Ness households recorded how they heat their home", "Peat"),
-    ("A survey of Stornoway pupils asked their favourite subject", "Art"),
-    ("A survey of Berneray pupils asked their favourite ceilidh dance", "Eightsome Reel"),
-    ("A survey of Uig crofters recorded their main occupation", "Fishing"),
+_L1_SCENARIOS = [
+    ("A survey of S1 pupils at Sir E Scott School asked how they travel to school",
+     ["By minibus", "By car", "On foot", "By bicycle"]),
+    ("A survey of Tarbert fishermen recorded which species they landed most last week",
+     ["Langoustine", "Crab", "Mackerel", "Other species"]),
+    ("A survey of Harris Tweed mill workers asked their favourite pattern",
+     ["Herringbone", "Houndstooth", "Plain twill", "Check"]),
+    ("A survey of Scalpay crofters recorded which animals they keep",
+     ["Sheep", "Cattle", "Hens", "Goats"]),
+    ("A survey of Leverburgh ceilidh-goers asked their favourite dance",
+     ["Strip the Willow", "Eightsome Reel", "Dashing White Sergeant", "Waltz"]),
+    ("A survey of CalMac passengers on the Uig crossing asked how they were travelling",
+     ["On foot", "By car", "By coach", "By bicycle"]),
+    ("A survey of Ness households recorded how they heat their home",
+     ["Peat", "Oil", "Electric", "Wood"]),
+    ("A survey of Stornoway pupils asked their favourite subject",
+     ["Art", "Maths", "PE", "English"]),
+    ("A survey of Berneray pupils asked their favourite ceilidh dance",
+     ["Eightsome Reel", "Strip the Willow", "Waltz", "Polka"]),
+    ("A survey of Uig crofters recorded their main occupation",
+     ["Fishing", "Crofting", "Weaving", "Tourism"]),
 ]
 
 
 def generate_pie_charts_l1():
+    context, categories = random.choice(_L1_SCENARIOS)
+    category = categories[0]
     angle = random.choice(_L1_ANGLES)
-    context, category = random.choice(_L1_CONTEXTS)
+    other_angles = _split_degrees(360 - angle, len(categories) - 1)
+    colors = random.sample(_PALETTE, len(categories))
+
     g = math.gcd(angle, 360)
     n, d = angle // g, 360 // g
     answer_str = f"{n}/{d}"
 
     question_text = (
         f"{context}. The pie chart above shows the results.\n\n"
-        f"The **{category}** segment has an angle of **{angle}°**.\n\n"
         f"Write the **{category}** segment as a fraction of the whole pie chart, in its "
         f"simplest form."
     )
@@ -86,8 +87,7 @@ def generate_pie_charts_l1():
         f"= {answer_str} (dividing both numbers by {g})",
     ]
 
-    primary_color = random.choice(_PALETTE)
-    filler_pieces, filler_colors = _filler_wedges(360 - angle, used_colors=[primary_color])
+    angles = [angle] + other_angles
 
     return Question(
         question_text=question_text,
@@ -99,11 +99,11 @@ def generate_pie_charts_l1():
         metadata={
             "diagram": "pie_chart",
             "diagram_params": {
-                "categories": [category] + [f"Segment {i + 2}" for i in range(len(filler_pieces))],
-                "angles": [angle] + filler_pieces,
-                "colors": [primary_color] + filler_colors,
-                "wedge_labels": [f"{angle}°"] + [""] * len(filler_pieces),
-                "show_labels": False,
+                "categories": categories,
+                "angles": angles,
+                "colors": colors,
+                "wedge_labels": [f"{a}°" for a in angles],
+                "show_legend": True,
             },
         },
     )
@@ -139,6 +139,7 @@ def generate_pie_charts_l2():
     n, d = missing // g, 360 // g
     fraction_str = f"{n}/{d}"
     cat1, cat2, cat3 = labels
+    colors = random.sample(_PALETTE, 3)
 
     question_text = (
         f"{context}. The pie chart above shows: **{cat1}**: {a1}°, **{cat2}**: {a2}°, "
@@ -170,9 +171,9 @@ def generate_pie_charts_l2():
             "diagram_params": {
                 "categories": [cat1, cat2, cat3],
                 "angles": [a1, a2, missing],
-                "colors": [_WEDGE_BLUE, _WEDGE_ORANGE, _WEDGE_GREEN],
+                "colors": colors,
                 "wedge_labels": [f"{a1}°", f"{a2}°", "?"],
-                "show_labels": False,
+                "show_legend": True,
             },
         },
     )
@@ -184,33 +185,39 @@ def generate_pie_charts_l2():
 
 _L3_SCENARIOS = [
     {
-        "context": "A weekly household budget of £{total} on Scalpay. This segment shows spending on petrol.",
-        "category": "petrol", "unit": "£", "angle": 72,
+        "context": "A weekly household budget of £{total} on Scalpay, split by spending type.",
+        "categories": ["Petrol", "Groceries", "Heating", "Other"],
+        "unit": "£", "angle": 72,
         "totals": [100, 150, 200, 250, 300],
     },
     {
-        "context": "The {total}-minute school day at Sir E Scott School, by activity. This segment shows PE.",
-        "category": "PE", "unit": "minutes", "angle": 60,
+        "context": "The {total}-minute school day at Sir E Scott School, by activity.",
+        "categories": ["PE", "Registration", "Lessons", "Lunch"],
+        "unit": "minutes", "angle": 60,
         "totals": [360, 420, 480, 540, 600],
     },
     {
-        "context": "{total} passengers on a CalMac sailing to Tarbert, by type. This segment shows foot passengers.",
-        "category": "foot passengers", "unit": "people", "angle": 90,
+        "context": "{total} passengers on a CalMac sailing to Tarbert, by type.",
+        "categories": ["Foot passengers", "Car passengers", "Coach passengers", "Freight"],
+        "unit": "people", "angle": 90,
         "totals": [120, 160, 200, 240, 280],
     },
     {
-        "context": "£{total} raised at the Leverburgh hall fundraiser. This segment shows the raffle.",
-        "category": "the raffle", "unit": "£", "angle": 45,
+        "context": "£{total} raised at the Leverburgh hall fundraiser, by activity.",
+        "categories": ["The raffle", "Tombola", "Cake stall", "Entry donations"],
+        "unit": "£", "angle": 45,
         "totals": [160, 240, 320, 400, 480],
     },
     {
-        "context": "{total} people on Harris surveyed about their main occupation. This segment shows crofting.",
-        "category": "crofting", "unit": "people", "angle": 40,
+        "context": "{total} people on Harris surveyed about their main occupation.",
+        "categories": ["Crofting", "Fishing", "Tourism", "Weaving"],
+        "unit": "people", "angle": 40,
         "totals": [90, 180, 270, 360, 450],
     },
     {
-        "context": "A {total}-hour working week for a Scalpay fisherman, by task. This segment shows hauling creels.",
-        "category": "hauling creels", "unit": "hours", "angle": 120,
+        "context": "A {total}-hour working week for a Scalpay fisherman, by task.",
+        "categories": ["Hauling creels", "Sailing", "Mending nets", "Selling the catch"],
+        "unit": "hours", "angle": 120,
         "totals": [36, 45, 54, 63, 72],
     },
 ]
@@ -220,6 +227,9 @@ def generate_pie_charts_l3():
     sc = random.choice(_L3_SCENARIOS)
     total = random.choice(sc["totals"])
     angle = sc["angle"]
+    categories = sc["categories"]
+    other_angles = _split_degrees(360 - angle, len(categories) - 1)
+    colors = random.sample(_PALETTE, len(categories))
     amount = angle * total // 360
     g = math.gcd(angle, 360)
     n, d = angle // g, 360 // g
@@ -227,11 +237,12 @@ def generate_pie_charts_l3():
     unit = sc["unit"]
     context = sc["context"].format(total=total)
     caption = f"Total: £{total}" if unit == "£" else f"Total: {total} {unit}"
+    category = categories[0]
 
     question_text = (
         f"{context}\n\n"
-        f"Use the angle of the shaded segment, together with the total given, to calculate the "
-        f"amount it represents."
+        f"Use the angle of the **{category}** segment, together with the total given, to "
+        f"calculate the amount it represents."
     )
 
     scaffold_steps = [
@@ -245,8 +256,7 @@ def generate_pie_charts_l3():
         f"Amount = {fraction_str} × {total} = {amount_str}",
     ]
 
-    primary_color = random.choice(_PALETTE)
-    filler_pieces, filler_colors = _filler_wedges(360 - angle, used_colors=[primary_color])
+    angles = [angle] + other_angles
 
     return Question(
         question_text=question_text,
@@ -259,11 +269,11 @@ def generate_pie_charts_l3():
         metadata={
             "diagram": "pie_chart",
             "diagram_params": {
-                "categories": [sc["category"]] + [f"Segment {i + 2}" for i in range(len(filler_pieces))],
-                "angles": [angle] + filler_pieces,
-                "colors": [primary_color] + filler_colors,
-                "wedge_labels": [f"{angle}°"] + [""] * len(filler_pieces),
-                "show_labels": False,
+                "categories": categories,
+                "angles": angles,
+                "colors": colors,
+                "wedge_labels": [f"{a}°" for a in angles],
+                "show_legend": True,
                 "caption": caption,
             },
         },
@@ -279,30 +289,35 @@ _L4_SCENARIOS = [
         "context": "Favourite Harris Tweed colour among mill workers at Tarbert.",
         "known": "Herringbone Grey", "known_angle": 45,
         "target": "Moorland Green", "target_angle": 90,
+        "others": ["Peat Brown", "Machair Blue"],
         "unit": "votes",
     },
     {
         "context": "A Scalpay fisherman's day, split by task.",
         "known": "Baiting creels", "known_angle": 80,
         "target": "Sailing", "target_angle": 40,
+        "others": ["Hauling creels", "Mending nets"],
         "unit": "minutes",
     },
     {
         "context": "CalMac ferry passengers on the Uig–Lochmaddy crossing, by type.",
         "known": "Car passengers", "known_angle": 150,
         "target": "Foot passengers", "target_angle": 90,
+        "others": ["Bicycle passengers", "Freight"],
         "unit": "people",
     },
     {
         "context": "Favourite subjects among S3 pupils at Sir E Scott School.",
         "known": "PE", "known_angle": 60,
         "target": "Maths", "target_angle": 120,
+        "others": ["Art", "English"],
         "unit": "pupils",
     },
     {
         "context": "Croft chores on Scalpay over the course of a month.",
         "known": "Feeding sheep", "known_angle": 100,
         "target": "Repairing fences", "target_angle": 50,
+        "others": ["Milking", "Peat cutting"],
         "unit": "hours",
     },
 ]
@@ -338,7 +353,14 @@ def generate_pie_charts_l4():
     ]
 
     rest_angle = 360 - sc["known_angle"] - sc["target_angle"]
-    filler_pieces, filler_colors = _filler_wedges(rest_angle, used_colors=[_WEDGE_GREEN, _WEDGE_ORANGE])
+    other_angles = _split_degrees(rest_angle, len(sc["others"]))
+    categories = [sc["known"], sc["target"]] + sc["others"]
+    colors = random.sample(_PALETTE, len(categories))
+    angles = [sc["known_angle"], sc["target_angle"]] + other_angles
+    wedge_labels = (
+        [f"{sc['known_angle']}°\n({known_value})", f"{sc['target_angle']}°\n?"]
+        + [f"{a}°" for a in other_angles]
+    )
 
     return Question(
         question_text=question_text,
@@ -351,11 +373,11 @@ def generate_pie_charts_l4():
         metadata={
             "diagram": "pie_chart",
             "diagram_params": {
-                "categories": [sc["known"], sc["target"]] + [f"Segment {i + 3}" for i in range(len(filler_pieces))],
-                "angles": [sc["known_angle"], sc["target_angle"]] + filler_pieces,
-                "colors": [_WEDGE_GREEN, _WEDGE_ORANGE] + filler_colors,
-                "wedge_labels": [f"{sc['known_angle']}°\n({known_value})", f"{sc['target_angle']}°\n?"] + [""] * len(filler_pieces),
-                "show_labels": False,
+                "categories": categories,
+                "angles": angles,
+                "colors": colors,
+                "wedge_labels": wedge_labels,
+                "show_legend": True,
             },
         },
     )

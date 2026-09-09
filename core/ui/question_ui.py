@@ -461,9 +461,11 @@ def _render_pie_chart(p):
     filler) — `categories`/`angles` define the wedges, summing to 360. Optional: `colors` (one
     per category — defaults to a fixed palette, cycled); `wedge_labels` (one per category,
     defaults to "<angle>°" — pass "" to leave a wedge unlabelled, or "?" for a missing/target
-    angle); `show_labels` (whether matplotlib draws the category name next to each wedge, default
-    True); `caption` (title text under the chart, e.g. a reference amount/total or a "given /
-    find" summary)."""
+    angle); `show_labels` (whether matplotlib draws the category name directly next to each
+    wedge, default True — turn off when using `show_legend` instead, SQA-exam style: angles only
+    on the wedges, names in a colour-swatch key to the right); `show_legend` (draw that key from
+    `categories`/`colors`, default False); `caption` (title text above the chart, e.g. a
+    reference amount/total)."""
     categories = p["categories"]
     angles = p["angles"]
     wedge_labels = p.get("wedge_labels", [f"{a}°" for a in angles])
@@ -471,16 +473,21 @@ def _render_pie_chart(p):
         ["#3498db", "#2ecc71", "#e74c3c", "#f39c12", "#9b59b6", "#1abc9c"] * (len(categories) // 6 + 1)
     )[:len(categories)]
     caption = p.get("caption", "")
+    show_legend = p.get("show_legend", False)
 
-    fig, ax = plt.subplots(figsize=(7, 5))
+    fig, ax = plt.subplots(figsize=(8.5, 5) if show_legend else (7, 5))
     wedges, _ = ax.pie(
         angles,
-        labels=categories if p.get("show_labels", True) else None,
+        labels=categories if p.get("show_labels", not show_legend) else None,
         colors=colors,
         startangle=90,
         counterclock=False,
         wedgeprops={"edgecolor": "white", "linewidth": 2},
     )
+
+    if show_legend:
+        ax.legend(wedges, categories, loc="center left", bbox_to_anchor=(1.02, 0.5),
+                   frameon=False, fontsize=11)
 
     for wedge, label, color in zip(wedges, wedge_labels, colors):
         if not label:
@@ -494,7 +501,10 @@ def _render_pie_chart(p):
     if caption:
         ax.set_title(caption, fontsize=10, pad=12)
     fig.patch.set_facecolor("white")
-    plt.tight_layout()
+    if show_legend:
+        plt.tight_layout(rect=[0, 0, 0.72, 1])
+    else:
+        plt.tight_layout()
     st.pyplot(fig, use_container_width=False)
     plt.close(fig)
 
