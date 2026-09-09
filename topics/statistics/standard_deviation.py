@@ -50,7 +50,7 @@ def generate_standard_deviation_question():
     scaffold_steps = [
         {"prompt": f"Calculate the mean of the {n} values", "answer": mean_rounded},
         {"prompt": "Calculate each (x − x̄)² and sum them: Σ(x − x̄)²", "answer": sum_sq_rounded},
-        {"prompt": f"Divide by (n − 1) = {n - 1}", "answer": variance_rounded},
+        {"prompt": "Divide by (n − 1)", "answer": variance_rounded},
         {"prompt": "Take the square root to find s (2 d.p.)", "answer": sd},
     ]
 

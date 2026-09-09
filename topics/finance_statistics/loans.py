@@ -42,7 +42,7 @@ def generate_loans_question():
         scaffold_steps = [
             {"prompt": "Calculate the total interest (P × R × T ÷ 100)", "answer": total_interest},
             {"prompt": "Calculate the total amount repaid", "answer": total_repaid},
-            {"prompt": f"Divide by {months} months to get the monthly repayment", "answer": monthly},
+            {"prompt": "Divide by the number of months to get the monthly repayment", "answer": monthly},
         ]
         worked = [
             "Total interest = P × R × T ÷ 100",
@@ -59,8 +59,8 @@ def generate_loans_question():
         answer = total_interest
         scaffold_steps = [
             {"prompt": "Calculate 1% of the principal", "answer": round(principal / 100, 2)},
-            {"prompt": f"Multiply by {rate}% to get the annual interest", "answer": round(principal * rate / 100, 2)},
-            {"prompt": f"Multiply by {years} year{'s' if years > 1 else ''} for total interest", "answer": total_interest},
+            {"prompt": "Multiply by the interest rate (%) to get the annual interest", "answer": round(principal * rate / 100, 2)},
+            {"prompt": "Multiply by the number of years for total interest", "answer": total_interest},
         ]
         worked = [
             "Total interest = P × R × T ÷ 100",

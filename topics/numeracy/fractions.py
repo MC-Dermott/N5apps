@@ -170,12 +170,11 @@ def _cake_leftover_question(n_terms, whole):
     lcd, equiv_lines, add_line = _lcm_lines(fracs)
     eaten_str = _fstr(total)
     answer_str = _fstr(remainder)
-    eaten_list_str = ", ".join(f"{num}/{den}" for num, den in fracs)
 
     scaffold_steps = [
-        {"prompt": f"Find the lowest common denominator of {eaten_list_str}", "answer": float(lcd)},
+        {"prompt": "Find the lowest common denominator of the fractions eaten", "answer": float(lcd)},
         {"prompt": "Add the fractions eaten, using equivalent fractions over the common denominator", "answer": eaten_str},
-        {"prompt": f"Subtract the total eaten from {whole} to find the amount left over", "answer": answer_str},
+        {"prompt": "Subtract the total eaten from the number of whole items to find the amount left over", "answer": answer_str},
     ]
 
     worked = equiv_lines + [
@@ -223,10 +222,8 @@ def _recipe_mix_question(n_terms):
     lcd, equiv_lines, add_line = _lcm_lines(fracs)
     total_str = _fstr(total)
     answer_str = _fstr(remainder)
-    given_list_str = ", ".join(f"{num}/{den}" for num, den in fracs)
-
     scaffold_steps = [
-        {"prompt": f"Find the lowest common denominator of {given_list_str}", "answer": float(lcd)},
+        {"prompt": "Find the lowest common denominator of the given fractions", "answer": float(lcd)},
         {"prompt": "Add the given fractions together", "answer": total_str},
         {"prompt": f"Subtract the total from 1 to find the fraction that is {remainder_ingredient}", "answer": answer_str},
     ]
@@ -271,10 +268,8 @@ def _election_votes_question(n_terms):
     lcd, equiv_lines, add_line = _lcm_lines(fracs)
     total_str = _fstr(total)
     answer_str = _fstr(remainder)
-    given_list_str = ", ".join(f"{num}/{den}" for num, den in fracs)
-
     scaffold_steps = [
-        {"prompt": f"Find the lowest common denominator of {given_list_str}", "answer": float(lcd)},
+        {"prompt": "Find the lowest common denominator of the given fractions", "answer": float(lcd)},
         {"prompt": "Add the given fractions of the votes together", "answer": total_str},
         {"prompt": f"Subtract the total from 1 to find {remainder_candidate}'s fraction of the votes", "answer": answer_str},
     ]
@@ -317,10 +312,8 @@ def _field_crops_question(n_terms):
     lcd, equiv_lines, add_line = _lcm_lines(fracs)
     total_str = _fstr(total)
     answer_str = _fstr(remainder)
-    given_list_str = ", ".join(f"{num}/{den}" for num, den in fracs)
-
     scaffold_steps = [
-        {"prompt": f"Find the lowest common denominator of {given_list_str}", "answer": float(lcd)},
+        {"prompt": "Find the lowest common denominator of the given fractions", "answer": float(lcd)},
         {"prompt": "Add the given fractions of the field together", "answer": total_str},
         {"prompt": f"Subtract the total from 1 to find the fraction used for {remainder_crop}", "answer": answer_str},
     ]
@@ -365,10 +358,8 @@ def _daily_routine_question(n_terms):
     lcd, equiv_lines, add_line = _lcm_lines(fracs)
     total_str = _fstr(total)
     answer_str = _fstr(remainder)
-    given_list_str = ", ".join(f"{num}/{den}" for num, den in fracs)
-
     scaffold_steps = [
-        {"prompt": f"Find the lowest common denominator of {given_list_str}", "answer": float(lcd)},
+        {"prompt": "Find the lowest common denominator of the given fractions", "answer": float(lcd)},
         {"prompt": "Add the given fractions of the day together", "answer": total_str},
         {"prompt": f"Subtract the total from 1 to find the fraction spent {remainder_activity}", "answer": answer_str},
     ]
@@ -498,8 +489,8 @@ def generate_fraction_addition():
     )
 
     scaffold_steps = [
-        {"prompt": f"Multiply {n1}/{d1} by {d2}/{d2} to get an equivalent fraction", "answer": f"{new_num1}/{p}"},
-        {"prompt": f"Multiply {n2}/{d2} by {d1}/{d1} to get an equivalent fraction", "answer": f"{new_num2}/{p}"},
+        {"prompt": "Multiply the first fraction by (second denominator/second denominator) to get an equivalent fraction", "answer": f"{new_num1}/{p}"},
+        {"prompt": "Multiply the second fraction by (first denominator/first denominator) to get an equivalent fraction", "answer": f"{new_num2}/{p}"},
         {"prompt": "Add the two new fractions together", "answer": answer_str},
     ]
 
@@ -568,8 +559,8 @@ def generate_fraction_subtraction():
     )
 
     scaffold_steps = [
-        {"prompt": f"Multiply {n1}/{d1} by {d2}/{d2} to get an equivalent fraction", "answer": f"{new_num1}/{p}"},
-        {"prompt": f"Multiply {n2}/{d2} by {d1}/{d1} to get an equivalent fraction", "answer": f"{new_num2}/{p}"},
+        {"prompt": "Multiply the first fraction by (second denominator/second denominator) to get an equivalent fraction", "answer": f"{new_num1}/{p}"},
+        {"prompt": "Multiply the second fraction by (first denominator/first denominator) to get an equivalent fraction", "answer": f"{new_num2}/{p}"},
         {"prompt": "Subtract the two new fractions", "answer": answer_str},
     ]
 
@@ -644,7 +635,7 @@ def _three_fraction_addition():
     )
 
     scaffold_steps = [
-        {"prompt": f"Find the lowest common denominator of {terms_str}", "answer": float(lcd)},
+        {"prompt": "Find the lowest common denominator of the three fractions", "answer": float(lcd)},
         {"prompt": "Add the fractions using equivalent fractions over the common denominator", "answer": answer_str},
     ]
 
@@ -674,7 +665,7 @@ def _three_fraction_subtraction():
 
     scaffold_steps = [
         {
-            "prompt": f"Find the lowest common denominator of {a[0]}/{a[1]}, {b[0]}/{b[1]} and {c[0]}/{c[1]}",
+            "prompt": "Find the lowest common denominator of the three fractions",
             "answer": float(lcd),
         },
         {"prompt": "Subtract the fractions using equivalent fractions over the common denominator", "answer": answer_str},
@@ -725,7 +716,7 @@ def generate_improper_fraction_conversion():
 
     scaffold_steps = [
         {
-            "prompt": f"Multiply the whole number by the denominator ({whole} × {denominator})",
+            "prompt": "Multiply the whole number by the target denominator",
             "answer": float(numerator),
         },
     ]
@@ -779,7 +770,7 @@ def generate_fraction_simplification():
     question_text = f"Simplify {n}/{d} to its simplest form."
 
     scaffold_steps = [
-        {"prompt": f"Find the highest common factor of {n} and {d}", "answer": float(hcf)},
+        {"prompt": "Find the highest common factor of the numerator and denominator", "answer": float(hcf)},
         {"prompt": "Divide both the numerator and denominator by the highest common factor", "answer": answer_str},
     ]
 

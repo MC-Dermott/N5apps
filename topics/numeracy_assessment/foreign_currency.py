@@ -120,7 +120,7 @@ def generate_foreign_currency_l1():
             f"{person} changes £{gbp} into {currency} before a trip to {place}, at a rate of "
             f"£1 = {symbol}{_fmt(rate, dp)}. How many {currency} do they receive?"
         )
-        scaffold_steps = [{"prompt": f"£{gbp} × {_fmt(rate, dp)}", "answer": foreign}]
+        scaffold_steps = [{"prompt": "Pounds × exchange rate", "answer": foreign}]
         worked = [f"£{gbp} × {_fmt(rate, dp)} = {symbol}{_fmt(foreign, dp)}"]
         answer = foreign
     else:
@@ -130,7 +130,7 @@ def generate_foreign_currency_l1():
             f"{person} changes {symbol}{_fmt(foreign, dp)} back into pounds at the end of a trip "
             f"to {place}, at a rate of £1 = {symbol}{_fmt(rate, dp)}. How many pounds do they receive?"
         )
-        scaffold_steps = [{"prompt": f"{symbol}{_fmt(foreign, dp)} ÷ {_fmt(rate, dp)}", "answer": gbp}]
+        scaffold_steps = [{"prompt": "Foreign currency amount ÷ exchange rate", "answer": gbp}]
         worked = [f"{symbol}{_fmt(foreign, dp)} ÷ {_fmt(rate, dp)} = £{gbp:.2f}"]
         answer = gbp
 
@@ -170,9 +170,9 @@ def generate_foreign_currency_l2():
         f"They change the rest back into pounds at the same rate. How many pounds do they receive?"
     )
     scaffold_steps = [
-        {"prompt": f"£{gbp} × {_fmt(rate, dp)}", "answer": foreign},
-        {"prompt": f"{symbol}{_fmt(foreign, dp)} − {symbol}{_fmt(spent, dp)}", "answer": remaining},
-        {"prompt": f"{symbol}{_fmt(remaining, dp)} ÷ {_fmt(rate, dp)}", "answer": back},
+        {"prompt": "Pounds × exchange rate", "answer": foreign},
+        {"prompt": "Foreign currency received − amount spent", "answer": remaining},
+        {"prompt": "Remaining foreign currency ÷ exchange rate", "answer": back},
     ]
     worked = [
         f"£{gbp} × {_fmt(rate, dp)} = {symbol}{_fmt(foreign, dp)}",
@@ -226,10 +226,10 @@ def generate_foreign_currency_l3():
     )
 
     scaffold_steps = [
-        {"prompt": f"Total {currency} spent ({daily} × {days})", "answer": spent},
-        {"prompt": f"{currency} remaining ({start} − {spent})", "answer": remaining},
+        {"prompt": f"Total {currency} spent (daily spend × number of days)", "answer": spent},
+        {"prompt": f"{currency} remaining (starting amount − total spent)", "answer": remaining},
         {"prompt": f"Rounded down to nearest multiple of {multiple}", "answer": rounded},
-        {"prompt": f"Convert to £ ({rounded} ÷ {_fmt(rate, dp)})", "answer": answer},
+        {"prompt": "Convert to £ (rounded amount ÷ exchange rate)", "answer": answer},
     ]
 
     worked = [
@@ -296,12 +296,12 @@ def generate_foreign_currency_l4():
     )
 
     scaffold_steps = [
-        {"prompt": f"£{gbp} × {_fmt(rateA, dpA)}", "answer": foreignA},
-        {"prompt": f"Total {nameA} spent ({_fmt(daily, dpA)} × {days})", "answer": spent},
-        {"prompt": f"{nameA} remaining ({_fmt(foreignA, dpA)} − {_fmt(spent, dpA)})", "answer": remainingA},
-        {"prompt": f"Remaining {nameA} converted to £ ({_fmt(remainingA, dpA)} ÷ {_fmt(rateA, dpA)})",
+        {"prompt": "Pounds × first exchange rate", "answer": foreignA},
+        {"prompt": f"Total {nameA} spent (daily spend × number of days)", "answer": spent},
+        {"prompt": f"{nameA} remaining (amount converted − total spent)", "answer": remainingA},
+        {"prompt": f"Remaining {nameA} converted to £ (remaining amount ÷ first exchange rate)",
          "answer": gbp_back},
-        {"prompt": f"£{gbp_back:.2f} × {_fmt(rateB, dpB)}", "answer": foreignB},
+        {"prompt": "Pounds × second exchange rate", "answer": foreignB},
     ]
     worked = [
         f"£{gbp} × {_fmt(rateA, dpA)} = {symbolA}{_fmt(foreignA, dpA)}",
@@ -346,7 +346,7 @@ def generate_foreign_currency_l5():
         )
 
     scaffold_steps = [
-        {"prompt": f"{symbol}{_fmt(foreign, dp)} ÷ £{gbp}", "answer": rate},
+        {"prompt": "Foreign currency amount ÷ pounds", "answer": rate},
     ]
     worked = [
         f"{symbol}{_fmt(foreign, dp)} ÷ {gbp} = {_fmt(rate, dp)}",

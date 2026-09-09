@@ -531,7 +531,7 @@ def generate_percentage_multiplier():
     )
 
     scaffold_steps = [
-        {"prompt": f"Write {rate}% as a decimal", "answer": decimal},
+        {"prompt": "Write the given percentage as a decimal", "answer": decimal},
         {"prompt": f"{'Add' if is_increase else 'Subtract'} this {'to' if is_increase else 'from'} 1 to find the multiplier",
          "answer": multiplier},
     ]
@@ -584,7 +584,7 @@ def generate_percentage_single_change():
     )
 
     scaffold_steps = [
-        {"prompt": f"Write {rate}% as a decimal", "answer": decimal},
+        {"prompt": "Write the given percentage as a decimal", "answer": decimal},
         {"prompt": f"{'Add' if is_increase else 'Subtract'} this {'to' if is_increase else 'from'} 1 to find the multiplier",
          "answer": multiplier},
         {"prompt": "Multiply the original amount by the multiplier", "answer": answer},
@@ -644,7 +644,7 @@ def generate_percentage_appreciation():
     scaffold_steps = []
     for i in range(1, years + 1):
         scaffold_steps.append(
-            {"prompt": f"{ctx['noun'].capitalize()} after year {i} (previous {ctx['noun']} × {multiplier})",
+            {"prompt": f"{ctx['noun'].capitalize()} after year {i} (previous {ctx['noun']} × multiplier)",
              "answer": values[i]}
         )
 
@@ -699,7 +699,7 @@ def generate_percentage_depreciation():
     scaffold_steps = []
     for i in range(1, years + 1):
         scaffold_steps.append(
-            {"prompt": f"{ctx['noun'].capitalize()} after year {i} (previous {ctx['noun']} × {multiplier})",
+            {"prompt": f"{ctx['noun'].capitalize()} after year {i} (previous {ctx['noun']} × multiplier)",
              "answer": values[i]}
         )
 
@@ -760,8 +760,8 @@ def generate_percentage_mixed_changes():
     )
 
     scaffold_steps = [
-        {"prompt": f"Apply the first multiplier ({m1}) to the original amount", "answer": after_1},
-        {"prompt": f"Apply the second multiplier ({m2}) to find the final amount", "answer": final},
+        {"prompt": "Apply the first multiplier to the original amount", "answer": after_1},
+        {"prompt": "Apply the second multiplier to find the final amount", "answer": final},
     ]
 
     worked = [

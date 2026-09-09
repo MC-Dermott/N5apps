@@ -74,8 +74,8 @@ def generate_compound_percentages():
     )
 
     scaffold_steps = [
-        {"prompt": f"Write down the multiplier ((100 {sign} {rate}) ÷ 100)", "answer": round(multiplier, 4)},
-        {"prompt": f"Calculate the value after {years} years (before rounding)", "answer": exact},
+        {"prompt": f"Write down the multiplier ((100 {sign} rate) ÷ 100)", "answer": round(multiplier, 4)},
+        {"prompt": "Calculate the value after the given number of years (before rounding)", "answer": exact},
         {"prompt": "Round to 2 significant figures", "answer": answer},
     ]
 

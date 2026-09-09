@@ -142,10 +142,9 @@ def generate_ni_l1():
     )
 
     scaffold_steps = [
-        {"prompt": f"Find how much of {name}'s {pw} income falls in the {rate_mid}% band "
-                   f"(earnings above £{pt:,})",
+        {"prompt": f"Find how much of {name}'s {pw} income is above the lower threshold in the table",
          "answer": float(taxable)},
-        {"prompt": f"Calculate {rate_mid}% of that amount to find {pw} NI",
+        {"prompt": f"Apply the band's NI rate from the table to that amount to find {pw} NI",
          "answer": float(ni)},
     ]
 
@@ -190,11 +189,11 @@ def generate_ni_l2():
     )
 
     scaffold_steps = [
-        {"prompt": f"Calculate the NI on the middle band: "
-                   f"{rate_mid}% on earnings from £{pt:,} to £{uel:,}",
+        {"prompt": "Calculate the NI on the middle band, using the middle band rate on earnings "
+                   "between the lower threshold and the upper limit in the table",
          "answer": float(ni_m)},
-        {"prompt": f"Calculate the NI on the upper band: "
-                   f"{rate_top}% on earnings above £{uel:,}",
+        {"prompt": "Calculate the NI on the upper band, using the upper band rate on earnings "
+                   "above the upper limit in the table",
          "answer": float(ni_top)},
         {"prompt": f"Add both amounts to find total {pw} NI",
          "answer": float(ni)},
@@ -343,15 +342,15 @@ def generate_ni_l3():
     )
 
     scaffold_steps = [
-        {"prompt": f"Calculate the NI on the middle band: "
-                   f"{rate_mid}% on earnings from £{pt:,} to £{uel:,}",
+        {"prompt": "Calculate the NI on the middle band, using the middle band rate on earnings "
+                   "between the lower threshold and the upper limit in the table",
          "answer": float(ni_m)},
-        {"prompt": f"Calculate the NI on the upper band: "
-                   f"{rate_top}% on earnings above £{uel:,}",
+        {"prompt": "Calculate the NI on the upper band, using the upper band rate on earnings "
+                   "above the upper limit in the table",
          "answer": float(ni_top)},
         {"prompt": f"Add both NI amounts to find total {pw} NI",
          "answer": float(ni)},
-        {"prompt": f"Calculate {pw} pension: {pension_pct}% of £{income:,}",
+        {"prompt": f"Calculate {pw} pension (pension percentage of gross {pw} salary)",
          "answer": float(pension)},
         {"prompt": f"Calculate {pw} net pay (gross − NI − pension − income tax)",
          "answer": float(net_units)},

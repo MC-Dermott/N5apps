@@ -555,19 +555,16 @@ def _level2_find_arrival():
         off_a = city_a["offset"]
         if off_a == 0:
             step1_desc = f"Departure is already in GMT: {dep_time}"
-            step1_ans = dep_gmt_display
         elif off_a > 0:
             step1_desc = (
                 f"Convert departure to GMT: {dep_time} − {off_a} "
                 f"hour{'s' if off_a != 1 else ''} = {_fmt_gmt(dep_g)}"
             )
-            step1_ans = dep_gmt_display
         else:
             step1_desc = (
                 f"Convert departure to GMT: {dep_time} + {abs(off_a)} "
                 f"hour{'s' if abs(off_a) != 1 else ''} = {_fmt_gmt(dep_g)}"
             )
-            step1_ans = dep_gmt_display
 
         off_b = city_b["offset"]
         if off_b > 0:
@@ -1054,26 +1051,21 @@ def _level3_find_stopover():
         scaffold_steps = [
             {
                 "prompt": (
-                    f"Convert the departure time from {origin['name']} ({origin['gmt']}) to "
-                    f"{dest['name']} ({dest['gmt']}) time. Give your answer in HHMM format (e.g. 0930)."
+                    f"Convert the departure time from {origin['name']} to "
+                    f"{dest['name']} time. Give your answer in HHMM format (e.g. 0930)."
                 ),
                 "answer": dep_in_dest,
             },
             {
                 "prompt": (
                     f"Calculate the total journey time using the departure time in {dest['name']} time "
-                    f"({dep_in_dest_display}) and the arrival time in {dest['name']} "
-                    f"({arr_dest_time}{arr_dest_day})."
+                    f"(from the previous step) and the arrival time in {dest['name']} given in the question."
                 ),
                 "answer": total_journey_str,
                 "answer_type": "duration",
             },
             {
-                "prompt": (
-                    f"Calculate the total flight time "
-                    f"({flight1_h} hour{'s' if flight1_h != 1 else ''} + "
-                    f"{flight2_h} hour{'s' if flight2_h != 1 else ''})."
-                ),
+                "prompt": "Calculate the total flight time (first flight duration + second flight duration).",
                 "answer": total_flight_str,
                 "answer_type": "duration",
             },

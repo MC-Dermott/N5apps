@@ -82,9 +82,9 @@ def generate_ratio_l1():
     )
 
     scaffold_steps = [
-        {"prompt": f"Total number of ratio shares ({' + '.join(str(p) for p in parts)})", "answer": total_shares},
-        {"prompt": f"Value of one share ({total:,} ÷ {total_shares})", "answer": share_value},
-        {"prompt": f"Number of {ask_category} {ctx['item_plural']} ({parts[ask_idx]} × {share_value})", "answer": ask_amount},
+        {"prompt": "Total number of ratio shares (add up the ratio parts)", "answer": total_shares},
+        {"prompt": "Value of one share (total ÷ total number of shares)", "answer": share_value},
+        {"prompt": f"Number of {ask_category} {ctx['item_plural']} (its ratio number × value of one share)", "answer": ask_amount},
     ]
 
     worked = [
@@ -130,9 +130,9 @@ def generate_ratio_l2():
     )
 
     scaffold_steps = [
-        {"prompt": f"Value of one ratio share ({given_amount:,} ÷ {parts[given_idx]})", "answer": share_value},
-        {"prompt": f"Total number of ratio shares ({' + '.join(str(p) for p in parts)})", "answer": total_shares},
-        {"prompt": f"Total number of {ctx['item_plural']} ({share_value} × {total_shares})", "answer": total},
+        {"prompt": "Value of one ratio share (given amount ÷ its ratio number)", "answer": share_value},
+        {"prompt": "Total number of ratio shares (add up the ratio parts)", "answer": total_shares},
+        {"prompt": f"Total number of {ctx['item_plural']} (value of one share × total number of shares)", "answer": total},
     ]
 
     worked = [

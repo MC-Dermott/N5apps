@@ -94,12 +94,12 @@ def generate_reverse_percentage_question():
         {
             "prompt": (
                 f"Find the multiplier "
-                f"({'1 − ' if direction == 'decrease' else '1 + '}{pct}/100)"
+                f"({'1 − the percentage/100' if direction == 'decrease' else '1 + the percentage/100'})"
             ),
             "answer": multiplier,
         },
         {
-            "prompt": f"Divide £{new_price:,} by the multiplier to find the original price",
+            "prompt": "Divide the given price by the multiplier to find the original price",
             "answer": original_display,
         },
     ]

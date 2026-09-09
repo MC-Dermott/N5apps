@@ -76,15 +76,15 @@ def generate_commission_question():
 
     scaffold_steps = [
         {
-            "prompt": f"Calculate the sales over the threshold (total sales − £{threshold:,}).",
+            "prompt": "Calculate the sales over the threshold (total sales − threshold).",
             "answer": float(excess),
         },
         {
-            "prompt": f"Calculate the commission ({rate}% of £{excess:,}).",
+            "prompt": "Calculate the commission (commission rate × sales over the threshold).",
             "answer": commission,
         },
         {
-            "prompt": f"Calculate gross pay (basic salary + commission).",
+            "prompt": "Calculate gross pay (basic salary + commission).",
             "answer": gross_pay,
         },
     ]

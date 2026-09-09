@@ -84,8 +84,8 @@ def generate_pie_charts():
     )
 
     scaffold_steps = [
-        {"prompt": f"Total surveyed = {ref_count} × (360 ÷ {ref_angle})", "answer": total},
-        {"prompt": f"Number choosing {ask_cat} = ({ask_angle} ÷ 360) × {total}", "answer": ask_count},
+        {"prompt": f"Total surveyed = {ref_cat} count × (360 ÷ {ref_cat} sector's angle)", "answer": total},
+        {"prompt": f"Number choosing {ask_cat} = ({ask_cat} sector's angle ÷ 360) × total surveyed", "answer": ask_count},
     ]
 
     worked = [

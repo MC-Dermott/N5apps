@@ -139,24 +139,21 @@ def generate_time_zones_reading_tables():
 
     scaffold_steps = [
         {
-            "prompt": (f"Convert arrival to UK time "
-                       f"({_fmt_time(arr_h, arr_m)} − {tz} hour)"),
+            "prompt": "Convert the arrival time to UK time (subtract the time difference given in the question)",
             "answer": _fmt_time(uk_arr_h, arr_m),
         },
         {
-            "prompt": f"Journey duration ({_fmt_time(dep_h, dep_m)} → {_fmt_time(uk_arr_h, arr_m)})",
+            "prompt": "Journey duration (departure time → UK arrival time from the previous step)",
             "answer": _dur_str(dur_h, dur_m),
         },
         {
-            "prompt": (f"Train cost: {n_adults} × £{adult_price} + "
-                       f"{n_children} × £{child_price}"),
+            "prompt": "Train cost: (number of adults × adult price) + (number of children × child price)",
             "answer": train_cost,
         },
     ]
     if include_ins:
         scaffold_steps.append({
-            "prompt": (f"Insurance: {n_adults} × £{_INS_ADULT} + "
-                       f"{n_children} × £{_INS_CHILD}"),
+            "prompt": "Insurance: (number of adults × per-adult rate) + (number of children × per-child rate)",
             "answer": ins_cost,
         })
     if use_card:

@@ -261,7 +261,7 @@ def generate_tolerance_l1():
                    f"(target + tolerance)",
          "answer": float(hi)},
         {"prompt": f"Count how many measurements {frac_text} (i.e. fall {'within' if ask_acc else 'outside'} "
-                   f"the range £{lo} to £{hi})".replace("£", ""),
+                   f"the minimum-maximum range you just calculated)",
          "answer": float(frac_count)},
         {"prompt": f"Write the fraction that {frac_text} (count ÷ total)",
          "answer": float(correct)},
@@ -329,8 +329,7 @@ def generate_tolerance_l2():
     measure_singular = ctx["measure"].rstrip("s") if ctx["measure"].endswith("s") else ctx["measure"]
 
     scaffold_steps = [
-        {"prompt": f"Convert the tolerance from {tol_unit} to {target_unit} "
-                   f"({tol_raw} {tol_unit} = ? {target_unit})",
+        {"prompt": f"Convert the tolerance from {tol_unit} to {target_unit}",
          "answer": float(tol_conv)},
         {"prompt": f"Calculate the minimum {adj} {measure_singular} "
                    f"(target − tolerance in {target_unit})",
@@ -339,7 +338,7 @@ def generate_tolerance_l2():
                    f"(target + tolerance in {target_unit})",
          "answer": float(hi)},
         {"prompt": f"Count how many measurements {frac_text} "
-                   f"(fall {'within' if ask_acc else 'outside'} {lo} to {hi} {target_unit})",
+                   f"(fall {'within' if ask_acc else 'outside'} the minimum-maximum range you just calculated)",
          "answer": float(frac_count)},
         {"prompt": f"Write the fraction that {frac_text} (count ÷ total)",
          "answer": float(correct)},
@@ -407,13 +406,13 @@ def generate_tolerance_l3():
 
     scaffold_steps = [
         {"prompt": f"Calculate the minimum {adj} {measure_singular}: "
-                   f"{target} × (1 − {pct}%)",
+                   f"target × (1 − tolerance percentage)",
          "answer": float(lo)},
         {"prompt": f"Calculate the maximum {adj} {measure_singular}: "
-                   f"{target} × (1 + {pct}%)",
+                   f"target × (1 + tolerance percentage)",
          "answer": float(hi)},
         {"prompt": f"Count how many measurements {frac_text} "
-                   f"(fall {'within' if ask_acc else 'outside'} {lo} to {hi} {unit})",
+                   f"(fall {'within' if ask_acc else 'outside'} the minimum-maximum range you just calculated)",
          "answer": float(frac_count)},
         {"prompt": f"Write the fraction that {frac_text} (count ÷ total)",
          "answer": float(correct)},

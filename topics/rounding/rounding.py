@@ -87,7 +87,7 @@ def generate_rounding_decimal_places():
     scaffold_steps = [
         {"prompt": f"Is the digit after the {place_word} decimal place 5 or more?",
          "answer": "Yes" if next_digit >= 5 else "No"},
-        {"prompt": f"Round {_fmt(value)} to {places_label}", "answer": answer},
+        {"prompt": f"Round the value to {places_label}", "answer": answer},
     ]
 
     worked = [
@@ -216,7 +216,7 @@ def generate_rounding_significant_figures():
     scaffold_steps = [
         {"prompt": f"Is the digit after the {figs_label} you are keeping 5 or more?",
          "answer": "Yes" if next_digit >= 5 else "No"},
-        {"prompt": f"Round {_fmt(value)} to {figs_label}", "answer": answer},
+        {"prompt": f"Round the value to {figs_label}", "answer": answer},
     ]
 
     worked = [

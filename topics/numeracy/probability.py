@@ -210,7 +210,7 @@ def _single_die_question():
         out_str = f"{{{outcomes[0]}, {outcomes[1]}, ..., {outcomes[-1]}}}"
 
     scaffold = [
-        {"prompt": f"List the outcomes {direction} {threshold} on a {sides}-sided die", "answer": fav},
+        {"prompt": f"List the outcomes {direction} the given threshold on the die", "answer": fav},
         {"prompt": "How many total outcomes are there?", "answer": total},
         {"prompt": "Write the probability as a simplified fraction", "answer": answer},
     ]
@@ -325,8 +325,8 @@ def _two_dice_question():
         pairs_str = ", ".join(f"({a},{b})" for a, b in favorable[:10]) + ", ..."
 
     scaffold = [
-        {"prompt": f"How many total outcomes are there for two {sides}-sided dice?", "answer": total},
-        {"prompt": f"Count outcomes where the total is {dir_word} {threshold}", "answer": fav},
+        {"prompt": "How many total outcomes are there for the two dice?", "answer": total},
+        {"prompt": f"Count outcomes where the total is {dir_word} the given threshold", "answer": fav},
         {"prompt": "Write the probability as a simplified fraction", "answer": answer},
     ]
     worked = [
@@ -404,8 +404,8 @@ def _two_spinners_question():
     answer = _frac(fav, total)
 
     scaffold = [
-        {"prompt": f"How many letters from A–E satisfy '{c['letter_desc']}'?", "answer": fl},
-        {"prompt": f"How many numbers from 1–5 satisfy '{c['number_desc']}'?", "answer": fn},
+        {"prompt": "How many letters from A–E satisfy the given letter condition?", "answer": fl},
+        {"prompt": "How many numbers from 1–5 satisfy the given number condition?", "answer": fn},
         {"prompt": "How many total outcomes are there (5 × 5)?", "answer": total},
         {"prompt": "Calculate the probability as a simplified fraction", "answer": answer},
     ]
@@ -466,14 +466,14 @@ def _tombola_vs_dice_question():
     scaffold = [
         {
             "prompt": (
-                f"Count tickets 1–100 with digit sum ≥ {t_thresh} "
-                f"(work by group: singles, 10s, 20s, ... 90s)"
+                "Count tickets 1–100 with digit sum meeting the given threshold "
+                "(work by group: singles, 10s, 20s, ... 90s)"
             ),
             "answer": tombola_fav,
         },
         {"prompt": "Write the tombola probability as a simplified fraction", "answer": tombola_frac},
         {
-            "prompt": f"Count two-dice outcomes (out of 36) with total ≥ {d_thresh}",
+            "prompt": "Count two-dice outcomes (out of 36) with total meeting the given threshold",
             "answer": dice_fav,
         },
         {"prompt": "Write the dice game probability as a simplified fraction", "answer": dice_frac},
@@ -553,7 +553,7 @@ def _colour_spinner_question():
 
     scaffold = [
         {"prompt": f"How many sections on the colour spinner show {colour_str}?", "answer": fav_c},
-        {"prompt": f"How many sections on the number spinner show {cond_desc}?", "answer": fav_n},
+        {"prompt": "How many sections on the number spinner satisfy the given number condition?", "answer": fav_n},
         {"prompt": f"How many total outcomes are there ({sides} × {sides})?", "answer": total},
         {"prompt": "Calculate the probability as a simplified fraction", "answer": answer},
     ]
@@ -650,8 +650,8 @@ def _two_number_spinners_question():
     cond_bare = c["desc"].removeprefix("a ").removeprefix("an ")
 
     scaffold = [
-        {"prompt": f"How many total outcomes are there ({n1} × {n2})?", "answer": total},
-        {"prompt": f"List all pairs (a, b) where a {op_sym} b gives {cond_bare}", "answer": fav},
+        {"prompt": "How many total outcomes are there in total?", "answer": total},
+        {"prompt": f"List all pairs (a, b) where a {op_sym} b matches the required condition", "answer": fav},
         {"prompt": "Write the probability as a simplified fraction", "answer": answer},
     ]
     worked = [

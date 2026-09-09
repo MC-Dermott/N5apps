@@ -168,7 +168,7 @@ def _gap_hourly_weekly():
 
     question_text = f"{name} is paid £{rate:.2f} per hour. {name} works {hours} hours per week. Calculate {name}'s gross annual salary."
     scaffold_steps = [
-        {"prompt": f"Weekly pay = £{rate:.2f} × {hours}", "answer": weekly},
+        {"prompt": "Weekly pay = hourly rate × hours worked per week", "answer": weekly},
         {"prompt": "Gross annual salary = weekly pay × 52", "answer": annual},
     ]
     worked = [
@@ -202,8 +202,8 @@ def _gap_hourly_daily_weekly():
         f"{days_per_week} days per week. Calculate {name}'s gross annual salary."
     )
     scaffold_steps = [
-        {"prompt": f"Daily pay = £{rate:.2f} × {hours_per_day}", "answer": daily},
-        {"prompt": f"Weekly pay = £{daily:.2f} × {days_per_week}", "answer": weekly},
+        {"prompt": "Daily pay = hourly rate × hours worked per day", "answer": daily},
+        {"prompt": "Weekly pay = daily pay × days worked per week", "answer": weekly},
         {"prompt": "Gross annual salary = weekly pay × 52", "answer": annual},
     ]
     worked = [
@@ -242,7 +242,7 @@ def generate_income_tax(level="Higher"):
     worked = []
     for label, lower, upper, taxable, rate, amt in breakdown:
         scaffold_steps.append({
-            "prompt": f"{label}: tax on £{taxable:,.2f} at {rate}%",
+            "prompt": f"{label}: tax on the amount of salary in this band at {rate}%",
             "answer": _r2(amt),
         })
         if rate == 0:
@@ -279,7 +279,7 @@ def generate_higher_ni(level="Higher"):
         if rate == 0:
             continue
         scaffold_steps.append({
-            "prompt": f"{label} band: £{taxable:,.2f} at {rate}%",
+            "prompt": f"{label} band: the amount of salary in this band at {rate}%",
             "answer": _r2(amt),
         })
         worked.append(f"{rate}% band: £{upper:,.2f} − £{lower:,.2f} = £{taxable:,.2f} at {rate}% = £{amt:,.2f}")
@@ -333,14 +333,14 @@ def generate_net_monthly_income(level="Higher"):
         )
 
     scaffold_steps = [
-        {"prompt": f"Monthly pension = {pension_pct}% of £{annual_salary:,} ÷ 12", "answer": monthly_pension},
-        {"prompt": f"Taxable income = £{annual_salary:,} − £{annual_pension:,.2f}", "answer": taxable_income},
+        {"prompt": "Monthly pension = pension percentage of annual salary ÷ 12", "answer": monthly_pension},
+        {"prompt": "Taxable income = annual salary − annual pension", "answer": taxable_income},
         {"prompt": "Total income tax for the year (using the tax bands)", "answer": annual_tax},
         {"prompt": "Monthly income tax = annual tax ÷ 12", "answer": monthly_tax},
     ]
     if not give_ni:
         scaffold_steps.append(
-            {"prompt": f"Monthly National Insurance (on gross monthly salary of £{monthly_gross:,.2f}, before pension)",
+            {"prompt": "Monthly National Insurance (on gross monthly salary, before pension)",
              "answer": ni}
         )
     scaffold_steps.append({

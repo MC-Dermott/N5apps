@@ -97,8 +97,8 @@ def generate_probability_question():
             f"Give your answer as a decimal."
         )
         scaffold_steps = [
-            {"prompt": f"Find P({colour_a} from A) = {fav_a} ÷ {total_a}", "answer": pa},
-            {"prompt": f"Find P({colour_b} from B) = {fav_b} ÷ {total_b}", "answer": pb},
+            {"prompt": f"Find P({colour_a} from A) (favourable ÷ total for Bag A)", "answer": pa},
+            {"prompt": f"Find P({colour_b} from B) (favourable ÷ total for Bag B)", "answer": pb},
             {"prompt": "Multiply for independent events: P(A) × P(B)", "answer": p_both},
         ]
         worked = [

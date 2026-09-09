@@ -84,11 +84,11 @@ def generate_ratio():
     )
 
     scaffold_steps = [
-        {"prompt": f"Price per ratio unit (£{price_c} ÷ {pc_r})", "answer": unit},
-        {"prompt": f"Price of {grade_a} {ticket_sg} ({pa_r} × £{unit})", "answer": price_a},
-        {"prompt": f"Price of {grade_b} {ticket_sg} ({pb_r} × £{unit})", "answer": price_b},
-        {"prompt": f"Total quantity ratio shares ({qty_ratio[0]}+{qty_ratio[1]}+{qty_ratio[2]})", "answer": sum(qty_ratio)},
-        {"prompt": f"Each share = {total:,} ÷ {sum(qty_ratio)}", "answer": share},
+        {"prompt": "Price per ratio unit (cheapest price ÷ its ratio number)", "answer": unit},
+        {"prompt": f"Price of {grade_a} {ticket_sg} (its ratio number × price per unit)", "answer": price_a},
+        {"prompt": f"Price of {grade_b} {ticket_sg} (its ratio number × price per unit)", "answer": price_b},
+        {"prompt": "Total quantity ratio shares (add the three ratio numbers)", "answer": sum(qty_ratio)},
+        {"prompt": "Each share = total sold ÷ total quantity ratio shares", "answer": share},
         {"prompt": f"Number of {grade_a} {ticket_pl}", "answer": qa},
         {"prompt": f"Number of {grade_b} {ticket_pl}", "answer": qb},
         {"prompt": f"Number of {grade_c} {ticket_pl}", "answer": qc},

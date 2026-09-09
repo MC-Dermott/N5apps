@@ -149,8 +149,8 @@ def generate_pie_charts_l2():
     )
 
     scaffold_steps = [
-        {"prompt": f"Missing angle = 360 − {a1} − {a2}", "answer": missing},
-        {"prompt": f"Fraction = {missing} ÷ 360, simplified", "answer": fraction_str},
+        {"prompt": "Missing angle = 360 − (the two known angles)", "answer": missing},
+        {"prompt": "Fraction = missing angle ÷ 360, simplified", "answer": fraction_str},
     ]
 
     worked = [
@@ -246,8 +246,8 @@ def generate_pie_charts_l3():
     )
 
     scaffold_steps = [
-        {"prompt": f"Fraction = {angle} ÷ 360, simplified", "answer": fraction_str},
-        {"prompt": f"Amount = {fraction_str} × {total}", "answer": amount},
+        {"prompt": "Fraction = segment's angle ÷ 360, simplified", "answer": fraction_str},
+        {"prompt": "Amount = fraction (from the previous step) × total", "answer": amount},
     ]
 
     amount_str = f"£{amount}" if unit == "£" else f"{amount} {unit}"
@@ -341,9 +341,9 @@ def generate_pie_charts_l4():
     )
 
     scaffold_steps = [
-        {"prompt": f"Value per degree = {known_value} ÷ {sc['known_angle']}", "answer": k},
-        {"prompt": f"(a) Value of ? = {sc['target_angle']} × {k}", "answer": target_value},
-        {"prompt": f"(b) Total = 360 × {k}", "answer": total},
+        {"prompt": "Value per degree = known segment's value ÷ known segment's angle", "answer": k},
+        {"prompt": "(a) Value of ? = target segment's angle × value per degree (from the previous step)", "answer": target_value},
+        {"prompt": "(b) Total = 360 × value per degree", "answer": total},
     ]
 
     worked = [

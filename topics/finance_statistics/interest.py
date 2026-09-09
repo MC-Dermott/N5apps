@@ -272,16 +272,18 @@ def generate_interest_l2():
         grown, lines, _ = _grow_amount_with_steps(amt, off, target_offset, periods)
         total += grown
         if idx == 0:
-            deposit_label = f"initial deposit of £{amt:,}"
+            scaffold_label = "initial deposit"
+            worked_label = f"initial deposit of £{amt:,}"
         else:
             dy, dm = _mi_to_ym(start_mi + off)
-            deposit_label = f"deposit of £{amt:,} made on {_date_str(dy, dm)}"
+            scaffold_label = f"deposit made on {_date_str(dy, dm)}"
+            worked_label = f"deposit of £{amt:,} made on {_date_str(dy, dm)}"
 
         scaffold_steps.append({
-            "prompt": f"Calculate how much the {deposit_label} grows to by {target_str}",
+            "prompt": f"Calculate how much the {scaffold_label} grows to by {target_str}",
             "answer": round(grown, 2),
         })
-        worked.append(f"Growth of the {deposit_label}:")
+        worked.append(f"Growth of the {worked_label}:")
         worked.extend(f"  {line}" for line in lines)
         worked.append(f"  → grows to £{_fmt_money(grown)}")
 

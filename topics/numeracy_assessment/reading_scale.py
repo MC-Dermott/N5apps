@@ -70,9 +70,9 @@ def generate_reading_scale():
         return "in range" if lo <= val <= hi else "out of range"
 
     scaffold_steps = [
-        {"prompt": f"Locate Systolic = {systolic} on the vertical axis. Which zone?",
+        {"prompt": "Locate the given Systolic reading on the vertical axis. Which zone?",
          "answer": f"{zone_name} ({sys_lo}–{sys_hi})"},
-        {"prompt": f"Locate Diastolic = {diastolic} on the horizontal axis. Which zone?",
+        {"prompt": "Locate the given Diastolic reading on the horizontal axis. Which zone?",
          "answer": f"{zone_name} ({dia_lo}–{dia_hi})"},
         {"prompt": "Overall blood pressure category (low / ideal / pre-high / high)", "answer": answer},
     ]

@@ -113,7 +113,7 @@ def generate_stem_and_leaf():
     scaffold_steps = [
         {"prompt": f"Highest value in the whole diagram", "answer": highest},
         {"prompt": f"Sum of all {ctx['group1']} values", "answer": sum(group1)},
-        {"prompt": f"Mean = {sum(group1)} ÷ {n}", "answer": mean1},
+        {"prompt": f"Mean = (sum from the previous step) ÷ {n}", "answer": mean1},
     ]
 
     worked = [

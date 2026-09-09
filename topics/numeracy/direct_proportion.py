@@ -84,8 +84,8 @@ def generate_direct_proportion_l1():
     )
 
     scaffold_steps = [
-        {"prompt": f"Multiply {amount1} by {quantity2}", "answer": amount1 * quantity2},
-        {"prompt": f"Divide by {quantity1} to find the amount needed for {quantity2} {ctx['unit_plural']}",
+        {"prompt": "Multiply the given amount by the new quantity", "answer": amount1 * quantity2},
+        {"prompt": f"Divide by the original quantity to find the amount needed for the new number of {ctx['unit_plural']}",
          "answer": amount2},
     ]
 
@@ -157,8 +157,8 @@ def _l2_count_question():
     )
 
     scaffold_steps = [
-        {"prompt": f"Price per item for Option 1, in pence ({price1_p}p ÷ {qty1})", "answer": unit1},
-        {"prompt": f"Price per item for Option 2, in pence ({price2_p}p ÷ {qty2})", "answer": unit2},
+        {"prompt": "Price per item for Option 1, in pence (price ÷ quantity)", "answer": unit1},
+        {"prompt": "Price per item for Option 2, in pence (price ÷ quantity)", "answer": unit2},
         {"prompt": "Which option is better value? (Option 1 or Option 2)", "answer": better},
     ]
 
@@ -206,8 +206,8 @@ def _l2_weight_question():
     )
 
     scaffold_steps = [
-        {"prompt": f"Price per kilogram for Option 1, in pence ({price1_p}p ÷ {w1} g × 1000)", "answer": unit1},
-        {"prompt": f"Price per kilogram for Option 2, in pence ({price2_p}p ÷ {w2} g × 1000)", "answer": unit2},
+        {"prompt": "Price per kilogram for Option 1, in pence (price ÷ weight in grams × 1000)", "answer": unit1},
+        {"prompt": "Price per kilogram for Option 2, in pence (price ÷ weight in grams × 1000)", "answer": unit2},
         {"prompt": "Which option is better value? (Option 1 or Option 2)", "answer": better},
     ]
 
@@ -271,9 +271,9 @@ def _l3_conversion_scaling():
     )
 
     scaffold_steps = [
-        {"prompt": f"Convert {target_litres} litres to ml (× 1000)", "answer": target_ml},
-        {"prompt": f"Multiply {dep_ml} by {target_ml:,}", "answer": dep_ml * target_ml},
-        {"prompt": f"Divide by {indep_ml:,} to find the volume of {ctx['dependent']} needed", "answer": answer},
+        {"prompt": "Convert the target volume to ml (× 1000)", "answer": target_ml},
+        {"prompt": "Multiply the given dependent-quantity rate by the converted target volume", "answer": dep_ml * target_ml},
+        {"prompt": f"Divide by the given independent-quantity rate to find the volume of {ctx['dependent']} needed", "answer": answer},
     ]
 
     worked = [
@@ -320,9 +320,9 @@ def _l3_conversion_value():
     )
 
     scaffold_steps = [
-        {"prompt": f"Convert {w1_g} g to kg", "answer": round(w1_g / 1000, 3)},
-        {"prompt": f"Price per kilogram for Option 1, in pence (£{price1:.2f} ÷ {w1_g / 1000} kg × 100)", "answer": unit1},
-        {"prompt": f"Price per kilogram for Option 2, in pence (£{price2:.2f} ÷ {w2_kg} kg × 100)", "answer": unit2},
+        {"prompt": "Convert Option 1's weight to kg", "answer": round(w1_g / 1000, 3)},
+        {"prompt": "Price per kilogram for Option 1, in pence (price ÷ weight in kg × 100)", "answer": unit1},
+        {"prompt": "Price per kilogram for Option 2, in pence (price ÷ weight in kg × 100)", "answer": unit2},
         {"prompt": "Which option is better value? (Option 1 or Option 2)", "answer": better},
     ]
 

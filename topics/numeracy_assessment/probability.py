@@ -66,9 +66,9 @@ def generate_probability():
 
     cmp = ">" if actual_prob > prob else "<"
     scaffold_steps = [
-        {"prompt": f"Expected count = {prob} × {n}", "answer": round(expected, 2)},
-        {"prompt": f"Actual probability = {actual} ÷ {n}", "answer": actual_prob},
-        {"prompt": f"Is {actual_prob} {cmp} {prob}? Type more or less", "answer": answer},
+        {"prompt": "Expected count = probability × total", "answer": round(expected, 2)},
+        {"prompt": "Actual probability = actual count ÷ total", "answer": actual_prob},
+        {"prompt": "Compare the actual probability (previous step) to the given probability — type more or less", "answer": answer},
     ]
 
     worked = [

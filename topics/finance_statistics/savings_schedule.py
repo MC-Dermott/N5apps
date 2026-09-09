@@ -250,7 +250,7 @@ def _generate_scenario():
 
     scaffold_steps = [
         {
-            "prompt": f"What is the monthly-equivalent of the {annual_rate}% annual rate "
+            "prompt": f"What is the monthly-equivalent of the annual rate that applies "
                       f"from {_date_str(switch_date)}? (as a percentage, 4 d.p.)",
             "answer": round(monthly_equiv_rate * 100, 4),
         },

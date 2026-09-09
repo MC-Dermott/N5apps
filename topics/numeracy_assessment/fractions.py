@@ -76,11 +76,11 @@ def generate_fractions():
     )
 
     scaffold_steps = [
-        {"prompt": f"Find the LCD of {b} and {d}", "answer": lcd},
-        {"prompt": f"Convert {a}/{b} to a fraction with denominator {lcd}", "answer": f"{a_new}/{lcd}"},
-        {"prompt": f"Convert {c}/{d} to a fraction with denominator {lcd}", "answer": f"{c_new}/{lcd}"},
+        {"prompt": "Find the LCD of the two denominators given in the question", "answer": lcd},
+        {"prompt": "Convert the first fraction to a fraction with the LCD as its denominator", "answer": f"{a_new}/{lcd}"},
+        {"prompt": "Convert the second fraction to a fraction with the LCD as its denominator", "answer": f"{c_new}/{lcd}"},
         {"prompt": "Add the two fractions", "answer": f"{sum_num}/{lcd}"},
-        {"prompt": f"Remainder = 1 − {sum_num}/{lcd}", "answer": answer},
+        {"prompt": "Remainder = 1 − (the sum from the previous step)", "answer": answer},
     ]
 
     simplify_note = f" = {answer}" if common > 1 else ""

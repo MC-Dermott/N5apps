@@ -49,7 +49,7 @@ def generate_mortgages_question():
         question_text = f"{base} Calculate the deposit {name} must pay."
         answer = deposit
         scaffold_steps = [
-            {"prompt": f"Find {deposit_pct}% of £{house_price:,}", "answer": deposit},
+            {"prompt": "Find the deposit percentage of the house price", "answer": deposit},
         ]
         worked = [
             f"Deposit = £{house_price:,} × {deposit_pct} ÷ 100 = £{deposit:,.2f}",
@@ -58,11 +58,11 @@ def generate_mortgages_question():
         question_text = f"{base} Calculate {name}'s monthly repayment."
         answer = monthly
         scaffold_steps = [
-            {"prompt": f"Calculate the deposit ({deposit_pct}% of £{house_price:,})", "answer": deposit},
+            {"prompt": "Calculate the deposit (deposit percentage of the house price)", "answer": deposit},
             {"prompt": "Calculate the mortgage (house price − deposit)", "answer": mortgage},
             {"prompt": "Calculate the total interest (mortgage × R × T ÷ 100)", "answer": total_interest},
             {"prompt": "Calculate the total amount repaid", "answer": total_repaid},
-            {"prompt": f"Divide by {months} months", "answer": monthly},
+            {"prompt": "Divide by the number of months", "answer": monthly},
         ]
         worked = [
             f"Deposit = £{house_price:,} × {deposit_pct} ÷ 100 = £{deposit:,.2f}",
@@ -75,7 +75,7 @@ def generate_mortgages_question():
         question_text = f"{base} Calculate the total interest {name} will pay."
         answer = total_interest
         scaffold_steps = [
-            {"prompt": f"Calculate the deposit ({deposit_pct}% of £{house_price:,})", "answer": deposit},
+            {"prompt": "Calculate the deposit (deposit percentage of the house price)", "answer": deposit},
             {"prompt": "Calculate the mortgage (house price − deposit)", "answer": mortgage},
             {"prompt": "Calculate the total interest (mortgage × R × T ÷ 100)", "answer": total_interest},
         ]

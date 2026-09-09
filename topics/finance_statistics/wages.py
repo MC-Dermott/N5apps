@@ -104,7 +104,7 @@ def generate_wages_l1():
 
     scaffold_steps = [
         {
-            "prompt": f"Calculate {name}'s basic pay ({_fmt_hrs(contracted)} hours at £{basic_rate:.2f} per hour).",
+            "prompt": f"Calculate {name}'s basic pay (contracted hours × basic hourly rate).",
             "answer": basic_pay,
         },
         {
@@ -116,7 +116,7 @@ def generate_wages_l1():
             "answer": ot_rate,
         },
         {
-            "prompt": f"Calculate {name}'s overtime pay ({_fmt_hrs(ot_hours)} hours at £{ot_rate:.2f} per hour).",
+            "prompt": f"Calculate {name}'s overtime pay (overtime hours × overtime rate).",
             "answer": ot_pay,
         },
         {
@@ -190,7 +190,7 @@ def generate_wages_l2():
 
     scaffold_steps = [
         {
-            "prompt": f"Calculate {name}'s basic pay ({_fmt_hrs(basic_hours)} hours at £{basic_rate:.2f} per hour).",
+            "prompt": f"Calculate {name}'s basic pay (basic hours × basic hourly rate).",
             "answer": basic_pay,
         },
         {
@@ -198,7 +198,7 @@ def generate_wages_l2():
             "answer": ot_rate,
         },
         {
-            "prompt": f"Calculate {name}'s overtime pay ({_fmt_hrs(ot_hours)} hours at £{ot_rate:.2f} per hour).",
+            "prompt": f"Calculate {name}'s overtime pay (overtime hours × overtime rate).",
             "answer": ot_pay,
         },
         {
