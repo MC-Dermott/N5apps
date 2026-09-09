@@ -448,20 +448,28 @@ def _render_bar_chart(p):
     plt.close(fig)
 
 
+def _text_color_for(hex_color):
+    """White text on a dark wedge, black text on a light one (perceived-luminance threshold)."""
+    hex_color = hex_color.lstrip("#")
+    r, g, b = (int(hex_color[i:i + 2], 16) for i in (0, 2, 4))
+    luminance = 0.299 * r + 0.587 * g + 0.114 * b
+    return "black" if luminance > 140 else "white"
+
+
 def _render_pie_chart(p):
-    """Generic pie chart diagram. `categories`/`angles` define the wedges (any unlabelled
-    remainder should be included as its own "Rest"-style category so the wedges sum to 360).
-    Optional: `colors` (one per category — defaults to a fixed palette, cycled); `wedge_labels`
-    (one per category, defaults to "<angle>°" — pass "" to leave a wedge unlabelled, e.g. a grey
-    "Rest" wedge, or "?" for a missing/target angle); `show_labels` (whether matplotlib draws the
-    category name next to each wedge, default True); `caption` (title text under the chart, e.g.
-    a reference amount/total or a "given / find" summary)."""
+    """Generic pie chart diagram: a full pie, every wedge in its own colour (no grey/blank
+    filler) — `categories`/`angles` define the wedges, summing to 360. Optional: `colors` (one
+    per category — defaults to a fixed palette, cycled); `wedge_labels` (one per category,
+    defaults to "<angle>°" — pass "" to leave a wedge unlabelled, or "?" for a missing/target
+    angle); `show_labels` (whether matplotlib draws the category name next to each wedge, default
+    True); `caption` (title text under the chart, e.g. a reference amount/total or a "given /
+    find" summary)."""
     categories = p["categories"]
     angles = p["angles"]
     wedge_labels = p.get("wedge_labels", [f"{a}°" for a in angles])
     colors = p.get("colors") or (
-        ["#3498db", "#2ecc71", "#e74c3c", "#f39c12", "#9b59b6", "#1abc9c"][:len(categories)]
-    )
+        ["#3498db", "#2ecc71", "#e74c3c", "#f39c12", "#9b59b6", "#1abc9c"] * (len(categories) // 6 + 1)
+    )[:len(categories)]
     caption = p.get("caption", "")
 
     fig, ax = plt.subplots(figsize=(7, 5))
@@ -474,13 +482,14 @@ def _render_pie_chart(p):
         wedgeprops={"edgecolor": "white", "linewidth": 2},
     )
 
-    for wedge, label in zip(wedges, wedge_labels):
+    for wedge, label, color in zip(wedges, wedge_labels, colors):
         if not label:
             continue
         theta = np.radians((wedge.theta1 + wedge.theta2) / 2)
         r = 0.6
         ax.text(r * np.cos(theta), r * np.sin(theta), label,
-                ha="center", va="center", fontsize=10, fontweight="bold", color="black")
+                ha="center", va="center", fontsize=10, fontweight="bold",
+                color=_text_color_for(color))
 
     if caption:
         ax.set_title(caption, fontsize=10, pad=12)

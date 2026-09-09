@@ -26,7 +26,26 @@ Total = 360 × value per degree
 _WEDGE_BLUE = "#5b9bd5"
 _WEDGE_ORANGE = "#ed7d31"
 _WEDGE_GREEN = "#70ad47"
-_WEDGE_GREY = "#d9d9d9"
+_PALETTE = ["#5b9bd5", "#ed7d31", "#70ad47", "#ffc000", "#7030a0", "#c00000", "#4472c4", "#548235"]
+
+
+def _filler_wedges(total_degrees, used_colors):
+    """Split `total_degrees` of "everything else on the chart" into 2-3 distinctly coloured,
+    unlabelled wedges, so the pie reads as a full multi-segment chart rather than one coloured
+    slice against a blank remainder. Purely cosmetic — never affects the maths."""
+    if total_degrees <= 0:
+        return [], []
+    count = min(random.randint(2, 3), max(total_degrees, 1))
+    if count <= 1:
+        pieces = [total_degrees]
+    else:
+        cuts = sorted(random.sample(range(1, total_degrees), count - 1))
+        bounds = [0] + cuts + [total_degrees]
+        pieces = [bounds[i + 1] - bounds[i] for i in range(len(bounds) - 1)]
+    available = [c for c in _PALETTE if c not in used_colors]
+    random.shuffle(available)
+    colors = [available[i % len(available)] for i in range(len(pieces))]
+    return pieces, colors
 
 # ---------------------------------------------------------------------------
 # Level 1 — Fraction from the Angle
@@ -67,6 +86,9 @@ def generate_pie_charts_l1():
         f"= {answer_str} (dividing both numbers by {g})",
     ]
 
+    primary_color = random.choice(_PALETTE)
+    filler_pieces, filler_colors = _filler_wedges(360 - angle, used_colors=[primary_color])
+
     return Question(
         question_text=question_text,
         correct_answer=answer_str,
@@ -77,10 +99,10 @@ def generate_pie_charts_l1():
         metadata={
             "diagram": "pie_chart",
             "diagram_params": {
-                "categories": [category, "Rest"],
-                "angles": [angle, 360 - angle],
-                "colors": [_WEDGE_BLUE, _WEDGE_GREY],
-                "wedge_labels": [f"{angle}°", ""],
+                "categories": [category] + [f"Segment {i + 2}" for i in range(len(filler_pieces))],
+                "angles": [angle] + filler_pieces,
+                "colors": [primary_color] + filler_colors,
+                "wedge_labels": [f"{angle}°"] + [""] * len(filler_pieces),
                 "show_labels": False,
             },
         },
@@ -148,7 +170,7 @@ def generate_pie_charts_l2():
             "diagram_params": {
                 "categories": [cat1, cat2, cat3],
                 "angles": [a1, a2, missing],
-                "colors": [_WEDGE_BLUE, _WEDGE_ORANGE, _WEDGE_GREY],
+                "colors": [_WEDGE_BLUE, _WEDGE_ORANGE, _WEDGE_GREEN],
                 "wedge_labels": [f"{a1}°", f"{a2}°", "?"],
                 "show_labels": False,
             },
@@ -223,6 +245,9 @@ def generate_pie_charts_l3():
         f"Amount = {fraction_str} × {total} = {amount_str}",
     ]
 
+    primary_color = random.choice(_PALETTE)
+    filler_pieces, filler_colors = _filler_wedges(360 - angle, used_colors=[primary_color])
+
     return Question(
         question_text=question_text,
         correct_answer=amount,
@@ -234,10 +259,10 @@ def generate_pie_charts_l3():
         metadata={
             "diagram": "pie_chart",
             "diagram_params": {
-                "categories": [sc["category"], "Rest"],
-                "angles": [angle, 360 - angle],
-                "colors": [_WEDGE_BLUE, _WEDGE_GREY],
-                "wedge_labels": [f"{angle}°", ""],
+                "categories": [sc["category"]] + [f"Segment {i + 2}" for i in range(len(filler_pieces))],
+                "angles": [angle] + filler_pieces,
+                "colors": [primary_color] + filler_colors,
+                "wedge_labels": [f"{angle}°"] + [""] * len(filler_pieces),
                 "show_labels": False,
                 "caption": caption,
             },
@@ -313,6 +338,7 @@ def generate_pie_charts_l4():
     ]
 
     rest_angle = 360 - sc["known_angle"] - sc["target_angle"]
+    filler_pieces, filler_colors = _filler_wedges(rest_angle, used_colors=[_WEDGE_GREEN, _WEDGE_ORANGE])
 
     return Question(
         question_text=question_text,
@@ -325,10 +351,10 @@ def generate_pie_charts_l4():
         metadata={
             "diagram": "pie_chart",
             "diagram_params": {
-                "categories": [sc["known"], sc["target"], "Rest"],
-                "angles": [sc["known_angle"], sc["target_angle"], rest_angle],
-                "colors": [_WEDGE_GREEN, _WEDGE_ORANGE, _WEDGE_GREY],
-                "wedge_labels": [f"{sc['known_angle']}°\n({known_value})", f"{sc['target_angle']}°\n?", ""],
+                "categories": [sc["known"], sc["target"]] + [f"Segment {i + 3}" for i in range(len(filler_pieces))],
+                "angles": [sc["known_angle"], sc["target_angle"]] + filler_pieces,
+                "colors": [_WEDGE_GREEN, _WEDGE_ORANGE] + filler_colors,
+                "wedge_labels": [f"{sc['known_angle']}°\n({known_value})", f"{sc['target_angle']}°\n?"] + [""] * len(filler_pieces),
                 "show_labels": False,
             },
         },
