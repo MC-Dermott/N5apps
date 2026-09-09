@@ -7,8 +7,8 @@ logging.basicConfig(level=logging.INFO)
 from core.engine.session_manager import initialise_session, reset_test, reset_numeracy_assessment
 from core.engine.question_factory import generate_question, get_levels, QUAL_REGISTRY
 from core.ui.question_ui import render_question
-from core.ui.scaffold_ui import render_scaffold
-from core.ui.notes_ui import render_notes
+from core.ui.scaffold_ui import render_scaffold, render_simulation
+from core.ui.notes_ui import render_notes, render_examples, split_notes_and_example
 from core.ui.solution_ui import render_solution
 from core.ui.test_ui import render_test
 from core.ui.numeracy_assessment_ui import render_numeracy_assessment
@@ -255,6 +255,11 @@ if mode == "Test":
 else:
     quiz = st.session_state.quiz
 
+    # --- Notes: shown before generating a question, so it reflects a
+    # lightweight preview question for this topic/type/level until an actual
+    # question exists, then switches to that question's own notes. ---
+    notes_container = st.container()
+
     if st.button("Generate Question"):
         quiz["current_question"] = generate_question(topic, question_type, level=selected_level, qualification=qualification)
         st.session_state.submitted = False
@@ -264,10 +269,30 @@ else:
     question = quiz.get("current_question")
 
     if question:
+        notes_source = question.notes
+    else:
+        notes_key = (qualification, topic, question_type, selected_level)
+        if quiz.get("notes_key") != notes_key:
+            quiz["notes_key"] = notes_key
+            preview_question = generate_question(topic, question_type, level=selected_level, qualification=qualification)
+            quiz["preview_notes"] = preview_question.notes
+        notes_source = quiz.get("preview_notes", "")
+
+    concept_text, example_text = split_notes_and_example(notes_source)
+    with notes_container:
+        render_notes(concept_text)
+
+    if question:
         top_answer = render_question(question, suffix="top")
+
+        if not st.session_state.submitted:
+            render_examples(example_text)
+            render_scaffold(question, suffix="main")
+            render_simulation(question)
 
         if st.button("Submit Answer", key="submit_top"):
             st.session_state.submitted = True
+            st.rerun()
 
         if st.session_state.submitted:
             user_answer = top_answer.strip()
@@ -283,8 +308,3 @@ else:
                 st.error(f"❌ Incorrect. Correct answer: {question.correct_answer}")
 
             render_solution(question)
-
-        else:
-            st.write("---")
-            render_notes(question)
-            render_scaffold(question, suffix="main")

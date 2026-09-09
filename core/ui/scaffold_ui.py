@@ -43,8 +43,6 @@ def render_scaffold(question, suffix=""):
     if not question.scaffold_steps:
         return
     with st.expander("🔍 Step-by-step scaffold"):
-        if question.metadata.get("diagram") == "tax_bands":
-            render_tax_band_simulator(**question.metadata["diagram_params"])
         for i, step in enumerate(question.scaffold_steps):
             st.markdown(f"**Step {i + 1}:** {step['prompt']}")
 
@@ -94,3 +92,13 @@ def render_scaffold(question, suffix=""):
 
             if i < len(question.scaffold_steps) - 1:
                 st.divider()
+
+
+def render_simulation(question):
+    """Renders any interactive widget/simulation for this question in its own
+    expander, separate from the scaffold. Dispatch on question.metadata["diagram"]
+    the same way as scaffold widgets previously did — add new "elif" branches here
+    for future simulations rather than embedding them in render_scaffold."""
+    if question.metadata.get("diagram") == "tax_bands":
+        with st.expander("🎮 Simulation"):
+            render_tax_band_simulator(**question.metadata["diagram_params"])
