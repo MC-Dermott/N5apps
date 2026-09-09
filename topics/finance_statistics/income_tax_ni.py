@@ -95,6 +95,34 @@ Insurance is worked out on the salary **before** the pension is deducted. Mixing
 figure to use for which deduction is the most common mistake.
 """
 
+# The reference sheet pupils are given alongside these questions (tax bands + NI rules, with
+# no worked example) — shown directly above the question itself for any level that involves
+# income tax and/or National Insurance, i.e. every level here except Gross Annual Pay.
+_REFERENCE_SHEET = """
+**Scottish tax bands 2025/26**
+
+| Band | Taxable income | Scottish tax rate |
+|---|---|---|
+| Personal Allowance | Up to £12,570 | 0% |
+| Starter rate | £12,570 – £15,397 | 19% |
+| Basic rate | £15,397 – £27,491 | 20% |
+| Intermediate rate | £27,491 – £43,662 | 21% |
+| Higher rate | £43,662 – £75,000 | 42% |
+| Advanced rate | £75,000 – £125,140 | 45% |
+| Top rate | Over £125,140 | 48% |
+
+**National Insurance contributions**
+
+You begin paying National Insurance once you earn more than £1,048 a month (this is the amount
+for the 2025/26 tax year).
+
+For payslips dated between 6 April 2025 and 5 April 2026, you pay 8% of your monthly earnings
+between £1,048 and £4,189; 2% of your monthly earnings above £4,189.
+
+National Insurance is calculated on a person's salary **before deductions** such as pension
+contributions.
+"""
+
 
 def _r2(v):
     return round(float(v), 2)
@@ -232,7 +260,7 @@ def generate_income_tax(level="Higher"):
         scaffold_steps=scaffold_steps,
         worked_solution=worked,
         notes=_NOTES_INCOME_TAX,
-        metadata=_bands_metadata(_TAX_BANDS_ANNUAL, _TAX_MAX_INCOME, salary),
+        metadata={**_bands_metadata(_TAX_BANDS_ANNUAL, _TAX_MAX_INCOME, salary), "reference_sheet": _REFERENCE_SHEET},
     )
 
 
@@ -267,7 +295,7 @@ def generate_higher_ni(level="Higher"):
         scaffold_steps=scaffold_steps,
         worked_solution=worked,
         notes=_NOTES_NI,
-        metadata=_bands_metadata(_NI_BANDS_MONTHLY, _NI_MAX_INCOME, salary),
+        metadata={**_bands_metadata(_NI_BANDS_MONTHLY, _NI_MAX_INCOME, salary), "reference_sheet": _REFERENCE_SHEET},
     )
 
 
@@ -344,7 +372,7 @@ def generate_net_monthly_income(level="Higher"):
         scaffold_steps=scaffold_steps,
         worked_solution=worked,
         notes=_NOTES_NET_PAY,
-        metadata=_bands_metadata(_TAX_BANDS_ANNUAL, _TAX_MAX_INCOME, taxable_income),
+        metadata={**_bands_metadata(_TAX_BANDS_ANNUAL, _TAX_MAX_INCOME, taxable_income), "reference_sheet": _REFERENCE_SHEET},
     )
 
 

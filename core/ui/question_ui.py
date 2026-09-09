@@ -73,6 +73,9 @@ def _render_spreadsheet_input(question, suffix):
 
 
 def render_question(question, suffix="default"):
+    if question.metadata.get("reference_sheet"):
+        st.markdown(question.metadata["reference_sheet"])
+        st.divider()
     if question.metadata.get("table"):
         st.markdown(question.metadata["table"])
     st.subheader(question.question_text)

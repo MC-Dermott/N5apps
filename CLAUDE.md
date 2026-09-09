@@ -75,6 +75,12 @@ class Question:
   demo example), dispatch on a new `"diagram"` key in `scaffold_ui.py`, and stress-test that the
   widget actually builds from every generated question's `diagram_params`, not just that the
   question itself is valid.
+- `metadata["reference_sheet"]`: a fixed markdown block (tables/rules, no worked example) shown
+  directly above the question text, unconditionally — for real-world reference data (e.g. tax
+  bands, NI rates) pupils are given alongside the question rather than expected to memorise.
+  Rendered by `render_question()` in `core/ui/question_ui.py`. Used by Income Tax and National
+  Insurance (Higher) — attached only to the levels that actually need it, not every level of the
+  question type (e.g. not Gross Annual Pay, which doesn't touch tax or NI).
 
 ## Worksheet/homework library (outside this repo) — the full pipeline
 
