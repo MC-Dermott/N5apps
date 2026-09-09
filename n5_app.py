@@ -244,9 +244,9 @@ levels = get_levels(topic, question_type, qualification)
 selected_level = None
 
 if levels:
-    level_options = ["All Levels"] + list(levels.keys())
-    level_choice = st.radio("Level", level_options, horizontal=True)
-    selected_level = None if level_choice == "All Levels" else level_choice
+    level_options = ["All Question Types"] + list(levels.keys())
+    level_choice = st.selectbox("Choose Question Type", level_options)
+    selected_level = None if level_choice == "All Question Types" else level_choice
 
 # --- Mode routing ---
 if mode == "Test":

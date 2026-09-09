@@ -248,9 +248,9 @@ _N5_LEVELS = {
             "Simplify Fractions": generate_fraction_simplification,
         },
         "Fractions (Exam Style)": {
-            "Level 1": generate_fraction_exam_l1,
-            "Level 2": generate_fraction_exam_l2,
-            "Level 3": generate_fraction_exam_l3,
+            "Two Fractions, Subtract from 1": generate_fraction_exam_l1,
+            "Two Fractions, Subtract from Several Items": generate_fraction_exam_l2,
+            "Three Fractions, Subtract from a Whole": generate_fraction_exam_l3,
         },
         "Percentages": {
             "Percentage of an Amount": generate_percentage_l1,
@@ -262,55 +262,55 @@ _N5_LEVELS = {
             "Mixed Changes": generate_percentage_mixed_changes,
         },
         "Probability": {
-            "Level 1": generate_numeracy_probability_l1,
-            "Level 2": generate_numeracy_probability_l2,
+            "Single Event": generate_numeracy_probability_l1,
+            "Combined Events": generate_numeracy_probability_l2,
         },
         "Ratio and Direct Proportion": {
-            "Ratio - Level 1": generate_numeracy_ratio_l1,
-            "Ratio - Level 2": generate_numeracy_ratio_l2,
-            "Direct Proportion - Level 1": generate_direct_proportion_l1,
-            "Direct Proportion - Level 2": generate_direct_proportion_l2,
-            "Direct Proportion - Level 3": generate_direct_proportion_l3,
+            "Ratio: Find a Share": generate_numeracy_ratio_l1,
+            "Ratio: Find the Total": generate_numeracy_ratio_l2,
+            "Direct Proportion: Scaling": generate_direct_proportion_l1,
+            "Direct Proportion: Best Value": generate_direct_proportion_l2,
+            "Direct Proportion: Unit Conversion": generate_direct_proportion_l3,
         },
         "Currency Exchange": {
-            "Level 1 — Basic Exchange": generate_currency_l1,
-            "Level 2 — Changing, Spending, and Changing Back": generate_currency_l2,
-            "Level 3 — Exchange with Restrictions": generate_currency_l3,
-            "Level 4 — Converting Between Two Currencies": generate_currency_l4,
-            "Level 5 — Calculating the Exchange Rate": generate_currency_l5,
+            "Basic Exchange": generate_currency_l1,
+            "Changing, Spending, and Changing Back": generate_currency_l2,
+            "Exchange with Restrictions": generate_currency_l3,
+            "Converting Between Two Currencies": generate_currency_l4,
+            "Calculating the Exchange Rate": generate_currency_l5,
         },
         "Pie Charts": {
-            "Level 1 — Fraction from the Angle": generate_pie_charts_l1,
-            "Level 2 — Finding the Missing Angle": generate_pie_charts_l2,
-            "Level 3 — Calculating the Amount": generate_pie_charts_l3,
-            "Level 4 — Working from One Segment": generate_pie_charts_l4,
+            "Fraction from the Angle": generate_pie_charts_l1,
+            "Finding the Missing Angle": generate_pie_charts_l2,
+            "Calculating the Amount": generate_pie_charts_l3,
+            "Working from One Segment": generate_pie_charts_l4,
         },
     },
     "Finance and Statistics": {
         "Hire Purchase": {
-            "Level 1": generate_hire_purchase_l1,
-            "Level 2": generate_hire_purchase_l2,
+            "Standard Instalments": generate_hire_purchase_l1,
+            "Different Final Instalment": generate_hire_purchase_l2,
         },
         "National Insurance": {
-            "Level 1": generate_ni_l1,
-            "Level 2": generate_ni_l2,
-            "Level 3": generate_ni_l3,
+            "Single Band": generate_ni_l1,
+            "Two Bands": generate_ni_l2,
+            "Net Pay": generate_ni_l3,
         },
         "Wages": {
-            "Level 1": generate_wages_l1,
-            "Level 2": generate_wages_l2,
+            "Gross Pay with Overtime": generate_wages_l1,
+            "Net Pay after Deductions": generate_wages_l2,
         },
     },
     "Geometry and Measure": {
         "Time Zones": {
-            "Level 1": generate_time_zone_l1,
-            "Level 2": generate_time_zone_l2,
-            "Level 3": generate_time_zone_l3,
+            "Time Zone Conversion": generate_time_zone_l1,
+            "Journey Times Across Zones": generate_time_zone_l2,
+            "Stopover Journeys": generate_time_zone_l3,
         },
         "Tolerance": {
-            "Level 1": generate_tolerance_l1,
-            "Level 2": generate_tolerance_l2,
-            "Level 3": generate_tolerance_l3,
+            "Absolute Tolerance": generate_tolerance_l1,
+            "Tolerance with Unit Conversion": generate_tolerance_l2,
+            "Percentage Tolerance": generate_tolerance_l3,
         },
     },
 }
@@ -320,9 +320,9 @@ _N4_LEVELS = {}
 _HIGHER_LEVELS = {
     "Finance": {
         "Interest": {
-            "Level 1": generate_interest_l1,
-            "Level 2": generate_interest_l2,
-            "Level 3": generate_interest_l3,
+            "Single Deposit": generate_interest_l1,
+            "Multiple Deposits": generate_interest_l2,
+            "Minimum Deposit for a Goal": generate_interest_l3,
         },
         "Income Tax and National Insurance": {
             "Gross Annual Pay": generate_gross_annual_pay,
@@ -336,16 +336,16 @@ _HIGHER_LEVELS = {
 _N5_NUMERACY_LEVELS = {
     "Numbers and Money": {
         "Fractions (Exam Style)": {
-            "Level 1": generate_fraction_exam_l1,
-            "Level 2": generate_fraction_exam_l2,
-            "Level 3": generate_fraction_exam_l3,
+            "Two Fractions, Subtract from 1": generate_fraction_exam_l1,
+            "Two Fractions, Subtract from Several Items": generate_fraction_exam_l2,
+            "Three Fractions, Subtract from a Whole": generate_fraction_exam_l3,
         },
         "Foreign Currency": {
-            "Level 1 — Basic Exchange": generate_foreign_currency_l1,
-            "Level 2 — Changing, Spending, and Changing Back": generate_foreign_currency_l2,
-            "Level 3 — Holiday Spending Money": generate_foreign_currency_l3,
-            "Level 4 — Converting Between Two Currencies": generate_foreign_currency_l4,
-            "Level 5 — Calculating the Exchange Rate": generate_foreign_currency_l5,
+            "Basic Exchange": generate_foreign_currency_l1,
+            "Changing, Spending, and Changing Back": generate_foreign_currency_l2,
+            "Holiday Spending Money": generate_foreign_currency_l3,
+            "Converting Between Two Currencies": generate_foreign_currency_l4,
+            "Calculating the Exchange Rate": generate_foreign_currency_l5,
         },
     },
 }
