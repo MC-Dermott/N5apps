@@ -449,34 +449,41 @@ def _render_bar_chart(p):
 
 
 def _render_pie_chart(p):
+    """Generic pie chart diagram. `categories`/`angles` define the wedges (any unlabelled
+    remainder should be included as its own "Rest"-style category so the wedges sum to 360).
+    Optional: `colors` (one per category — defaults to a fixed palette, cycled); `wedge_labels`
+    (one per category, defaults to "<angle>°" — pass "" to leave a wedge unlabelled, e.g. a grey
+    "Rest" wedge, or "?" for a missing/target angle); `show_labels` (whether matplotlib draws the
+    category name next to each wedge, default True); `caption` (title text under the chart, e.g.
+    a reference amount/total or a "given / find" summary)."""
     categories = p["categories"]
     angles = p["angles"]
-    ref_cat = p["ref_cat"]
-    ref_count = p["ref_count"]
-    ask_cat = p["ask_cat"]
-
-    colors = ["#3498db", "#2ecc71", "#e74c3c", "#f39c12", "#9b59b6", "#1abc9c"][:len(categories)]
+    wedge_labels = p.get("wedge_labels", [f"{a}°" for a in angles])
+    colors = p.get("colors") or (
+        ["#3498db", "#2ecc71", "#e74c3c", "#f39c12", "#9b59b6", "#1abc9c"][:len(categories)]
+    )
+    caption = p.get("caption", "")
 
     fig, ax = plt.subplots(figsize=(7, 5))
     wedges, _ = ax.pie(
         angles,
-        labels=categories,
+        labels=categories if p.get("show_labels", True) else None,
         colors=colors,
         startangle=90,
         counterclock=False,
         wedgeprops={"edgecolor": "white", "linewidth": 2},
     )
 
-    for wedge, angle in zip(wedges, angles):
+    for wedge, label in zip(wedges, wedge_labels):
+        if not label:
+            continue
         theta = np.radians((wedge.theta1 + wedge.theta2) / 2)
         r = 0.6
-        ax.text(r * np.cos(theta), r * np.sin(theta), f"{angle}°",
-                ha="center", va="center", fontsize=10, fontweight="bold", color="white")
+        ax.text(r * np.cos(theta), r * np.sin(theta), label,
+                ha="center", va="center", fontsize=10, fontweight="bold", color="black")
 
-    ax.set_title(
-        f"Given: {ref_count} people chose {ref_cat}   |   Find: how many chose {ask_cat}",
-        fontsize=10, pad=12,
-    )
+    if caption:
+        ax.set_title(caption, fontsize=10, pad=12)
     fig.patch.set_facecolor("white")
     plt.tight_layout()
     st.pyplot(fig, use_container_width=False)

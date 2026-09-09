@@ -46,6 +46,13 @@ from topics.numeracy.currency_exchange import (
     generate_currency_l4,
     generate_currency_l5,
 )
+from topics.numeracy.pie_charts import (
+    generate_pie_charts_question as generate_numeracy_pie_charts_question,
+    generate_pie_charts_l1,
+    generate_pie_charts_l2,
+    generate_pie_charts_l3,
+    generate_pie_charts_l4,
+)
 from topics.rounding.rounding import (
     generate_rounding_decimal_places,
     generate_rounding_money,
@@ -142,6 +149,7 @@ _N5_TOPICS = {
         "Probability": generate_numeracy_probability_question,
         "Ratio and Direct Proportion": generate_ratio_and_proportion_question,
         "Currency Exchange": generate_currency_question,
+        "Pie Charts": generate_numeracy_pie_charts_question,
     },
     "Finance and Statistics": {
         "Simple Interest": generate_simple_interest_question,
@@ -270,6 +278,12 @@ _N5_LEVELS = {
             "Level 3 — Exchange with Restrictions": generate_currency_l3,
             "Level 4 — Converting Between Two Currencies": generate_currency_l4,
             "Level 5 — Calculating the Exchange Rate": generate_currency_l5,
+        },
+        "Pie Charts": {
+            "Level 1 — Fraction from the Angle": generate_pie_charts_l1,
+            "Level 2 — Finding the Missing Angle": generate_pie_charts_l2,
+            "Level 3 — Calculating the Amount": generate_pie_charts_l3,
+            "Level 4 — Working from One Segment": generate_pie_charts_l4,
         },
     },
     "Finance and Statistics": {

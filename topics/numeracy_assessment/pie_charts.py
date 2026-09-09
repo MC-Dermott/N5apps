@@ -108,9 +108,7 @@ def generate_pie_charts():
             "diagram_params": {
                 "categories": [c[0] for c in sc["categories"]],
                 "angles": [c[1] for c in sc["categories"]],
-                "ref_cat": ref_cat,
-                "ref_count": ref_count,
-                "ask_cat": ask_cat,
+                "caption": f"Given: {ref_count} people chose {ref_cat}   |   Find: how many chose {ask_cat}",
             },
         },
     )
