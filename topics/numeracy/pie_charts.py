@@ -3,7 +3,11 @@ import random
 
 from core.models.question_model import Question
 
-NOTES = """
+_HEADLINE = "### **The fraction of a pie chart covered by a segment = the fraction of the total**"
+
+NOTES_L1 = f"""
+{_HEADLINE}
+
 **Reading Pie Charts**
 
 There are 360° in a full circle — a sector's angle is always a fraction of 360°.
@@ -11,16 +15,55 @@ There are 360° in a full circle — a sector's angle is always a fraction of 36
 **Fraction represented by a sector:**
 Fraction = sector angle ÷ 360
 
-**Finding a missing angle:**
+**Example:** A sector has an angle of 90°.
+- Fraction = 90 ÷ 360
+- = 1/4 (dividing both numbers by 90)
+"""
+
+NOTES_L2 = f"""
+{_HEADLINE}
+
+**Finding a Missing Angle**
+
+The angles in a pie chart always add up to 360°.
+
 Missing angle = 360 − (sum of the angles you already know)
 
-**Finding an amount from an angle and a total:**
-Amount = (sector angle ÷ 360) × total
+**Example:** A pie chart shows: Tea: 110°, Coffee: 100°, Juice: **?**.
+- Missing angle = 360 − 110 − 100 = 150°
+- Fraction = 150 ÷ 360 = 5/12
+"""
 
-**Finding another segment (or the total) from one known segment:**
+NOTES_L3 = f"""
+{_HEADLINE}
+
+**Finding an Amount from an Angle and a Total**
+
+1. Find the segment's fraction: Fraction = sector angle ÷ 360
+2. Multiply by the total: Amount = fraction × total
+
+**Example:** A pie chart shows a 90° segment. The total represented by the whole chart is
+200 people.
+- Fraction = 90 ÷ 360 = 1/4
+- Amount = 1/4 × 200 = 50 people
+"""
+
+NOTES_L4 = f"""
+{_HEADLINE}
+
+**Working from One Known Segment**
+
+If you know one segment's angle AND its value, you can work out the value of any other
+segment — or the total — without knowing the overall total in advance.
+
 Value per degree = known value ÷ known angle
 Other segment's value = other angle × value per degree
 Total = 360 × value per degree
+
+**Example:** A 60° segment represents 120 people.
+- Value per degree = 120 ÷ 60 = 2 people per degree
+- A 90° segment = 90 × 2 = 180 people
+- Total = 360 × 2 = 720 people
 """
 
 _PALETTE = ["#5b9bd5", "#ed7d31", "#70ad47", "#ffc000", "#7030a0", "#c00000", "#4472c4", "#548235"]
@@ -95,7 +138,7 @@ def generate_pie_charts_l1():
         topic="Numeracy",
         question_type="Pie Charts",
         worked_solution=worked,
-        notes=NOTES,
+        notes=NOTES_L1,
         metadata={
             "diagram": "pie_chart",
             "diagram_params": {
@@ -165,7 +208,7 @@ def generate_pie_charts_l2():
         question_type="Pie Charts",
         scaffold_steps=scaffold_steps,
         worked_solution=worked,
-        notes=NOTES,
+        notes=NOTES_L2,
         metadata={
             "diagram": "pie_chart",
             "diagram_params": {
@@ -265,7 +308,7 @@ def generate_pie_charts_l3():
         question_type="Pie Charts",
         scaffold_steps=scaffold_steps,
         worked_solution=worked,
-        notes=NOTES,
+        notes=NOTES_L3,
         metadata={
             "diagram": "pie_chart",
             "diagram_params": {
@@ -369,7 +412,7 @@ def generate_pie_charts_l4():
         question_type="Pie Charts",
         scaffold_steps=scaffold_steps,
         worked_solution=worked,
-        notes=NOTES,
+        notes=NOTES_L4,
         metadata={
             "diagram": "pie_chart",
             "diagram_params": {
