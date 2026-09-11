@@ -30,11 +30,22 @@ _CM_M_PAIRS = [
     (15,  6), (10,  4), (60,  4), (75,  5), (50, 10),
     (80,  5), (45,  9), (36,  9), (24,  6), (48,  8),
 ]
+# calc_mode: (50,4)→0.125, (20,8)→0.025, (15,6)→0.025, (10,4)→0.025 all exceed 2 d.p.
+_CM_M_PAIRS_CALC = [
+    (30,  6), (25,  5), (40,  8), (60,  4), (75,  5),
+    (50, 10), (80,  5), (45,  9), (36,  9), (24,  6), (48,  8),
+]
 
 # (rise_m, run_km) → gradient = rise_m / (run_km × 1000)
 _M_KM_PAIRS = [
     ( 50, 2), ( 80, 4), (100, 2), (150, 3), ( 60, 3),
     ( 75, 3), (120, 4), (200, 5), ( 40, 2), ( 90, 3),
+    (100, 5), (160, 4), (120, 6), (180, 6), (250, 5),
+]
+# calc_mode: (50,2)→0.025 and (75,3)→0.025 exceed 2 d.p.
+_M_KM_PAIRS_CALC = [
+    ( 80, 4), (100, 2), (150, 3), ( 60, 3),
+    (120, 4), (200, 5), ( 40, 2), ( 90, 3),
     (100, 5), (160, 4), (120, 6), (180, 6), (250, 5),
 ]
 
@@ -74,25 +85,25 @@ def _frac_str(num, den):
     return str(n) if d == 1 else f"{n}/{d}"
 
 
-def generate_gradient_question_n4():
-    return _gradient_cm_m()
+def generate_gradient_question_n4(calc_mode=False):
+    return _gradient_cm_m(calc_mode)
 
 
-def generate_gradient_question():
+def generate_gradient_question(calc_mode=False):
     qtype = random.choice(["cm_m_slope", "m_km_slope", "sea_level"])
     return {
         "cm_m_slope": _gradient_cm_m,
         "m_km_slope": _gradient_m_km,
         "sea_level":  _gradient_sea_level,
-    }[qtype]()
+    }[qtype](calc_mode)
 
 
 # ---------------------------------------------------------------------------
 # Type 1 — Simple slope: rise in cm, run in m
 # ---------------------------------------------------------------------------
 
-def _gradient_cm_m():
-    rise_cm, run_m = random.choice(_CM_M_PAIRS)
+def _gradient_cm_m(calc_mode=False):
+    rise_cm, run_m = random.choice(_CM_M_PAIRS_CALC if calc_mode else _CM_M_PAIRS)
     rise_m_float = rise_cm / 100
     gradient = rise_cm / (run_m * 100)   # integer division avoids float rounding
     g_frac = _frac_str(rise_cm, run_m * 100)
@@ -137,8 +148,8 @@ def _gradient_cm_m():
 # Type 2 — Simple slope: rise in m, run in km
 # ---------------------------------------------------------------------------
 
-def _gradient_m_km():
-    rise_m, run_km = random.choice(_M_KM_PAIRS)
+def _gradient_m_km(calc_mode=False):
+    rise_m, run_km = random.choice(_M_KM_PAIRS_CALC if calc_mode else _M_KM_PAIRS)
     run_m = run_km * 1000
     gradient = rise_m / run_m
     g_frac = _frac_str(rise_m, run_m)
@@ -183,8 +194,8 @@ def _gradient_m_km():
 # Type 3 — Height above sea level word problem
 # ---------------------------------------------------------------------------
 
-def _gradient_sea_level():
-    rise_m, run_km = random.choice(_M_KM_PAIRS)
+def _gradient_sea_level(calc_mode=False):
+    rise_m, run_km = random.choice(_M_KM_PAIRS_CALC if calc_mode else _M_KM_PAIRS)
     run_m = run_km * 1000
     gradient = rise_m / run_m
     g_frac = _frac_str(rise_m, run_m)

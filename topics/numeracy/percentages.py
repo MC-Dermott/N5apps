@@ -144,8 +144,8 @@ def generate_percentage_question_n4():
 # Level 1 — percentage of an amount
 # ---------------------------------------------------------------------------
 
-def generate_percentage_l1():
-    percentage = random.randint(1, 99)
+def generate_percentage_l1(calc_mode=False):
+    percentage = random.choice(range(5, 100, 5)) if calc_mode else random.randint(1, 99)
     amount = random.randint(10, 200)
     multiplier = round(percentage / 100, 2)
     answer = round(amount * multiplier, 2)
@@ -491,7 +491,7 @@ def _survey_question():
     )
 
 
-def generate_percentage_l2():
+def generate_percentage_l2(calc_mode=False):
     return random.choice([
         _profit_loss_question,
         _quality_control_question,
@@ -516,7 +516,7 @@ _CHANGE_CONTEXTS = [
 ]
 
 
-def generate_percentage_multiplier():
+def generate_percentage_multiplier(calc_mode=False):
     ctx = random.choice(_CHANGE_CONTEXTS)
     is_increase = random.choice([True, False])
     rate = random.randint(1, 50)
@@ -566,10 +566,10 @@ _SINGLE_CHANGE_CONTEXTS = [
 ]
 
 
-def generate_percentage_single_change():
+def generate_percentage_single_change(calc_mode=False):
     ctx = random.choice(_SINGLE_CHANGE_CONTEXTS)
     is_increase = random.choice([True, False])
-    rate = random.randint(2, 40)
+    rate = random.choice(range(5, 41, 5)) if calc_mode else random.randint(2, 40)
     amount = random.choice(range(200, 20001, 100))
     decimal = round(rate / 100, 2)
     multiplier = round(1 + decimal, 2) if is_increase else round(1 - decimal, 2)
@@ -622,11 +622,11 @@ _APPRECIATION_CONTEXTS = [
 ]
 
 
-def generate_percentage_appreciation():
+def generate_percentage_appreciation(calc_mode=False):
     ctx = random.choice(_APPRECIATION_CONTEXTS)
     lo, hi, step = ctx["range"]
     initial = random.choice(range(lo, hi + 1, step))
-    rate = random.randint(2, 20)
+    rate = random.choice(range(5, 21, 5)) if calc_mode else random.randint(2, 20)
     years = random.choice([2, 3])
     multiplier = round((100 + rate) / 100, 2)
 
@@ -677,11 +677,11 @@ _DEPRECIATION_CONTEXTS = [
 ]
 
 
-def generate_percentage_depreciation():
+def generate_percentage_depreciation(calc_mode=False):
     ctx = random.choice(_DEPRECIATION_CONTEXTS)
     lo, hi, step = ctx["range"]
     initial = random.choice(range(lo, hi + 1, step))
-    rate = random.randint(2, 30)
+    rate = random.choice(range(5, 31, 5)) if calc_mode else random.randint(2, 30)
     years = random.choice([2, 3])
     multiplier = round((100 - rate) / 100, 2)
 
@@ -731,14 +731,18 @@ _MIXED_CONTEXTS = [
 ]
 
 
-def generate_percentage_mixed_changes():
+def generate_percentage_mixed_changes(calc_mode=False):
     ctx = random.choice(_MIXED_CONTEXTS)
     lo, hi, step = ctx["range"]
     initial = random.choice(range(lo, hi + 1, step))
 
     is_increase_1, is_increase_2 = random.sample([True, False], 2)
-    rate1 = random.randint(2, 30)
-    rate2 = random.randint(2, 30)
+    if calc_mode:
+        rate1 = random.choice(range(5, 31, 5))
+        rate2 = random.choice(range(5, 31, 5))
+    else:
+        rate1 = random.randint(2, 30)
+        rate2 = random.randint(2, 30)
 
     m1 = round((100 + rate1) / 100, 2) if is_increase_1 else round((100 - rate1) / 100, 2)
     m2 = round((100 + rate2) / 100, 2) if is_increase_2 else round((100 - rate2) / 100, 2)
@@ -786,13 +790,17 @@ def generate_percentage_mixed_changes():
 # Default dispatcher
 # ---------------------------------------------------------------------------
 
-def generate_percentage_question():
-    return random.choice([
+def generate_percentage_question(calc_mode=False):
+    # generate_percentage_l2's six scenarios divide by an arbitrary real-world total with
+    # no clean-divisor variant, so it's dropped from the pool under calc_mode.
+    choices = [
         generate_percentage_l1,
-        generate_percentage_l2,
         generate_percentage_multiplier,
         generate_percentage_single_change,
         generate_percentage_appreciation,
         generate_percentage_depreciation,
         generate_percentage_mixed_changes,
-    ])()
+    ]
+    if not calc_mode:
+        choices.append(generate_percentage_l2)
+    return random.choice(choices)(calc_mode=calc_mode)

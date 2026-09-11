@@ -130,14 +130,14 @@ from topics.numeracy_assessment.stem_and_leaf import generate_stem_and_leaf
 from topics.numeracy_assessment.reading_bar_charts import generate_reading_bar_charts
 from topics.numeracy_assessment.pie_charts import generate_pie_charts
 
-def generate_ratio_and_proportion_question():
+def generate_ratio_and_proportion_question(calc_mode=False):
     return random.choice([
         generate_numeracy_ratio_l1,
         generate_numeracy_ratio_l2,
         generate_direct_proportion_l1,
         generate_direct_proportion_l2,
         generate_direct_proportion_l3,
-    ])()
+    ])(calc_mode=calc_mode)
 
 
 _N5_TOPICS = {
@@ -381,9 +381,71 @@ def get_levels(topic, question_type, qualification="National 5"):
     return _QUAL_LEVELS.get(qualification, {}).get(topic, {}).get(question_type, {})
 
 
-def generate_question(topic, question_type, level=None, qualification="National 5"):
+# ---------------------------------------------------------------------------
+# Calculator vs Non-calculator mode
+#
+# _CALC_MODE_AWARE: generator functions that accept a `calc_mode` kwarg and
+# restrict their own number generation (single-digit/power-of-ten multipliers
+# and divisors, ≤2 d.p. decimals) when it's True.
+# _ALWAYS_CALC_SAFE: generator functions whose output already satisfies the
+# non-calculator constraint unconditionally — called with no kwarg either way.
+#
+# Higher is deliberately excluded entirely (no non-calculator mode there), as
+# are any topics whose arithmetic can't be made non-calc-safe without
+# falsifying the numbers (e.g. real exchange rates, compounding, π).
+# ---------------------------------------------------------------------------
+
+_CALC_MODE_AWARE = {
+    generate_ni_question, generate_ni_l1, generate_ni_l2, generate_ni_l3,
+    generate_ratio_and_proportion_question,
+    generate_numeracy_ratio_l1, generate_numeracy_ratio_l2,
+    generate_direct_proportion_l1, generate_direct_proportion_l2, generate_direct_proportion_l3,
+    generate_percentage_question, generate_percentage_l1, generate_percentage_single_change,
+    generate_percentage_appreciation, generate_percentage_depreciation, generate_percentage_mixed_changes,
+    generate_gradient_question, generate_gradient_question_n4,
+    generate_tolerance_question, generate_tolerance_l1, generate_tolerance_l2, generate_tolerance_l3,
+    generate_rounding_significant_figures,
+    generate_liquid_volume, generate_num_probability,
+}
+
+_ALWAYS_CALC_SAFE = {
+    generate_fraction_question, generate_fraction_question_n4,
+    generate_fraction_exam_style, generate_fraction_exam_l1, generate_fraction_exam_l2, generate_fraction_exam_l3,
+    generate_fraction_addition, generate_fraction_subtraction, generate_fraction_three,
+    generate_improper_fraction_conversion, generate_fraction_simplification,
+    generate_percentage_question_n4, generate_percentage_multiplier,
+    generate_numeracy_probability_question, generate_numeracy_probability_l1, generate_numeracy_probability_l2,
+    generate_numeracy_pie_charts_question, generate_pie_charts_l1, generate_pie_charts_l2,
+    generate_pie_charts_l3, generate_pie_charts_l4,
+    generate_simple_interest_question, generate_simple_interest_question_n4,
+    generate_commission_question,
+    generate_time_zone_question, generate_time_zone_question_n4,
+    generate_time_zone_l1, generate_time_zone_l2, generate_time_zone_l3,
+    generate_stem_and_leaf, generate_pie_charts, generate_reading_bar_charts,
+    generate_reading_scale, generate_num_fractions, generate_time_zones_reading_tables,
+}
+
+_CALC_MODE_SAFE = _CALC_MODE_AWARE | _ALWAYS_CALC_SAFE
+
+
+def _invoke(func, calc_mode):
+    if calc_mode and func in _CALC_MODE_AWARE:
+        return func(calc_mode=True)
+    return func()
+
+
+def calc_mode_available(topic, question_type, level=None, qualification="National 5"):
+    """Whether a non-calculator variant exists for this exact topic/type/level selection."""
+    if level:
+        func = get_levels(topic, question_type, qualification).get(level)
+    else:
+        func = QUAL_REGISTRY.get(qualification, {}).get(topic, {}).get(question_type)
+    return func in _CALC_MODE_SAFE if func else False
+
+
+def generate_question(topic, question_type, level=None, qualification="National 5", calc_mode=False):
     if level:
         levels = get_levels(topic, question_type, qualification)
         if level in levels:
-            return levels[level]()
-    return QUAL_REGISTRY[qualification][topic][question_type]()
+            return _invoke(levels[level], calc_mode)
+    return _invoke(QUAL_REGISTRY[qualification][topic][question_type], calc_mode)

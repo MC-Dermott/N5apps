@@ -487,9 +487,9 @@ def _tombola_vs_dice_question():
         + [f"  {line}" for line in breakdown]
         + [
             f"  Total: {tombola_fav} tickets",
-            f"P(tombola win) = {tombola_fav}/100 = {tombola_frac} ≈ {tombola_prob:.3f}",
+            f"P(tombola win) = {tombola_fav}/100 = {tombola_frac} ≈ {tombola_prob:.2f}",
             f"Dice game — totals ≥ {d_thresh} out of 36: {dice_fav} outcomes",
-            f"P(dice win) = {dice_fav}/36 = {dice_frac} ≈ {dice_prob:.3f}",
+            f"P(dice win) = {dice_fav}/36 = {dice_frac} ≈ {dice_prob:.2f}",
             f"Since {tombola_frac if winner == 'tombola' else dice_frac} > "
             f"{dice_frac if winner == 'tombola' else tombola_frac}, "
             f"the **{winner}** gives the greater chance of winning.",

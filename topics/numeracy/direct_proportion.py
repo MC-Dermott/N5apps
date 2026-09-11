@@ -62,13 +62,14 @@ _L1_CONTEXTS = [
 ]
 
 
-def generate_direct_proportion_l1():
+def generate_direct_proportion_l1(calc_mode=False):
     ctx = random.choice(_L1_CONTEXTS)
 
     quantity1 = quantity2 = amount1 = amount2 = None
+    q2_hi = 10 if calc_mode else 16   # calc_mode: q2 stays single-digit (a clean multiplier)
     for _ in range(50):
         q1 = random.randint(2, 9)
-        q2 = random.choice([q for q in range(2, 16) if q != q1])
+        q2 = random.choice([q for q in range(2, q2_hi) if q != q1])
         a1 = random.randint(2, 40)
         if (a1 * q2) % q1 == 0:
             quantity1, quantity2, amount1 = q1, q2, a1
@@ -130,13 +131,14 @@ _L2_WEIGHT_CONTEXTS = [
 ]
 
 _L2_QTYS = [20, 24, 25, 30, 35, 40, 45, 50, 60, 70, 75, 80]
+_L2_QTYS_CALC = [20, 30, 40, 50, 60, 70, 80]   # single-digit × 10 only — clean divisors
 
 
-def _l2_count_question():
+def _l2_count_question(calc_mode=False):
     ctx = random.choice(_L2_COUNT_CONTEXTS)
 
     for _ in range(50):
-        qty1, qty2 = random.sample(_L2_QTYS, 2)
+        qty1, qty2 = random.sample(_L2_QTYS_CALC if calc_mode else _L2_QTYS, 2)
         price1_p = random.randint(150, 1500)
         price2_p = random.randint(150, 1500)
         unit1 = round(price1_p / qty1, 2)
@@ -180,13 +182,14 @@ def _l2_count_question():
 
 
 _L2_WEIGHTS_G = [200, 250, 300, 400, 500, 600, 750, 800, 900, 1000, 1200, 1500]
+_L2_WEIGHTS_G_CALC = [200, 300, 400, 500, 600, 800, 900, 1000]   # single-digit × 100 only
 
 
-def _l2_weight_question():
+def _l2_weight_question(calc_mode=False):
     ctx = random.choice(_L2_WEIGHT_CONTEXTS)
 
     for _ in range(50):
-        w1, w2 = random.sample(_L2_WEIGHTS_G, 2)
+        w1, w2 = random.sample(_L2_WEIGHTS_G_CALC if calc_mode else _L2_WEIGHTS_G, 2)
         price1_p = random.randint(100, 800)
         price2_p = random.randint(100, 800)
         unit1 = round(price1_p * 1000 / w1, 1)
@@ -228,8 +231,8 @@ def _l2_weight_question():
     )
 
 
-def generate_direct_proportion_l2():
-    return random.choice([_l2_count_question, _l2_weight_question])()
+def generate_direct_proportion_l2(calc_mode=False):
+    return random.choice([_l2_count_question, _l2_weight_question])(calc_mode=calc_mode)
 
 
 # ---------------------------------------------------------------------------
@@ -249,12 +252,13 @@ _L3_SCALING_CONTEXTS = [
 
 _L3_TARGET_LITRES = [2, 3, 5, 7, 10, 12, 14, 15, 18, 20, 25]
 _L3_INDEP_ML = [10000, 20000, 25000, 40000, 50000]
+_L3_INDEP_ML_CALC = [10000, 20000, 40000, 50000]   # drop 25000 — not single-digit × 1000
 _L3_DEP_ML = [2, 3, 4, 5, 6, 8, 10]
 
 
-def _l3_conversion_scaling():
+def _l3_conversion_scaling(calc_mode=False):
     ctx = random.choice(_L3_SCALING_CONTEXTS)
-    indep_ml = random.choice(_L3_INDEP_ML)
+    indep_ml = random.choice(_L3_INDEP_ML_CALC if calc_mode else _L3_INDEP_ML)
     dep_ml = random.choice(_L3_DEP_ML)
     target_litres = random.choice(_L3_TARGET_LITRES)
     target_ml = target_litres * 1000
@@ -344,7 +348,11 @@ def _l3_conversion_value():
     )
 
 
-def generate_direct_proportion_l3():
+def generate_direct_proportion_l3(calc_mode=False):
+    # _l3_conversion_value divides by an arbitrary weight/kg figure with no clean-divisor
+    # variant available, so calc_mode always takes the scaling sub-type instead.
+    if calc_mode:
+        return _l3_conversion_scaling(calc_mode=True)
     return random.choice([_l3_conversion_scaling, _l3_conversion_value])()
 
 
@@ -352,9 +360,9 @@ def generate_direct_proportion_l3():
 # Default dispatcher
 # ---------------------------------------------------------------------------
 
-def generate_direct_proportion_question():
+def generate_direct_proportion_question(calc_mode=False):
     return random.choice([
         generate_direct_proportion_l1,
         generate_direct_proportion_l2,
         generate_direct_proportion_l3,
-    ])()
+    ])(calc_mode=calc_mode)

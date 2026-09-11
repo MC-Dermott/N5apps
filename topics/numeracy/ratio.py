@@ -52,7 +52,14 @@ _MONTHS = [
 ]
 
 
-def _random_ratio():
+_CALC_SAFE_RATIOS = [(1, 2, 3), (1, 2, 4), (1, 2, 5), (1, 2, 6), (1, 3, 4), (1, 3, 5), (2, 3, 4)]
+
+
+def _random_ratio(calc_mode=False):
+    if calc_mode:
+        # Sum of parts must itself be single-digit (it's the divisor for "one share"
+        # and a multiplier for "total") — only sums ≤ 9 qualify.
+        return random.choice(_CALC_SAFE_RATIOS)
     parts = random.sample(range(1, 10), 3)
     return tuple(parts)
 
@@ -61,10 +68,10 @@ def _random_ratio():
 # Level 1 — split an amount into unequal quantities
 # ---------------------------------------------------------------------------
 
-def generate_ratio_l1():
+def generate_ratio_l1(calc_mode=False):
     ctx = random.choice(_CONTEXTS)
     month = random.choice(_MONTHS)
-    parts = _random_ratio()
+    parts = _random_ratio(calc_mode)
     total_shares = sum(parts)
     share_value = random.choice(range(4, 41, 2))
     total = share_value * total_shares
@@ -108,10 +115,10 @@ def generate_ratio_l1():
 # Level 2 — calculate a total when given one of the ratio amounts
 # ---------------------------------------------------------------------------
 
-def generate_ratio_l2():
+def generate_ratio_l2(calc_mode=False):
     ctx = random.choice(_CONTEXTS)
     month = random.choice(_MONTHS)
-    parts = _random_ratio()
+    parts = _random_ratio(calc_mode)
     total_shares = sum(parts)
     share_value = random.choice(range(4, 41, 2))
     given_idx = random.randrange(3)
@@ -156,5 +163,5 @@ def generate_ratio_l2():
 # Default dispatcher
 # ---------------------------------------------------------------------------
 
-def generate_ratio_question():
-    return random.choice([generate_ratio_l1, generate_ratio_l2])()
+def generate_ratio_question(calc_mode=False):
+    return random.choice([generate_ratio_l1, generate_ratio_l2])(calc_mode=calc_mode)

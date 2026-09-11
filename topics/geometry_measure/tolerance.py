@@ -222,7 +222,7 @@ def _format_measurements(meas):
 # Level 1 — absolute tolerance, same units
 # ---------------------------------------------------------------------------
 
-def generate_tolerance_l1():
+def generate_tolerance_l1(calc_mode=False):
     ctx    = random.choice(_L1_CONTEXTS)
     target = random.choice(ctx["targets"])
     tol    = random.choice(ctx["tols"])
@@ -232,7 +232,7 @@ def generate_tolerance_l1():
     unit   = ctx["unit"]
     adj    = ctx["adj"]
 
-    n_total = random.randint(5, 8)
+    n_total = random.choice([5, 10]) if calc_mode else random.randint(5, 8)
     n_pass  = random.randint(1, n_total - 1)
     meas    = _gen_measurements(target, lo, hi, n_total, n_pass)
 
@@ -292,8 +292,13 @@ def generate_tolerance_l1():
 # Level 2 — absolute tolerance, different units
 # ---------------------------------------------------------------------------
 
-def generate_tolerance_l2():
-    ctx         = random.choice(_L2_CONTEXTS)
+# calc_mode: only the ×0.01 (cm→m) contexts keep tolerances to ≤2 d.p. after conversion —
+# the ×0.001 (mm/ml→m/l) contexts produce 3 d.p. results for most of their tolerance values.
+_L2_CONTEXTS_CALC = [ctx for ctx in _L2_CONTEXTS if ctx["factor"] == 0.01]
+
+
+def generate_tolerance_l2(calc_mode=False):
+    ctx         = random.choice(_L2_CONTEXTS_CALC if calc_mode else _L2_CONTEXTS)
     target      = random.choice(ctx["targets"])
     tol_raw     = random.choice(ctx["tols"])          # tolerance in tol_unit
     tol_conv    = round(tol_raw * ctx["factor"], 4)   # converted to target_unit
@@ -304,7 +309,7 @@ def generate_tolerance_l2():
     tol_unit    = ctx["tol_unit"]
     adj         = ctx["adj"]
 
-    n_total = random.randint(5, 8)
+    n_total = random.choice([5, 10]) if calc_mode else random.randint(5, 8)
     n_pass  = random.randint(1, n_total - 1)
     meas    = _gen_measurements(target, lo, hi, n_total, n_pass, decimals=2)
 
@@ -370,10 +375,11 @@ def generate_tolerance_l2():
 # Level 3 — percentage tolerance
 # ---------------------------------------------------------------------------
 
-def generate_tolerance_l3():
+def generate_tolerance_l3(calc_mode=False):
     ctx    = random.choice(_L3_CONTEXTS)
     target = random.choice(ctx["targets"])
-    pct    = random.choice(ctx["pcts"])
+    pcts   = [p for p in ctx["pcts"] if p % 5 == 0] if calc_mode else ctx["pcts"]
+    pct    = random.choice(pcts)
     rate   = pct / 100
     lo     = round(target * (1 - rate), 2)
     hi     = round(target * (1 + rate), 2)
@@ -381,7 +387,7 @@ def generate_tolerance_l3():
     unit   = ctx["unit"]
     adj    = ctx["adj"]
 
-    n_total = random.randint(5, 8)
+    n_total = random.choice([5, 10]) if calc_mode else random.randint(5, 8)
     n_pass  = random.randint(1, n_total - 1)
     meas    = _gen_measurements(target, lo, hi, n_total, n_pass)
 
@@ -443,5 +449,5 @@ def generate_tolerance_l3():
 # Default dispatcher
 # ---------------------------------------------------------------------------
 
-def generate_tolerance_question():
-    return generate_tolerance_l1()
+def generate_tolerance_question(calc_mode=False):
+    return generate_tolerance_l1(calc_mode=calc_mode)

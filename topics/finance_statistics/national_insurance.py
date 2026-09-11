@@ -16,6 +16,7 @@ _UEL = {
     "weekly":  [800, 900, 1_000],   # diffs vs PT: 600, 700, 800 — all ÷ 100 ✓
 }
 _RATE_MID_OPTIONS = [10, 11, 12, 13]
+_RATE_MID_OPTIONS_CALC = [10]   # single-digit-or-10 only, so rate × taxable ÷ 100 is non-calc-safe
 _RATE_TOP_OPTIONS = [2, 3, 4]
 _PENSION_PCTS     = [3, 4, 5, 6, 7, 8]
 
@@ -30,11 +31,11 @@ _PERIOD_WORD  = {"annual": "annual",   "monthly": "monthly",   "weekly": "weekly
 _INCOME_WORD  = {"annual": "Annual",   "monthly": "Monthly",   "weekly": "Weekly"}
 
 
-def _gen_params(period):
+def _gen_params(period, calc_mode=False):
     return (
         random.choice(_PT[period]),
         random.choice(_UEL[period]),
-        random.choice(_RATE_MID_OPTIONS),
+        random.choice(_RATE_MID_OPTIONS_CALC if calc_mode else _RATE_MID_OPTIONS),
         random.choice(_RATE_TOP_OPTIONS),
     )
 
@@ -126,9 +127,9 @@ def _gen_l2_income(period, uel):
 # Level 1 — income in the middle (rate_mid%) band only
 # ===========================================================================
 
-def generate_ni_l1():
+def generate_ni_l1(calc_mode=False):
     period = random.choice(["annual", "monthly", "weekly"])
-    pt, uel, rate_mid, rate_top = _gen_params(period)
+    pt, uel, rate_mid, rate_top = _gen_params(period, calc_mode)
     income  = _gen_l1_income(period, pt, uel)
     taxable = income - pt
     ni      = rate_mid * taxable // 100
@@ -172,9 +173,9 @@ def generate_ni_l1():
 # Level 2 — income above the UEL (two-band calculation)
 # ===========================================================================
 
-def generate_ni_l2():
+def generate_ni_l2(calc_mode=False):
     period = random.choice(["annual", "monthly", "weekly"])
-    pt, uel, rate_mid, rate_top = _gen_params(period)
+    pt, uel, rate_mid, rate_top = _gen_params(period, calc_mode)
     income  = _gen_l2_income(period, uel)
     ni_m    = _ni_mid(pt, uel, rate_mid)
     ni_top  = rate_top * (income - uel) // 100
@@ -304,9 +305,11 @@ def _l3_params(pt, uel, rate_mid, rate_top, period):
     return None
 
 
-def generate_ni_l3():
-    period = random.choice(["annual", "monthly", "weekly"])
-    pt, uel, rate_mid, rate_top = _gen_params(period)
+def generate_ni_l3(calc_mode=False):
+    # "annual" forces a final ÷12 or ÷52 step to reach monthly/weekly net pay — not
+    # non-calc-safe, so calc_mode restricts to periods needing no such division.
+    period = random.choice(["monthly", "weekly"]) if calc_mode else random.choice(["annual", "monthly", "weekly"])
+    pt, uel, rate_mid, rate_top = _gen_params(period, calc_mode)
     p = _l3_params(pt, uel, rate_mid, rate_top, period)
     if p is None:
         raise RuntimeError("Could not generate valid Level 3 NI question parameters")
@@ -395,5 +398,5 @@ def generate_ni_l3():
 # Default dispatcher
 # ===========================================================================
 
-def generate_ni_question():
-    return generate_ni_l1()
+def generate_ni_question(calc_mode=False):
+    return generate_ni_l1(calc_mode=calc_mode)

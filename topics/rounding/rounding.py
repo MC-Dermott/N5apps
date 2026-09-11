@@ -190,10 +190,12 @@ def _random_decimal_candidate(sig_figs):
     return Decimal(f"{int_part}.{frac_str}")
 
 
-def generate_rounding_significant_figures():
+def generate_rounding_significant_figures(calc_mode=False):
     sig_figs = random.choice([1, 2, 3])
 
-    if random.random() < 0.35:
+    # calc_mode: always round a whole number — the decimal branch can produce values with
+    # more than 2 decimal places in the given number.
+    if calc_mode or random.random() < 0.35:
         digit_count = sig_figs + random.randint(1, 3)
         low = 10 ** (digit_count - 1)
         high = 10 ** digit_count - 1

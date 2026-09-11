@@ -5,7 +5,7 @@ import streamlit as st
 logging.basicConfig(level=logging.INFO)
 
 from core.engine.session_manager import initialise_session, reset_test, reset_numeracy_assessment
-from core.engine.question_factory import generate_question, get_levels, QUAL_REGISTRY
+from core.engine.question_factory import generate_question, get_levels, QUAL_REGISTRY, calc_mode_available
 from core.ui.question_ui import render_question
 from core.ui.scaffold_ui import render_scaffold, render_simulation
 from core.ui.notes_ui import render_notes, render_examples, split_notes_and_example
@@ -248,9 +248,21 @@ if levels:
     level_choice = st.selectbox("Choose Question Type", level_options)
     selected_level = None if level_choice == "All Question Types" else level_choice
 
+# --- Calculator / Non-calculator (only where a non-calculator variant exists;
+# stays hidden otherwise so the UI doesn't grow a dead control per topic) ---
+calc_mode = False
+if qualification != "Higher" and calc_mode_available(topic, question_type, level=selected_level, qualification=qualification):
+    calc_choice = st.radio("Calculator", ["Calculator", "Non-calculator"], horizontal=True, index=0)
+    calc_mode = calc_choice == "Non-calculator"
+
+if st.session_state.get("last_calc_mode") != calc_mode:
+    st.session_state.last_calc_mode = calc_mode
+    st.session_state.submitted = False
+    reset_test()
+
 # --- Mode routing ---
 if mode == "Test":
-    render_test(topic, question_type, level=selected_level, qualification=qualification, user_id=user_id)
+    render_test(topic, question_type, level=selected_level, qualification=qualification, user_id=user_id, calc_mode=calc_mode)
 
 else:
     quiz = st.session_state.quiz
@@ -261,7 +273,7 @@ else:
     notes_container = st.container()
 
     if st.button("Generate Question"):
-        quiz["current_question"] = generate_question(topic, question_type, level=selected_level, qualification=qualification)
+        quiz["current_question"] = generate_question(topic, question_type, level=selected_level, qualification=qualification, calc_mode=calc_mode)
         st.session_state.submitted = False
         st.session_state.pop("last_tracked_qid", None)
         st.rerun()

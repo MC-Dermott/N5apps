@@ -31,12 +31,18 @@ _PRODUCTS = [
 ]
 
 
-def generate_liquid_volume():
+def generate_liquid_volume(calc_mode=False):
     product, container_sg, container_pl = random.choice(_PRODUCTS)
     bottle_ml = random.choice([200, 250, 330, 500])
     bottle_weight_g = random.choice([20, 25, 30, 40, 50])
-    bottles_per_tray = random.choice([12, 24, 48, 60, 100, 120, 124])
-    num_trays = random.randint(20, 50)
+    # calc_mode: fix bottles_per_tray at a clean power of ten so total_bottles (=100 × a
+    # single-digit num_trays) stays a clean multiplier for the total_g step that follows.
+    if calc_mode:
+        bottles_per_tray = 100
+        num_trays = random.randint(2, 9)
+    else:
+        bottles_per_tray = random.choice([12, 24, 48, 60, 100, 120, 124])
+        num_trays = random.randint(20, 50)
     van_kg = 1000
 
     liquid_g = bottle_ml          # 1 litre = 1 kg = 1000 g, so X ml = X g

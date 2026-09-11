@@ -33,19 +33,21 @@ def _is_correct(user_input, expected):
         return str(user_input).strip().lower() == str(expected).strip().lower()
 
 
-def render_test(topic, question_type, level=None, qualification="National 5", user_id=None):
+def render_test(topic, question_type, level=None, qualification="National 5", user_id=None, calc_mode=False):
     test = st.session_state.test
 
     if not test["questions"]:
         level_label = f" — {level}" if level else ""
+        calc_label = " (non-calculator)" if calc_mode else ""
         st.markdown(
-            f"You will be given **{_NUM_QUESTIONS} questions** on *{question_type}{level_label}*. "
+            f"You will be given **{_NUM_QUESTIONS} questions** on *{question_type}{level_label}*{calc_label}. "
             "Each question is marked automatically. A summary with feedback is shown at the end."
         )
         if st.button("Start Test", type="primary"):
             reset_test()
             st.session_state.test["questions"] = [
-                generate_question(topic, question_type, level=level, qualification=qualification) for _ in range(_NUM_QUESTIONS)
+                generate_question(topic, question_type, level=level, qualification=qualification, calc_mode=calc_mode)
+                for _ in range(_NUM_QUESTIONS)
             ]
             st.rerun()
         return

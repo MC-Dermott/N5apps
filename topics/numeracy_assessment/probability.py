@@ -38,12 +38,13 @@ _SCENARIOS = [
 ]
 
 _PROBS = [0.01, 0.012, 0.015, 0.02, 0.025, 0.03, 0.05]
+_PROBS_CALC = [0.01, 0.02, 0.03, 0.05]   # k/100 with k single-digit only
 _TOTALS = [200, 300, 400, 500, 600, 700, 800, 1000]
 
 
-def generate_probability():
+def generate_probability(calc_mode=False):
     sc = random.choice(_SCENARIOS)
-    prob = random.choice(_PROBS)
+    prob = random.choice(_PROBS_CALC if calc_mode else _PROBS)
     n = random.choice(_TOTALS)
     expected = prob * n
 
@@ -53,7 +54,17 @@ def generate_probability():
     else:
         actual = max(1, round(expected * random.uniform(0.2, 0.6)))
 
-    actual_prob = round(actual / n, 5)
+    if calc_mode:
+        # Round to 2 d.p. for display, retrying if that rounds to a tie with prob
+        # (which would make "more or less" ambiguous).
+        for _ in range(30):
+            actual_prob = round(actual / n, 2)
+            if actual_prob != prob:
+                break
+            actual = actual + (1 if is_more else -1)
+            actual = max(1, actual)
+    else:
+        actual_prob = round(actual / n, 5)
     answer = "more" if actual_prob > prob else "less"
 
     question_text = (
