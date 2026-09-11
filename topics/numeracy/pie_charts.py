@@ -380,7 +380,8 @@ def generate_pie_charts_l4():
         f"{sc['context']} The pie chart above shows: **{sc['known']}**: {sc['known_angle']}°, "
         f"{known_value} {unit}. **{sc['target']}**: {sc['target_angle']}°, **?**.\n\n"
         f"(a) Find the value of the segment marked '?'.\n\n"
-        f"(b) Find the total represented by the whole pie chart."
+        f"(b) Find the total represented by the whole pie chart.\n\n"
+        f"**Enter your answer for part (b).**"
     )
 
     scaffold_steps = [
@@ -407,7 +408,7 @@ def generate_pie_charts_l4():
 
     return Question(
         question_text=question_text,
-        correct_answer=target_value,
+        correct_answer=total,
         topic="Numeracy",
         question_type="Pie Charts",
         scaffold_steps=scaffold_steps,
