@@ -1,6 +1,7 @@
 import streamlit as st
 from core.ui.tax_bands_widget import render_tax_band_simulator
 from core.ui.bus_stop_division_widget import render_bus_stop_division_widget
+from core.ui.frequency_table_widget import render_frequency_table_widget
 
 
 def _build_duration_str(h, m):
@@ -106,3 +107,6 @@ def render_simulation(question):
     elif question.metadata.get("diagram") == "bus_stop_division":
         with st.expander("🎮 Simulation"):
             render_bus_stop_division_widget(**question.metadata["diagram_params"])
+    elif question.metadata.get("diagram") == "frequency_table_angles":
+        with st.expander("🎮 Simulation"):
+            render_frequency_table_widget(**question.metadata["diagram_params"])

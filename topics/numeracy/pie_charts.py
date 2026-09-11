@@ -66,7 +66,36 @@ Total = 360 × value per degree
 - Total = 360 × 2 = 720 people
 """
 
+NOTES_L5 = f"""
+{_HEADLINE}
+
+**Calculating Angles from a Frequency Table**
+
+1. Add up the frequencies to find the **total**.
+2. For each category, find its **fraction** of the total: fraction = frequency ÷ total.
+3. Multiply the fraction by 360° to find that category's **angle**.
+
+**Example:** A survey of 18 people asked which country they'd like to visit.
+
+| Country | Frequency |
+|:---|:---|
+| France | 3 |
+| Wales | 4 |
+| England | 11 |
+
+- France: fraction = 3 ÷ 18 = 1/6 → angle = 1/6 × 360 = 60°
+- Wales: fraction = 4 ÷ 18 = 2/9 → angle = 2/9 × 360 = 80°
+- England: fraction = 11 ÷ 18 → angle = 11/18 × 360 = 220°
+- Check: 60 + 80 + 220 = 360° ✓
+"""
+
 _PALETTE = ["#5b9bd5", "#ed7d31", "#70ad47", "#ffc000", "#7030a0", "#c00000", "#4472c4", "#548235"]
+
+
+def _freq_table_md(categories, frequencies, category_label="Category", value_label="Frequency"):
+    header = f"| {category_label} | {value_label} |\n|:---|:---|\n"
+    rows = "".join(f"| {c} | {f} |\n" for c, f in zip(categories, frequencies))
+    return header + rows
 
 
 def _split_degrees(total, n):
@@ -427,10 +456,76 @@ def generate_pie_charts_l4():
     )
 
 
+# ---------------------------------------------------------------------------
+# Level 5 — Calculating Angles from a Frequency Table
+# ---------------------------------------------------------------------------
+
+_L5_TOTALS = [12, 15, 18, 20, 24, 30, 36, 40, 45, 60]
+
+
+def generate_pie_charts_l5():
+    context, all_categories = random.choice(_L1_SCENARIOS)
+    n = random.choice([3, 4])
+    categories = random.sample(all_categories, n)
+    total = random.choice(_L5_TOTALS)
+    per_unit = 360 // total
+    frequencies = _split_degrees(total, n)
+    angles = [f * per_unit for f in frequencies]
+
+    target_idx = random.randrange(n)
+    target_category = categories[target_idx]
+    target_angle = angles[target_idx]
+
+    question_text = (
+        f"{context}. The table above shows the results.\n\n"
+        f"Calculate the angle needed to represent each category in a pie chart.\n\n"
+        f"**Enter your answer for {target_category} in the box below.**"
+    )
+
+    scaffold_steps = []
+    for cat, freq, ang in zip(categories, frequencies, angles):
+        g = math.gcd(freq, total)
+        n_, d_ = freq // g, total // g
+        frac_str = f"{n_}/{d_}"
+        scaffold_steps.append({
+            "prompt": f"{cat}: what fraction of the total is this ({freq} ÷ {total}, simplified)?",
+            "answer": frac_str,
+        })
+        scaffold_steps.append({
+            "prompt": f"{cat}: what angle represents this fraction (fraction × 360)?",
+            "answer": ang,
+        })
+
+    worked = [f"Total = {' + '.join(str(f) for f in frequencies)} = {total}"]
+    for cat, freq, ang in zip(categories, frequencies, angles):
+        worked.append(f"{cat}: {freq} ÷ {total} × 360 = {ang}°")
+    worked.append(f"Check: {' + '.join(str(a) for a in angles)} = {sum(angles)}° ✓")
+
+    return Question(
+        question_text=question_text,
+        correct_answer=target_angle,
+        topic="Numeracy",
+        question_type="Pie Charts",
+        scaffold_steps=scaffold_steps,
+        worked_solution=worked,
+        notes=NOTES_L5,
+        metadata={
+            "table": _freq_table_md(categories, frequencies),
+            "diagram": "frequency_table_angles",
+            "diagram_params": {
+                "categories": categories,
+                "frequencies": frequencies,
+                "angles": angles,
+            },
+        },
+    )
+
+
 def generate_pie_charts_question():
     return random.choice([
         generate_pie_charts_l1,
         generate_pie_charts_l2,
         generate_pie_charts_l3,
         generate_pie_charts_l4,
+        generate_pie_charts_l5,
     ])()
