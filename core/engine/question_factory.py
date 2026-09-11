@@ -46,6 +46,12 @@ from topics.numeracy.currency_exchange import (
     generate_currency_l4,
     generate_currency_l5,
 )
+from topics.numeracy.division import (
+    generate_division_question,
+    generate_division_l1,
+    generate_division_l2,
+    generate_division_l3,
+)
 from topics.numeracy.pie_charts import (
     generate_pie_charts_question as generate_numeracy_pie_charts_question,
     generate_pie_charts_l1,
@@ -150,6 +156,7 @@ _N5_TOPICS = {
         "Ratio and Direct Proportion": generate_ratio_and_proportion_question,
         "Currency Exchange": generate_currency_question,
         "Pie Charts": generate_numeracy_pie_charts_question,
+        "Division": generate_division_question,
     },
     "Finance and Statistics": {
         "Simple Interest": generate_simple_interest_question,
@@ -284,6 +291,11 @@ _N5_LEVELS = {
             "Finding the Missing Angle": generate_pie_charts_l2,
             "Calculating the Amount": generate_pie_charts_l3,
             "Working from One Segment": generate_pie_charts_l4,
+        },
+        "Division": {
+            "Exact Division": generate_division_l1,
+            "Terminating Decimals": generate_division_l2,
+            "Recurring Decimals": generate_division_l3,
         },
     },
     "Finance and Statistics": {
@@ -423,6 +435,7 @@ _ALWAYS_CALC_SAFE = {
     generate_time_zone_l1, generate_time_zone_l2, generate_time_zone_l3,
     generate_stem_and_leaf, generate_pie_charts, generate_reading_bar_charts,
     generate_reading_scale, generate_num_fractions, generate_time_zones_reading_tables,
+    generate_division_question, generate_division_l1, generate_division_l2, generate_division_l3,
 }
 
 _CALC_MODE_SAFE = _CALC_MODE_AWARE | _ALWAYS_CALC_SAFE
