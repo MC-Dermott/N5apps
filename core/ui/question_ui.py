@@ -111,6 +111,10 @@ def render_question(question, suffix="default"):
         _render_pie_chart(question.metadata["diagram_params"])
     elif question.metadata.get("diagram") == "blood_pressure":
         _render_blood_pressure(question.metadata["diagram_params"])
+    elif question.metadata.get("diagram") == "pert_chart":
+        _render_pert_chart(question.metadata["diagram_params"])
+    elif question.metadata.get("diagram") == "gantt_chart":
+        _render_gantt_chart(question.metadata["diagram_params"])
 
     if question.metadata.get("answer_type") == "duration":
         return _render_duration_input(question.qid, suffix)
@@ -505,6 +509,105 @@ def _render_pie_chart(p):
         plt.tight_layout(rect=[0, 0, 0.72, 1])
     else:
         plt.tight_layout()
+    st.pyplot(fig, use_container_width=False)
+    plt.close(fig)
+
+
+def _render_pert_chart(p):
+    """PERT / activity-network diagram. Each task is a box: a task-letter cell on top, over
+    a row of 3 cells (EST | Duration | LFT). `show_values=False` leaves EST/LFT blank (the
+    calculation the student must do); duration is always shown since it's given data."""
+    layout = p["layout"]
+    deps = p["deps"]
+    durations = p["durations"]
+    est = p["est"]
+    lft = p["lft"]
+    show_values = p.get("show_values", False)
+
+    box_w, box_h = 1.8, 1.0
+    gap_x, gap_y = 0.9, 0.4
+    top_h = 0.42
+    bot_h = box_h - top_h
+    cell_w = box_w / 3
+
+    def box_xy(letter):
+        col, row = layout[letter]
+        return col * (box_w + gap_x), -row * (box_h + gap_y)
+
+    max_col = max(c for c, r in layout.values())
+    max_row = max(r for c, r in layout.values())
+    fig_w = min(18, 1.6 + (max_col + 1) * (box_w + gap_x))
+    fig_h = min(11, 1.6 + (max_row + 1) * (box_h + gap_y))
+    fig, ax = plt.subplots(figsize=(fig_w, fig_h))
+
+    for letter in layout:
+        x, y = box_xy(letter)
+        ax.add_patch(patches.Rectangle((x, y + bot_h), box_w, top_h, fill=False,
+                                        edgecolor="#2c3e50", linewidth=1.8, zorder=3))
+        ax.text(x + box_w / 2, y + bot_h + top_h / 2, letter, ha="center", va="center",
+                fontsize=13, fontweight="bold", zorder=4)
+        for i in range(3):
+            ax.add_patch(patches.Rectangle((x + i * cell_w, y), cell_w, bot_h, fill=False,
+                                            edgecolor="#2c3e50", linewidth=1.8, zorder=3))
+        est_text = str(est[letter]) if show_values else ""
+        lft_text = str(lft[letter]) if show_values else ""
+        ax.text(x + cell_w * 0.5, y + bot_h / 2, est_text, ha="center", va="center", fontsize=10, zorder=4)
+        ax.text(x + cell_w * 1.5, y + bot_h / 2, str(durations[letter]), ha="center", va="center",
+                fontsize=10, zorder=4)
+        ax.text(x + cell_w * 2.5, y + bot_h / 2, lft_text, ha="center", va="center", fontsize=10, zorder=4)
+
+    for letter, preds in deps.items():
+        x2, y2 = box_xy(letter)
+        for pred in preds:
+            x1, y1 = box_xy(pred)
+            ax.annotate("", xy=(x2, y2 + bot_h), xytext=(x1 + box_w, y1 + bot_h),
+                        arrowprops=dict(arrowstyle="->", color="#2c3e50", lw=1.3), zorder=2)
+
+    xs = [box_xy(letter)[0] for letter in layout]
+    ys = [box_xy(letter)[1] for letter in layout]
+    ax.set_xlim(min(xs) - 0.4, max(xs) + box_w + 0.4)
+    ax.set_ylim(min(ys) - 0.4, max(ys) + box_h + 0.4)
+    ax.set_aspect("equal")
+    ax.axis("off")
+    fig.patch.set_facecolor("white")
+    plt.tight_layout()
+    st.pyplot(fig, use_container_width=False)
+    plt.close(fig)
+
+
+def _render_gantt_chart(p):
+    """Gantt chart: one bar per task, positioned at its EST and running for its duration.
+    Non-critical tasks get a hatched extension out to their LFT, showing their float."""
+    tasks = p["tasks"]
+    est = p["est"]
+    durations = p["durations"]
+    lft = p["lft"]
+    critical = set(p["critical"])
+    unit = p.get("unit", "hours")
+
+    fig, ax = plt.subplots(figsize=(9, max(3, 0.5 * len(tasks) + 1)))
+    y_positions = list(range(len(tasks)))[::-1]
+
+    for y, t in zip(y_positions, tasks):
+        start = est[t]
+        dur = durations[t]
+        ax.barh(y, dur, left=start, height=0.6, color="#2c3e50", zorder=3)
+        if t not in critical:
+            float_len = lft[t] - (start + dur)
+            if float_len > 0:
+                ax.barh(y, float_len, left=start + dur, height=0.6, facecolor="none",
+                        edgecolor="#2c3e50", hatch="///", linewidth=1.2, zorder=3)
+
+    ax.set_yticks(y_positions)
+    ax.set_yticklabels(tasks)
+    ax.set_ylabel("task", fontsize=11)
+    ax.set_xlabel(f"time ({unit})", fontsize=11)
+    max_t = max(lft.values())
+    ax.set_xlim(0, max_t + 1)
+    ax.xaxis.set_major_locator(plt.MultipleLocator(max(1, max_t // 15)))
+    ax.grid(axis="x", linestyle="--", alpha=0.4, zorder=0)
+    fig.patch.set_facecolor("white")
+    plt.tight_layout()
     st.pyplot(fig, use_container_width=False)
     plt.close(fig)
 

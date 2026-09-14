@@ -60,6 +60,15 @@ from topics.numeracy.pie_charts import (
     generate_pie_charts_l4,
     generate_pie_charts_l5,
 )
+from topics.numeracy.networks import (
+    generate_networks_question,
+    generate_networks_l1,
+    generate_networks_l2,
+    generate_networks_l3,
+    generate_networks_l4,
+    generate_networks_l5,
+    generate_networks_l6,
+)
 from topics.rounding.rounding import (
     generate_rounding_decimal_places,
     generate_rounding_money,
@@ -165,6 +174,7 @@ _N5_TOPICS = {
         "Currency Exchange": generate_currency_question,
         "Pie Charts": generate_numeracy_pie_charts_question,
         "Division": generate_division_question,
+        "Networks": generate_networks_question,
     },
     "Finance and Statistics": {
         "Simple Interest": generate_simple_interest_question,
@@ -306,6 +316,14 @@ _N5_LEVELS = {
             "Exact Division": generate_division_l1,
             "Terminating Decimals": generate_division_l2,
             "Recurring Decimals": generate_division_l3,
+        },
+        "Networks": {
+            "Earliest Start Time": generate_networks_l1,
+            "Latest Finish Time": generate_networks_l2,
+            "Critical Path": generate_networks_l3,
+            "Total Project Time": generate_networks_l4,
+            "Float": generate_networks_l5,
+            "Gantt Chart": generate_networks_l6,
         },
     },
     "Finance and Statistics": {
@@ -452,6 +470,8 @@ _ALWAYS_CALC_SAFE = {
     generate_stem_and_leaf, generate_pie_charts, generate_reading_bar_charts,
     generate_reading_scale, generate_num_fractions, generate_time_zones_reading_tables,
     generate_division_question, generate_division_l1, generate_division_l2, generate_division_l3,
+    generate_networks_question, generate_networks_l1, generate_networks_l2, generate_networks_l3,
+    generate_networks_l4, generate_networks_l5, generate_networks_l6,
 }
 
 _CALC_MODE_SAFE = _CALC_MODE_AWARE | _ALWAYS_CALC_SAFE
