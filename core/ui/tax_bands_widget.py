@@ -1,9 +1,10 @@
-"""Interactive banded-rate earnings simulator (income tax / National Insurance style).
+"""Interactive banded-rate simulator (income tax / National Insurance / LBTT style).
 
 Generalises the fixed 3-band prototype (Downloads/tax_bands_widget.py) to any number of
 contiguous rate bands, so the same widget can drive N5's randomised National Insurance
-questions (2-3 bands) and Higher's real Scottish income tax bands (7 bands) and National
-Insurance (2 bands) alike.
+questions (2-3 bands), Higher's real Scottish income tax bands (7 bands) and National
+Insurance (2 bands), and Higher's LBTT bands (5 bands) alike — pass `amount_label` to name
+whatever quantity is being banded (defaults to "Income"; e.g. "Purchase price" for LBTT).
 
 Usage:
 
@@ -43,7 +44,7 @@ def _range_label(lower, upper, currency):
     return f"{currency}{lower:,.0f} – {currency}{upper:,.0f}"
 
 
-def _build_html(bands, max_income, initial_income, currency, height):
+def _build_html(bands, max_income, initial_income, currency, height, amount_label):
     if not bands:
         raise ValueError("bands must be non-empty")
     if bands[0][1] != 0:
@@ -109,7 +110,7 @@ def _build_html(bands, max_income, initial_income, currency, height):
 
       <div style="margin:1.5rem 0 0;">
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:1rem;">
-          <label style="font-size:14px;color:#666;white-space:nowrap;">Income</label>
+          <label style="font-size:14px;color:#666;white-space:nowrap;">{amount_label}</label>
           <input type="range" id="earnings" min="0" max="{max_income}" step="{max(1, round(max_income / 200))}" value="{initial_income}" style="flex:1;">
           <span id="earnings-out" style="font-size:14px;font-weight:600;min-width:90px;text-align:right;color:#111;"></span>
         </div>
@@ -173,10 +174,13 @@ def _build_html(bands, max_income, initial_income, currency, height):
     """
 
 
-def render_tax_band_simulator(bands, max_income, initial_income=None, currency="£", height=620):
-    """Render the interactive banded-rate earnings simulator in the current Streamlit app.
+def render_tax_band_simulator(bands, max_income, initial_income=None, currency="£", height=620,
+                               amount_label="Income"):
+    """Render the interactive banded-rate simulator in the current Streamlit app.
 
     See the module docstring for the `bands`/`max_income`/`initial_income` contract.
+    `amount_label` names the slider quantity being banded (e.g. "Income" for tax/NI,
+    "Purchase price" for LBTT) — defaults to "Income" so existing callers are unaffected.
     """
-    html_code = _build_html(bands, max_income, initial_income, currency, height)
+    html_code = _build_html(bands, max_income, initial_income, currency, height, amount_label)
     components.html(html_code, height=height, scrolling=False)

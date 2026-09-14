@@ -99,6 +99,13 @@ from topics.finance_statistics.income_tax_ni import (
     generate_higher_ni,
     generate_net_monthly_income,
 )
+from topics.finance_statistics.vat_lbtt import (
+    generate_vat_lbtt_question,
+    generate_vat_inclusive_price,
+    generate_vat_exclusive_price,
+    generate_vat_percentage_of_shop,
+    generate_lbtt,
+)
 from topics.geometry_measure.pythagoras import generate_pythagoras_question, generate_pythagoras_question_n4
 from topics.geometry_measure.circle_area import generate_circle_area_question, generate_circle_area_question_n4
 from topics.geometry_measure.gradient import generate_gradient_question, generate_gradient_question_n4
@@ -230,6 +237,7 @@ _HIGHER_TOPICS = {
         "Interest": generate_interest_question,
         "Savings Schedule": generate_savings_schedule_question,
         "Income Tax and National Insurance": generate_tax_ni_question,
+        "VAT and LBTT": generate_vat_lbtt_question,
     },
     "Statistics": {
         "Standard Deviation": generate_standard_deviation_question,
@@ -343,6 +351,12 @@ _HIGHER_LEVELS = {
             "Income Tax": generate_income_tax,
             "National Insurance": generate_higher_ni,
             "Net Monthly Income": generate_net_monthly_income,
+        },
+        "VAT and LBTT": {
+            "VAT-Inclusive Price": generate_vat_inclusive_price,
+            "Price Before VAT": generate_vat_exclusive_price,
+            "VAT Percentage of a Shop": generate_vat_percentage_of_shop,
+            "LBTT": generate_lbtt,
         },
     },
 }
