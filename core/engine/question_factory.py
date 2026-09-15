@@ -59,6 +59,7 @@ from topics.numeracy.pie_charts import (
     generate_pie_charts_l3,
     generate_pie_charts_l4,
     generate_pie_charts_l5,
+    generate_pie_charts_l6,
 )
 from topics.numeracy.networks import (
     generate_networks_question,
@@ -311,6 +312,7 @@ _N5_LEVELS = {
             "Calculating the Amount": generate_pie_charts_l3,
             "Working from One Segment": generate_pie_charts_l4,
             "Calculating Angles from Frequencies": generate_pie_charts_l5,
+            "Comparing Proportions": generate_pie_charts_l6,
         },
         "Division": {
             "Exact Division": generate_division_l1,
@@ -462,7 +464,7 @@ _ALWAYS_CALC_SAFE = {
     generate_percentage_question_n4, generate_percentage_multiplier,
     generate_numeracy_probability_question, generate_numeracy_probability_l1, generate_numeracy_probability_l2,
     generate_numeracy_pie_charts_question, generate_pie_charts_l1, generate_pie_charts_l2,
-    generate_pie_charts_l3, generate_pie_charts_l4, generate_pie_charts_l5,
+    generate_pie_charts_l3, generate_pie_charts_l4, generate_pie_charts_l5, generate_pie_charts_l6,
     generate_simple_interest_question, generate_simple_interest_question_n4,
     generate_commission_question,
     generate_time_zone_question, generate_time_zone_question_n4,

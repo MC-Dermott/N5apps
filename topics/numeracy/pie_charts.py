@@ -89,6 +89,25 @@ NOTES_L5 = f"""
 - Check: 60 + 80 + 220 = 360° ✓
 """
 
+NOTES_L6 = f"""
+{_HEADLINE}
+
+**Comparing Proportions Between Two Groups**
+
+When two totals are different, you can't compare the raw numbers directly — convert each to a
+fraction, decimal, or percentage of its own total first, then compare those.
+
+1. For the pie chart: percentage = (sector angle ÷ 360) × 100
+2. For the table: percentage = (frequency ÷ its own total) × 100
+3. Compare the two percentages.
+
+**Example:** A pie chart shows a 90° "Bus" sector for one class. A table for a different class
+shows 40 out of 100 pupils travel by bus.
+- Pie chart: 90 ÷ 360 × 100 = 25%
+- Table: 40 ÷ 100 × 100 = 40%
+- 40% > 25%, so the proportion has increased.
+"""
+
 _PALETTE = ["#5b9bd5", "#ed7d31", "#70ad47", "#ffc000", "#7030a0", "#c00000", "#4472c4", "#548235"]
 
 
@@ -521,6 +540,132 @@ def generate_pie_charts_l5():
     )
 
 
+# ---------------------------------------------------------------------------
+# Level 6 — Comparing Proportions
+# ---------------------------------------------------------------------------
+
+_L6_SCENARIOS = [
+    {
+        "topic": "Numeracy qualification results for S4 pupils at Sir E Scott School",
+        "categories": ["National 3", "National 4", "National 5"],
+        "target": "National 5",
+        "unit": "pupils",
+    },
+    {
+        "topic": "CalMac passenger types on the Tarbert–Uig crossing",
+        "categories": ["Car", "Foot", "Freight"],
+        "target": "Foot",
+        "unit": "passengers",
+    },
+    {
+        "topic": "main occupations of working adults on Harris",
+        "categories": ["Crofting", "Fishing", "Tourism"],
+        "target": "Fishing",
+        "unit": "people",
+    },
+    {
+        "topic": "lunch choices among S3 pupils at Sir E Scott School",
+        "categories": ["Hot meal", "Packed lunch", "Went home"],
+        "target": "Went home",
+        "unit": "pupils",
+    },
+    {
+        "topic": "Harris Tweed mill sales by channel",
+        "categories": ["Online", "Mill shop", "Wholesale"],
+        "target": "Online",
+        "unit": "sales",
+    },
+]
+
+_L6_A_ANGLES = [36, 45, 60, 72, 90, 108, 120, 144, 150, 180, 200, 216]
+_L6_B_TOTALS = [60, 90, 120, 150, 160, 180, 200, 240, 260, 300]
+
+
+def _fmt_pct(x):
+    return f"{x:g}%"
+
+
+def generate_pie_charts_l6():
+    sc = random.choice(_L6_SCENARIOS)
+    categories = sc["categories"]
+    target_idx = categories.index(sc["target"])
+    n = len(categories)
+
+    target_angle = random.choice(_L6_A_ANGLES)
+    other_angles = _split_degrees(360 - target_angle, n - 1)
+    angles = other_angles[:target_idx] + [target_angle] + other_angles[target_idx:]
+    colors = random.sample(_PALETTE, n)
+    percent_a = round(target_angle / 360 * 100, 1)
+
+    want_increase = random.random() < 0.5
+    for _ in range(30):
+        total_b = random.choice(_L6_B_TOTALS)
+        target_freq = random.randint(1, total_b - (n - 1))
+        percent_b = round(target_freq / total_b * 100, 1)
+        if abs(percent_b - percent_a) < 1.5:
+            continue
+        if (percent_b > percent_a) == want_increase:
+            other_freqs = _split_degrees(total_b - target_freq, n - 1)
+            break
+    else:
+        other_freqs = _split_degrees(total_b - target_freq, n - 1)
+    freqs = other_freqs[:target_idx] + [target_freq] + other_freqs[target_idx:]
+
+    direction = "Increased" if percent_b > percent_a else "Decreased"
+
+    year_a = random.randint(2015, 2021)
+    year_b = year_a + random.randint(1, 4)
+
+    value_label = f"Number of {sc['unit']}"
+    table_md = _freq_table_md(categories, freqs, category_label="Category", value_label=value_label)
+
+    question_text = (
+        f"A survey looked at {sc['topic']}.\n\n"
+        f"The pie chart shows the **{year_a}** results. The table shows the **{year_b}** "
+        f"results.\n\n"
+        f"{table_md}\n"
+        f"Determine whether the proportion of **{sc['target']}** has increased or decreased "
+        f"between {year_a} and {year_b}. Use your working to justify your answer."
+    )
+
+    scaffold_steps = [
+        {"prompt": f"{year_a}: {sc['target']} as a percentage ({target_angle} ÷ 360 × 100, to 1 d.p.)",
+         "answer": percent_a},
+        {"prompt": f"{year_b} total = {' + '.join(str(f) for f in freqs)}", "answer": total_b},
+        {"prompt": f"{year_b}: {sc['target']} as a percentage ({target_freq} ÷ {total_b} × 100, to 1 d.p.)",
+         "answer": percent_b},
+    ]
+
+    worked = [
+        f"{year_a}: {sc['target']} = {target_angle} ÷ 360 × 100 = {_fmt_pct(percent_a)}",
+        f"{year_b} total = {total_b}",
+        f"{year_b}: {sc['target']} = {target_freq} ÷ {total_b} × 100 ≈ {_fmt_pct(percent_b)}",
+        f"{_fmt_pct(percent_b)} {'>' if direction == 'Increased' else '<'} {_fmt_pct(percent_a)}, "
+        f"so the proportion has {direction.lower()}",
+    ]
+
+    return Question(
+        question_text=question_text,
+        correct_answer=direction,
+        topic="Numeracy",
+        question_type="Pie Charts",
+        scaffold_steps=scaffold_steps,
+        worked_solution=worked,
+        notes=NOTES_L6,
+        metadata={
+            "diagram": "pie_chart",
+            "diagram_params": {
+                "categories": categories,
+                "angles": angles,
+                "colors": colors,
+                "wedge_labels": [f"{a}°" for a in angles],
+                "show_legend": True,
+                "caption": f"{year_a} results",
+            },
+        },
+    )
+
+
 def generate_pie_charts_question():
     return random.choice([
         generate_pie_charts_l1,
@@ -528,4 +673,5 @@ def generate_pie_charts_question():
         generate_pie_charts_l3,
         generate_pie_charts_l4,
         generate_pie_charts_l5,
+        generate_pie_charts_l6,
     ])()
