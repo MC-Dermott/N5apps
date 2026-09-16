@@ -38,6 +38,11 @@ from topics.numeracy.direct_proportion import (
     generate_direct_proportion_l2,
     generate_direct_proportion_l3,
 )
+from topics.numeracy.indirect_proportion import (
+    generate_indirect_proportion_question,
+    generate_indirect_proportion_l1,
+    generate_indirect_proportion_l2,
+)
 from topics.numeracy.currency_exchange import (
     generate_currency_question,
     generate_currency_l1,
@@ -172,6 +177,7 @@ _N5_TOPICS = {
         "Percentages": generate_percentage_question,
         "Probability": generate_numeracy_probability_question,
         "Ratio and Direct Proportion": generate_ratio_and_proportion_question,
+        "Indirect Proportion": generate_indirect_proportion_question,
         "Currency Exchange": generate_currency_question,
         "Pie Charts": generate_numeracy_pie_charts_question,
         "Division": generate_division_question,
@@ -298,6 +304,10 @@ _N5_LEVELS = {
             "Direct Proportion: Scaling": generate_direct_proportion_l1,
             "Direct Proportion: Best Value": generate_direct_proportion_l2,
             "Direct Proportion: Unit Conversion": generate_direct_proportion_l3,
+        },
+        "Indirect Proportion": {
+            "People and Time": generate_indirect_proportion_l1,
+            "Other Contexts": generate_indirect_proportion_l2,
         },
         "Currency Exchange": {
             "Basic Exchange": generate_currency_l1,
@@ -448,6 +458,7 @@ _CALC_MODE_AWARE = {
     generate_ratio_and_proportion_question,
     generate_numeracy_ratio_l1, generate_numeracy_ratio_l2,
     generate_direct_proportion_l1, generate_direct_proportion_l2, generate_direct_proportion_l3,
+    generate_indirect_proportion_question, generate_indirect_proportion_l1, generate_indirect_proportion_l2,
     generate_percentage_question, generate_percentage_l1, generate_percentage_single_change,
     generate_percentage_appreciation, generate_percentage_depreciation, generate_percentage_mixed_changes,
     generate_gradient_question, generate_gradient_question_n4,
