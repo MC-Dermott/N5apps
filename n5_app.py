@@ -4,7 +4,9 @@ import streamlit as st
 
 logging.basicConfig(level=logging.INFO)
 
-from core.engine.session_manager import initialise_session, reset_test, reset_numeracy_assessment
+from core.engine.session_manager import (
+    initialise_session, reset_test, reset_numeracy_assessment, reset_unit_assessment,
+)
 from core.engine.question_factory import generate_question, get_levels, QUAL_REGISTRY, calc_mode_available
 from core.ui.question_ui import render_question
 from core.ui.scaffold_ui import render_scaffold, render_simulation
@@ -12,6 +14,7 @@ from core.ui.notes_ui import render_notes, render_examples, split_notes_and_exam
 from core.ui.solution_ui import render_solution
 from core.ui.test_ui import render_test
 from core.ui.numeracy_assessment_ui import render_numeracy_assessment
+from core.ui.unit_assessment_ui import render_unit_assessment
 from core.ui.auth_ui import render_auth, render_change_password
 from core.auth.auth import login_as_admin
 from core.ui.dashboard_ui import render_dashboard
@@ -56,6 +59,7 @@ def _do_logout():
         st.session_state.pop(key, None)
     reset_test()
     reset_numeracy_assessment()
+    reset_unit_assessment()
 
 
 def _render_auth_button():
@@ -189,6 +193,7 @@ if st.button("← Change Level"):
     st.session_state.submitted = False
     reset_test()
     reset_numeracy_assessment()
+    reset_unit_assessment()
     st.rerun()
 
 if st.session_state.get("last_qualification") != qualification:
@@ -196,28 +201,49 @@ if st.session_state.get("last_qualification") != qualification:
     st.session_state.submitted = False
     reset_test()
     reset_numeracy_assessment()
+    reset_unit_assessment()
 
 st.divider()
 
 # --- Mode and topic selection ---
-_mode_options = (
-    ["Practice", "Test", "Practice Assessment"]
-    if qualification == "N5 Numeracy"
-    else ["Practice", "Test"]
-)
+_mode_options = ["Practice", "Test", "Unit Assessment"]
+if qualification == "N5 Numeracy":
+    _mode_options.append("Practice Assessment")
 mode = st.radio("Mode", _mode_options, horizontal=True, index=0)
 
 if st.session_state.mode != mode:
     st.session_state.mode = mode
     st.session_state.submitted = False
     reset_test()
+    reset_unit_assessment()
     if mode != "Practice Assessment":
         reset_numeracy_assessment()
 
-# --- N5 Numeracy Practice Assessment shortcut ---
 user_id = user["id"] if user else None
+
+# --- N5 Numeracy Practice Assessment shortcut ---
 if mode == "Practice Assessment":
     render_numeracy_assessment(user_id=user_id)
+    st.stop()
+
+# --- Unit Assessment shortcut: 10 random questions, harder levels, across a unit ---
+if mode == "Unit Assessment":
+    unit_topic = st.selectbox("Choose Unit", list(QUAL_REGISTRY[qualification].keys()))
+
+    if st.session_state.get("last_unit_assessment_topic") != unit_topic:
+        st.session_state.last_unit_assessment_topic = unit_topic
+        reset_unit_assessment()
+
+    unit_calc_mode = False
+    if qualification != "Higher":
+        unit_calc_choice = st.radio("Calculator", ["Calculator", "Non-calculator"], horizontal=True, index=0)
+        unit_calc_mode = unit_calc_choice == "Non-calculator"
+
+    if st.session_state.get("last_unit_assessment_calc_mode") != unit_calc_mode:
+        st.session_state.last_unit_assessment_calc_mode = unit_calc_mode
+        reset_unit_assessment()
+
+    render_unit_assessment(unit_topic, qualification=qualification, user_id=user_id, calc_mode=unit_calc_mode)
     st.stop()
 
 st.divider()

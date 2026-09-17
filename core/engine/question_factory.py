@@ -439,6 +439,34 @@ def get_levels(topic, question_type, qualification="National 5"):
     return _QUAL_LEVELS.get(qualification, {}).get(topic, {}).get(question_type, {})
 
 
+def _harder_generators(topic, question_type, qualification):
+    """Generators for a question type, biased away from its easiest/introductory
+    level. Drops the first (simplest) level when several are registered in
+    _QUAL_LEVELS; falls back to the plain dispatcher for question types with no
+    level breakdown (nothing to exclude)."""
+    levels = list(get_levels(topic, question_type, qualification).values())
+    if len(levels) > 1:
+        return levels[1:]
+    if levels:
+        return levels
+    return [QUAL_REGISTRY[qualification][topic][question_type]]
+
+
+def generate_unit_assessment(topic, qualification="National 5", num_questions=10, calc_mode=False):
+    """10 (by default) randomly chosen questions drawn from every question type
+    in a unit, weighted toward the harder levels of each type rather than its
+    simplest/introductory one. Returns (questions, question_type_labels)."""
+    question_types = list(QUAL_REGISTRY[qualification][topic].keys())
+    questions = []
+    labels = []
+    for _ in range(num_questions):
+        question_type = random.choice(question_types)
+        generator = random.choice(_harder_generators(topic, question_type, qualification))
+        questions.append(_invoke(generator, calc_mode))
+        labels.append(question_type)
+    return questions, labels
+
+
 # ---------------------------------------------------------------------------
 # Calculator vs Non-calculator mode
 #
