@@ -48,27 +48,27 @@ def render_progress_heatmaps(user_id):
         st.info("No tests taken yet. Complete a test to see your progress here.")
         return
 
-    for qual in qualifications:
-        st.subheader(qual)
-        units = list(QUAL_REGISTRY[qual].keys())
-        unit = st.selectbox("Unit", units, key=f"progress_unit_{qual}")
+    level = st.selectbox("Level", qualifications, key="progress_level")
 
-        question_types = QUAL_REGISTRY[qual][unit].keys()
-        if not question_types:
-            st.caption("No topics in this unit yet.")
-        for qt in question_types:
-            try:
-                row = summary.loc[(qual, unit, qt)]
-                pct, attempts = row["pct"], int(row["attempts"])
-            except KeyError:
-                pct, attempts = None, 0
+    units = list(QUAL_REGISTRY[level].keys())
+    unit = st.selectbox("Unit", units, key=f"progress_unit_{level}")
 
-            colour = _colour_for(pct)
-            if pct is None:
-                detail = "No tests yet"
-            else:
-                detail = f"{pct:.0f}% ({attempts} test{'s' if attempts != 1 else ''})"
-            st.markdown(f"{colour} &nbsp; **{qt}** — {detail}")
+    question_types = QUAL_REGISTRY[level][unit].keys()
+    if not question_types:
+        st.caption("No topics in this unit yet.")
+    for qt in question_types:
+        try:
+            row = summary.loc[(level, unit, qt)]
+            pct, attempts = row["pct"], int(row["attempts"])
+        except KeyError:
+            pct, attempts = None, 0
+
+        colour = _colour_for(pct)
+        if pct is None:
+            detail = "No tests yet"
+        else:
+            detail = f"{pct:.0f}% ({attempts} test{'s' if attempts != 1 else ''})"
+        st.markdown(f"{colour} &nbsp; **{qt}** — {detail}")
 
     st.caption("🟢 > 70%   🟡 50 – 70%   🔴 < 50%   ⚪ No tests taken")
 
