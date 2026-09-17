@@ -177,8 +177,8 @@ def render_dashboard():
 
     st.divider()
 
-    # --- Student progress heatmaps ---
-    st.subheader("Progress Heatmap")
+    # --- Student progress ---
+    st.subheader("Progress")
     render_progress_heatmaps(uid)
 
     st.divider()

@@ -1,89 +1,76 @@
 import streamlit as st
 import pandas as pd
-import plotly.graph_objects as go
 from core.db.client import get_supabase
+from core.engine.question_factory import QUAL_REGISTRY
 
-_COLORSCALE = [
-    [0.0,  "#e74c3c"],
-    [0.4,  "#e67e22"],
-    [0.7,  "#27ae60"],
-    [1.0,  "#1e8449"],
-]
+_GREY = "⚪"
+_RED = "🔴"
+_YELLOW = "🟡"
+_GREEN = "🟢"
 
 
 def _fetch_tests(user_id):
     return get_supabase().table("test_results").select("*").eq("user_id", user_id).execute().data
 
 
-def _heatmap(topics, qtypes, summary):
-    z, annotations = [], []
-    for r, topic in enumerate(topics):
-        row = []
-        for c, qt in enumerate(qtypes):
-            val = summary.get((topic, qt))
-            row.append(val)
-            label = f"{val:.0f}%" if val is not None else ""
-            annotations.append(dict(
-                x=c, y=r, text=label, showarrow=False,
-                font=dict(color="white", size=13),
-            ))
-        z.append(row)
-
-    fig = go.Figure(go.Heatmap(
-        z=z,
-        x=qtypes,
-        y=topics,
-        colorscale=_COLORSCALE,
-        zmin=0,
-        zmax=100,
-        showscale=False,
-        hoverongaps=False,
-        hovertemplate="%{y} — %{x}: %{z:.0f}%<extra></extra>",
-    ))
-
-    fig.update_layout(
-        annotations=annotations,
-        plot_bgcolor="#bdc3c7",
-        paper_bgcolor="rgba(0,0,0,0)",
-        margin=dict(l=10, r=10, t=40, b=10),
-        height=max(160, len(topics) * 70 + 60),
-        xaxis=dict(side="top", tickangle=-30),
-        yaxis=dict(autorange="reversed"),
-    )
-    return fig
+def _colour_for(pct):
+    if pct is None:
+        return _GREY
+    if pct < 50:
+        return _RED
+    if pct <= 70:
+        return _YELLOW
+    return _GREEN
 
 
 def render_progress_heatmaps(user_id):
-    """Render heatmaps for a given user_id (no page header)."""
+    """Render the Unit/Topic progress list for a given user_id (no page header)."""
     try:
         tests = _fetch_tests(user_id)
     except Exception as e:
         st.error(f"Could not load data: {e}")
         return
 
-    if not tests:
-        st.info("No tests taken yet.")
+    df = pd.DataFrame(tests)
+    if not df.empty:
+        df["pct"] = df["score"] / df["total"] * 100
+        summary = (
+            df.groupby(["qualification", "topic", "question_type"])["pct"]
+            .agg(pct="mean", attempts="count")
+        )
+        tested_quals = set(df["qualification"].unique())
+    else:
+        summary = pd.DataFrame(columns=["pct", "attempts"])
+        tested_quals = set()
+
+    qualifications = [q for q in QUAL_REGISTRY if q in tested_quals]
+    if not qualifications:
+        st.info("No tests taken yet. Complete a test to see your progress here.")
         return
 
-    df = pd.DataFrame(tests)
-    df["pct"] = df["score"] / df["total"] * 100
-
-    for qual in sorted(df["qualification"].unique()):
+    for qual in qualifications:
         st.subheader(qual)
-        qdf = df[df["qualification"] == qual]
+        units = list(QUAL_REGISTRY[qual].keys())
+        unit = st.selectbox("Unit", units, key=f"progress_unit_{qual}")
 
-        topics = sorted(qdf["topic"].unique())
-        qtypes = sorted(qdf["question_type"].unique())
+        question_types = QUAL_REGISTRY[qual][unit].keys()
+        if not question_types:
+            st.caption("No topics in this unit yet.")
+        for qt in question_types:
+            try:
+                row = summary.loc[(qual, unit, qt)]
+                pct, attempts = row["pct"], int(row["attempts"])
+            except KeyError:
+                pct, attempts = None, 0
 
-        summary = (
-            qdf.groupby(["topic", "question_type"])["pct"]
-            .mean()
-            .to_dict()
-        )
+            colour = _colour_for(pct)
+            if pct is None:
+                detail = "No tests yet"
+            else:
+                detail = f"{pct:.0f}% ({attempts} test{'s' if attempts != 1 else ''})"
+            st.markdown(f"{colour} &nbsp; **{qt}** — {detail}")
 
-        st.plotly_chart(_heatmap(topics, qtypes, summary), use_container_width=True)
-
-    st.caption("🟩 ≥ 70%   🟧 40 – 69%   🟥 < 40%   Grey = no tests taken")
+    st.caption("🟢 > 70%   🟡 50 – 70%   🔴 < 50%   ⚪ No tests taken")
 
 
 def render_student_dashboard(user):
