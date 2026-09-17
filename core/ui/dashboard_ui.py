@@ -2,14 +2,15 @@ import streamlit as st
 import pandas as pd
 from core.db.client import get_supabase
 from core.auth.auth import reset_password
+from core.db.tracker import SUBJECT
 from core.ui.student_dashboard_ui import render_progress_heatmaps
 
 
 def _fetch_all():
     sb = get_supabase()
     users = sb.table("users").select("id,username,role,class_code,created_at").eq("role", "student").order("username").execute().data
-    attempts = sb.table("question_attempts").select("*").execute().data
-    tests = sb.table("test_results").select("*").execute().data
+    attempts = sb.table("question_attempts").select("*").eq("subject", SUBJECT).execute().data
+    tests = sb.table("test_results").select("*").eq("subject", SUBJECT).execute().data
     return users, attempts, tests
 
 

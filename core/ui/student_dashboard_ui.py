@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 from core.db.client import get_supabase
+from core.db.tracker import SUBJECT
 from core.engine.question_factory import QUAL_REGISTRY
 
 _GREY = "⚪"
@@ -10,7 +11,11 @@ _GREEN = "🟢"
 
 
 def _fetch_tests(user_id):
-    return get_supabase().table("test_results").select("*").eq("user_id", user_id).execute().data
+    return (
+        get_supabase().table("test_results")
+        .select("*").eq("user_id", user_id).eq("subject", SUBJECT)
+        .execute().data
+    )
 
 
 def _colour_for(pct):

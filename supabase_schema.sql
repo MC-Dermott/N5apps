@@ -13,6 +13,7 @@ CREATE TABLE users (
 CREATE TABLE question_attempts (
     id            UUID        DEFAULT gen_random_uuid() PRIMARY KEY,
     user_id       UUID        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    subject       TEXT        NOT NULL DEFAULT 'maths',
     qualification TEXT        NOT NULL,
     topic         TEXT        NOT NULL,
     question_type TEXT        NOT NULL,
@@ -23,6 +24,7 @@ CREATE TABLE question_attempts (
 CREATE TABLE test_results (
     id            UUID        DEFAULT gen_random_uuid() PRIMARY KEY,
     user_id       UUID        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    subject       TEXT        NOT NULL DEFAULT 'maths',
     qualification TEXT        NOT NULL,
     topic         TEXT        NOT NULL,
     question_type TEXT        NOT NULL,
@@ -51,3 +53,15 @@ CREATE POLICY "anon full access" ON question_attempts
     FOR ALL TO anon USING (true) WITH CHECK (true);
 CREATE POLICY "anon full access" ON test_results
     FOR ALL TO anon USING (true) WITH CHECK (true);
+
+
+-- ===========================================================================
+-- MIGRATION — if this project already existed before N3apps joined it, run
+-- just this against the live project instead of the CREATE TABLE statements
+-- above. Safe to run even if `subject` already exists (IF NOT EXISTS).
+-- Existing rows backfill to 'maths', which is correct since this project only
+-- ever tracked maths before N3apps was added — see N3apps' own
+-- supabase_schema.sql for the equivalent migration.
+-- ===========================================================================
+ALTER TABLE question_attempts ADD COLUMN IF NOT EXISTS subject TEXT NOT NULL DEFAULT 'maths';
+ALTER TABLE test_results      ADD COLUMN IF NOT EXISTS subject TEXT NOT NULL DEFAULT 'maths';
