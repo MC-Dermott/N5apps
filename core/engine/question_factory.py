@@ -539,3 +539,13 @@ def generate_question(topic, question_type, level=None, qualification="National 
         if level in levels:
             return _invoke(levels[level], calc_mode)
     return _invoke(QUAL_REGISTRY[qualification][topic][question_type], calc_mode)
+
+
+def generate_test_question(topic, question_type, qualification="National 5", calc_mode=False):
+    """A Test question for this Topic. Unlike generate_question, this always mixes
+    across all of the Topic's levels (Question Styles) instead of being pinned to
+    one — the plain dispatcher in QUAL_REGISTRY isn't used here since for several
+    question types it only ever returns its easiest level."""
+    levels = get_levels(topic, question_type, qualification)
+    generator = random.choice(list(levels.values())) if levels else QUAL_REGISTRY[qualification][topic][question_type]
+    return _invoke(generator, calc_mode)

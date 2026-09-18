@@ -265,11 +265,11 @@ if st.session_state.get("last_question_type") != question_type:
     st.session_state.submitted = False
     reset_test()
 
-# --- Level selection ---
+# --- Level selection (not for Test: a Test mixes all of a Topic's levels) ---
 levels = get_levels(topic, question_type, qualification)
 selected_level = None
 
-if levels:
+if levels and mode != "Test":
     level_options = ["All Question Types"] + list(levels.keys())
     level_choice = st.selectbox("Choose Question Type", level_options)
     selected_level = None if level_choice == "All Question Types" else level_choice
@@ -288,7 +288,7 @@ if st.session_state.get("last_calc_mode") != calc_mode:
 
 # --- Mode routing ---
 if mode == "Test":
-    render_test(topic, question_type, level=selected_level, qualification=qualification, user_id=user_id, calc_mode=calc_mode)
+    render_test(topic, question_type, qualification=qualification, user_id=user_id, calc_mode=calc_mode)
 
 else:
     quiz = st.session_state.quiz

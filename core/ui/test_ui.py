@@ -4,7 +4,7 @@ from pathlib import Path
 import streamlit as st
 import streamlit.components.v1 as components
 
-from core.engine.question_factory import generate_question
+from core.engine.question_factory import generate_test_question
 from core.engine.session_manager import reset_test
 from core.ui.question_ui import render_question
 from core.ui.solution_ui import render_solution
@@ -33,20 +33,19 @@ def _is_correct(user_input, expected):
         return str(user_input).strip().lower() == str(expected).strip().lower()
 
 
-def render_test(topic, question_type, level=None, qualification="National 5", user_id=None, calc_mode=False):
+def render_test(topic, question_type, qualification="National 5", user_id=None, calc_mode=False):
     test = st.session_state.test
 
     if not test["questions"]:
-        level_label = f" — {level}" if level else ""
         calc_label = " (non-calculator)" if calc_mode else ""
         st.markdown(
-            f"You will be given **{_NUM_QUESTIONS} questions** on *{question_type}{level_label}*{calc_label}. "
+            f"You will be given **{_NUM_QUESTIONS} questions** on *{question_type}*{calc_label}. "
             "Each question is marked automatically. A summary with feedback is shown at the end."
         )
         if st.button("Start Test", type="primary"):
             reset_test()
             st.session_state.test["questions"] = [
-                generate_question(topic, question_type, level=level, qualification=qualification, calc_mode=calc_mode)
+                generate_test_question(topic, question_type, qualification=qualification, calc_mode=calc_mode)
                 for _ in range(_NUM_QUESTIONS)
             ]
             st.rerun()
