@@ -279,10 +279,10 @@ def _context_block(net, scenario):
     return f"{scenario['subject']} The table shows the tasks required, their preceding task(s), and how long each takes.\n\n{_describe_table(net, scenario)}"
 
 
-def _pert_diagram_params(net, show_values):
+def _pert_diagram_params(net):
     return {
         "layout": net["layout"], "deps": net["deps"], "durations": net["durations"],
-        "est": net["est"], "lft": net["lft"], "show_values": show_values,
+        "est": net["est"], "lft": net["lft"],
     }
 
 
@@ -317,7 +317,7 @@ def generate_networks_l1():
         topic="Projects", question_type="Networks",
         scaffold_steps=scaffold_steps, worked_solution=worked, notes=NOTES,
         metadata={"table": _context_block(net, scenario), "diagram": "pert_chart",
-                  "diagram_params": _pert_diagram_params(net, show_values=False)},
+                  "diagram_params": _pert_diagram_params(net)},
     )
 
 
@@ -347,7 +347,7 @@ def generate_networks_l2():
         topic="Projects", question_type="Networks",
         scaffold_steps=scaffold_steps, worked_solution=worked, notes=NOTES,
         metadata={"table": _context_block(net, scenario), "diagram": "pert_chart",
-                  "diagram_params": _pert_diagram_params(net, show_values=False)},
+                  "diagram_params": _pert_diagram_params(net)},
     )
 
 
@@ -373,7 +373,7 @@ def generate_networks_l3():
         topic="Projects", question_type="Networks",
         scaffold_steps=scaffold_steps, worked_solution=worked, notes=NOTES,
         metadata={"table": _context_block(net, scenario), "diagram": "pert_chart",
-                  "diagram_params": _pert_diagram_params(net, show_values=False)},
+                  "diagram_params": _pert_diagram_params(net)},
     )
 
 
@@ -395,7 +395,7 @@ def generate_networks_l4():
         topic="Projects", question_type="Networks",
         scaffold_steps=scaffold_steps, worked_solution=worked, notes=NOTES,
         metadata={"table": _context_block(net, scenario), "diagram": "pert_chart",
-                  "diagram_params": _pert_diagram_params(net, show_values=False)},
+                  "diagram_params": _pert_diagram_params(net)},
     )
 
 
@@ -420,7 +420,7 @@ def generate_networks_l5():
         topic="Projects", question_type="Networks",
         scaffold_steps=scaffold_steps, worked_solution=worked, notes=NOTES,
         metadata={"table": _context_block(net, scenario), "diagram": "pert_chart",
-                  "diagram_params": _pert_diagram_params(net, show_values=False)},
+                  "diagram_params": _pert_diagram_params(net)},
     )
 
 
