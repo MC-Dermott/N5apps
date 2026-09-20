@@ -181,7 +181,6 @@ _N5_TOPICS = {
         "Currency Exchange": generate_currency_question,
         "Pie Charts": generate_numeracy_pie_charts_question,
         "Division": generate_division_question,
-        "Networks": generate_networks_question,
     },
     "Finance and Statistics": {
         "Simple Interest": generate_simple_interest_question,
@@ -260,6 +259,9 @@ _HIGHER_TOPICS = {
         "Standard Deviation": generate_standard_deviation_question,
         "Probability": generate_probability_question,
     },
+    "Numeracy": {
+        "Networks": generate_networks_question,
+    },
 }
 
 QUAL_REGISTRY = {
@@ -329,14 +331,6 @@ _N5_LEVELS = {
             "Terminating Decimals": generate_division_l2,
             "Recurring Decimals": generate_division_l3,
         },
-        "Networks": {
-            "Earliest Start Time": generate_networks_l1,
-            "Latest Finish Time": generate_networks_l2,
-            "Critical Path": generate_networks_l3,
-            "Total Project Time": generate_networks_l4,
-            "Float": generate_networks_l5,
-            "Gantt Chart": generate_networks_l6,
-        },
     },
     "Finance and Statistics": {
         "Hire Purchase": {
@@ -387,6 +381,16 @@ _HIGHER_LEVELS = {
             "Price Before VAT": generate_vat_exclusive_price,
             "VAT Percentage of a Shop": generate_vat_percentage_of_shop,
             "LBTT": generate_lbtt,
+        },
+    },
+    "Numeracy": {
+        "Networks": {
+            "Earliest Start Time": generate_networks_l1,
+            "Latest Finish Time": generate_networks_l2,
+            "Critical Path": generate_networks_l3,
+            "Total Project Time": generate_networks_l4,
+            "Float": generate_networks_l5,
+            "Gantt Chart": generate_networks_l6,
         },
     },
 }
@@ -511,8 +515,6 @@ _ALWAYS_CALC_SAFE = {
     generate_stem_and_leaf, generate_pie_charts, generate_reading_bar_charts,
     generate_reading_scale, generate_num_fractions, generate_time_zones_reading_tables,
     generate_division_question, generate_division_l1, generate_division_l2, generate_division_l3,
-    generate_networks_question, generate_networks_l1, generate_networks_l2, generate_networks_l3,
-    generate_networks_l4, generate_networks_l5, generate_networks_l6,
 }
 
 _CALC_MODE_SAFE = _CALC_MODE_AWARE | _ALWAYS_CALC_SAFE
