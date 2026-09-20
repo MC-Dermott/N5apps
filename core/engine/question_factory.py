@@ -57,6 +57,32 @@ from topics.numeracy.division import (
     generate_division_l2,
     generate_division_l3,
 )
+from topics.numeracy.multiplication import (
+    generate_multiplication_question,
+    generate_multiplication_l1,
+    generate_multiplication_l2,
+    generate_multiplication_l3,
+)
+from topics.numeracy.addition import (
+    generate_addition_question,
+    generate_addition_l1,
+    generate_addition_l2,
+)
+from topics.numeracy.subtraction import (
+    generate_subtraction_question,
+    generate_subtraction_l1,
+    generate_subtraction_l2,
+)
+from topics.numeracy.core_skills_rounding import (
+    generate_core_skills_rounding_question,
+    generate_core_skills_rounding_l1,
+    generate_core_skills_rounding_l2,
+)
+from topics.numeracy.simplifying_fractions import (
+    generate_simplifying_fractions_question,
+    generate_simplifying_fractions_l1,
+    generate_simplifying_fractions_l2,
+)
 from topics.numeracy.pie_charts import (
     generate_pie_charts_question as generate_numeracy_pie_charts_question,
     generate_pie_charts_l1,
@@ -182,6 +208,14 @@ _N5_TOPICS = {
         "Pie Charts": generate_numeracy_pie_charts_question,
         "Division": generate_division_question,
     },
+    "Core Skills": {
+        "Division": generate_division_question,
+        "Multiplication": generate_multiplication_question,
+        "Addition": generate_addition_question,
+        "Subtraction": generate_subtraction_question,
+        "Rounding": generate_core_skills_rounding_question,
+        "Simplifying Fractions": generate_simplifying_fractions_question,
+    },
     "Finance and Statistics": {
         "Simple Interest": generate_simple_interest_question,
         "Appreciation and Depreciation": generate_appreciation_question,
@@ -259,7 +293,7 @@ _HIGHER_TOPICS = {
         "Standard Deviation": generate_standard_deviation_question,
         "Probability": generate_probability_question,
     },
-    "Numeracy": {
+    "Projects": {
         "Networks": generate_networks_question,
     },
 }
@@ -332,6 +366,34 @@ _N5_LEVELS = {
             "Recurring Decimals": generate_division_l3,
         },
     },
+    "Core Skills": {
+        "Division": {
+            "Exact Division": generate_division_l1,
+            "Terminating Decimals": generate_division_l2,
+            "Recurring Decimals": generate_division_l3,
+        },
+        "Multiplication": {
+            "2-Digit x 1-Digit": generate_multiplication_l1,
+            "2-Digit x 2-Digit": generate_multiplication_l2,
+            "3-Digit x 2-Digit": generate_multiplication_l3,
+        },
+        "Addition": {
+            "2-Digit Numbers": generate_addition_l1,
+            "3-Digit Numbers": generate_addition_l2,
+        },
+        "Subtraction": {
+            "2-Digit Numbers": generate_subtraction_l1,
+            "3-Digit Numbers": generate_subtraction_l2,
+        },
+        "Rounding": {
+            "Nearest 10 / 100 / 1000": generate_core_skills_rounding_l1,
+            "Decimal Places": generate_core_skills_rounding_l2,
+        },
+        "Simplifying Fractions": {
+            "Small Factor": generate_simplifying_fractions_l1,
+            "Larger Factor": generate_simplifying_fractions_l2,
+        },
+    },
     "Finance and Statistics": {
         "Hire Purchase": {
             "Standard Instalments": generate_hire_purchase_l1,
@@ -383,7 +445,7 @@ _HIGHER_LEVELS = {
             "LBTT": generate_lbtt,
         },
     },
-    "Numeracy": {
+    "Projects": {
         "Networks": {
             "Earliest Start Time": generate_networks_l1,
             "Latest Finish Time": generate_networks_l2,
@@ -515,6 +577,11 @@ _ALWAYS_CALC_SAFE = {
     generate_stem_and_leaf, generate_pie_charts, generate_reading_bar_charts,
     generate_reading_scale, generate_num_fractions, generate_time_zones_reading_tables,
     generate_division_question, generate_division_l1, generate_division_l2, generate_division_l3,
+    generate_multiplication_question, generate_multiplication_l1, generate_multiplication_l2, generate_multiplication_l3,
+    generate_addition_question, generate_addition_l1, generate_addition_l2,
+    generate_subtraction_question, generate_subtraction_l1, generate_subtraction_l2,
+    generate_core_skills_rounding_question, generate_core_skills_rounding_l1, generate_core_skills_rounding_l2,
+    generate_simplifying_fractions_question, generate_simplifying_fractions_l1, generate_simplifying_fractions_l2,
 }
 
 _CALC_MODE_SAFE = _CALC_MODE_AWARE | _ALWAYS_CALC_SAFE

@@ -2,6 +2,10 @@ import streamlit as st
 from core.ui.tax_bands_widget import render_tax_band_simulator
 from core.ui.bus_stop_division_widget import render_bus_stop_division_widget
 from core.ui.frequency_table_widget import render_frequency_table_widget
+from core.ui.column_calculation_widget import render_column_calculation_widget
+from core.ui.lattice_multiplication_widget import render_lattice_multiplication_widget
+from core.ui.rounding_number_line_widget import render_rounding_number_line_widget
+from core.ui.fraction_simplifier_widget import render_fraction_simplifier_widget
 
 
 def _build_duration_str(h, m):
@@ -110,3 +114,15 @@ def render_simulation(question):
     elif question.metadata.get("diagram") == "frequency_table_angles":
         with st.expander("🎮 Simulation"):
             render_frequency_table_widget(**question.metadata["diagram_params"])
+    elif question.metadata.get("diagram") == "column_calculation":
+        with st.expander("🎮 Simulation"):
+            render_column_calculation_widget(**question.metadata["diagram_params"])
+    elif question.metadata.get("diagram") == "lattice_multiplication":
+        with st.expander("🎮 Simulation"):
+            render_lattice_multiplication_widget(**question.metadata["diagram_params"])
+    elif question.metadata.get("diagram") == "rounding_number_line":
+        with st.expander("🎮 Simulation"):
+            render_rounding_number_line_widget(**question.metadata["diagram_params"])
+    elif question.metadata.get("diagram") == "fraction_simplifier":
+        with st.expander("🎮 Simulation"):
+            render_fraction_simplifier_widget(**question.metadata["diagram_params"])
