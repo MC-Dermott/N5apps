@@ -1,5 +1,10 @@
+import io
 import math
 import random
+
+from openpyxl import Workbook
+from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
+from openpyxl.utils import get_column_letter
 
 from core.models.question_model import Question
 
@@ -317,6 +322,88 @@ def _pert_diagram_params(net):
 
 
 # ---------------------------------------------------------------------------
+# Downloadable Gantt-chart spreadsheet (Exam Style) -- same download/fill/upload pattern
+# as topics/finance_statistics/savings_schedule.py.
+# ---------------------------------------------------------------------------
+
+_GANTT_HEADER_FILL = PatternFill("solid", fgColor="1F3864")
+_GANTT_ANSWER_FILL = PatternFill("solid", fgColor="FFFF00")
+_GANTT_HEADER_FONT = Font(color="FFFFFF", bold=True)
+_GANTT_GRID_BORDER = Border(
+    left=Side(style="thin", color="BBBBBB"), right=Side(style="thin", color="BBBBBB"),
+    top=Side(style="thin", color="BBBBBB"), bottom=Side(style="thin", color="BBBBBB"),
+)
+
+
+def _build_gantt_workbook(net, scenario, final_prompt):
+    letters = sorted(net["deps"].keys())
+    descriptions = scenario["tasks"][:len(letters)]
+    max_t = max(net["lft"].values())
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Gantt Chart"
+
+    ws.column_dimensions["A"].width = 8
+    ws.column_dimensions["B"].width = 32
+    ws.column_dimensions["C"].width = 14
+
+    ws["A1"] = "Name:"
+    ws["A2"] = "Class:"
+
+    ws["A4"] = scenario["subject"]
+    ws["A4"].font = Font(bold=True, size=12)
+    ws["A5"] = (
+        "(b) Use the table and your completed PERT chart to construct a Gantt chart, without "
+        "float times, for this job. Mark each task's bar by typing a letter (e.g. x) into "
+        "every cell it covers, starting at its Earliest Start Time."
+    )
+    ws["A5"].font = Font(italic=True)
+    ws["A5"].alignment = Alignment(wrap_text=True)
+    ws.merge_cells("A5:H5")
+    ws.row_dimensions[5].height = 30
+
+    header_row = 7
+    for col, text in enumerate(["Task", "Description", f"Duration ({scenario['unit']})"], start=1):
+        cell = ws.cell(row=header_row, column=col, value=text)
+        cell.fill = _GANTT_HEADER_FILL
+        cell.font = _GANTT_HEADER_FONT
+        cell.alignment = Alignment(horizontal="center", vertical="center")
+
+    grid_start_col = 4
+    for t in range(1, max_t + 1):
+        col = grid_start_col + t - 1
+        cell = ws.cell(row=header_row, column=col, value=t)
+        cell.fill = _GANTT_HEADER_FILL
+        cell.font = Font(color="FFFFFF", bold=True, size=9)
+        cell.alignment = Alignment(horizontal="center")
+        ws.column_dimensions[get_column_letter(col)].width = 3
+
+    for i, (letter, desc) in enumerate(zip(letters, descriptions)):
+        row = header_row + 1 + i
+        ws.cell(row=row, column=1, value=letter).alignment = Alignment(horizontal="center")
+        ws.cell(row=row, column=2, value=desc)
+        ws.cell(row=row, column=3, value=net["durations"][letter]).alignment = Alignment(horizontal="center")
+        for t in range(1, max_t + 1):
+            ws.cell(row=row, column=grid_start_col + t - 1).border = _GANTT_GRID_BORDER
+
+    answer_row = header_row + len(letters) + 3
+    ws.cell(row=answer_row, column=1, value="(c)").font = Font(bold=True)
+    prompt_cell = ws.cell(row=answer_row, column=2, value=final_prompt)
+    prompt_cell.alignment = Alignment(wrap_text=True)
+    ws.merge_cells(start_row=answer_row, start_column=2, end_row=answer_row, end_column=6)
+
+    answer_label_row = answer_row + 2
+    ws.cell(row=answer_label_row, column=1, value="Your answer:").font = Font(bold=True)
+    answer_cell_ref = f"B{answer_label_row}"
+    ws[answer_cell_ref].fill = _GANTT_ANSWER_FILL
+
+    buf = io.BytesIO()
+    wb.save(buf)
+    return buf.getvalue(), answer_cell_ref
+
+
+# ---------------------------------------------------------------------------
 # Question generators
 # ---------------------------------------------------------------------------
 
@@ -377,8 +464,9 @@ def generate_networks_pert():
 def generate_networks_exam_style():
     """A full exam-style question: the same (a) complete the PERT chart / (b) construct a
     Gantt chart (without float) / (c) answer a final question structure as real SQA papers.
-    Only part (c) is graded here -- (a) and (b) are practised via the interactive PERT
-    widget and a blank Gantt grid shown alongside it."""
+    (a) is practised via the interactive PERT widget; (b) and (c) are done in a downloadable
+    spreadsheet (download, fill in, re-upload) -- same pattern as the Savings Schedule
+    question in Finance. Only the spreadsheet's single answer cell (part (c)) is graded."""
     scenario = random.choice(_SCENARIOS)
     net = _pick_network(scenario)
 
@@ -426,23 +514,24 @@ def generate_networks_exam_style():
     question_text = (
         "(a) Complete the PERT chart below, showing the duration, the earliest start time and "
         "the latest completion time for each task.\n\n"
-        "(b) Using your completed PERT chart, construct a Gantt chart, without float times, on "
-        "the grid provided.\n\n"
-        f"{final_prompt}"
+        "(b) Download the spreadsheet below and use your completed PERT chart to construct a "
+        "Gantt chart, without float times, for this job.\n\n"
+        f"{final_prompt} Enter your answer in the spreadsheet, save it, then upload it here."
     )
-    diagram_params = {
-        "layout": net["layout"], "deps": net["deps"], "durations": net["durations"],
-        "est": net["est"], "lft": net["lft"],
-        "tasks": sorted(net["deps"].keys()), "critical": net["chain"], "unit": scenario["unit"],
-    }
+    spreadsheet_bytes, answer_cell = _build_gantt_workbook(net, scenario, final_prompt)
 
     return Question(
         question_text=question_text,
         correct_answer=correct_answer,
         topic="Planning", question_type="Networks",
         scaffold_steps=scaffold_steps, worked_solution=worked, notes=NOTES,
-        metadata={"table": _context_block(net, scenario), "diagram": "pert_and_blank_gantt",
-                  "diagram_params": diagram_params},
+        metadata={
+            "table": _context_block(net, scenario), "diagram": "pert_chart",
+            "diagram_params": _pert_diagram_params(net),
+            "spreadsheet_bytes": spreadsheet_bytes,
+            "spreadsheet_filename": "gantt_chart.xlsx",
+            "spreadsheet_answer_cell": ("Gantt Chart", answer_cell),
+        },
     )
 
 
