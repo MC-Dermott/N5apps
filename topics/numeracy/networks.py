@@ -314,7 +314,7 @@ def generate_networks_l1():
     return Question(
         question_text=f"What is the Earliest Start Time of task {target}, in {scenario['unit']}?",
         correct_answer=net["est"][target],
-        topic="Projects", question_type="Networks",
+        topic="Planning", question_type="Networks",
         scaffold_steps=scaffold_steps, worked_solution=worked, notes=NOTES,
         metadata={"table": _context_block(net, scenario), "diagram": "pert_chart",
                   "diagram_params": _pert_diagram_params(net)},
@@ -344,7 +344,7 @@ def generate_networks_l2():
     return Question(
         question_text=f"What is the Latest Finish Time of task {target}, in {scenario['unit']}?",
         correct_answer=net["lft"][target],
-        topic="Projects", question_type="Networks",
+        topic="Planning", question_type="Networks",
         scaffold_steps=scaffold_steps, worked_solution=worked, notes=NOTES,
         metadata={"table": _context_block(net, scenario), "diagram": "pert_chart",
                   "diagram_params": _pert_diagram_params(net)},
@@ -370,7 +370,7 @@ def generate_networks_l3():
         question_text=("Complete the calculations for this network. State the critical path, "
                         "giving your answer as task letters separated by dashes (e.g. A-C-F)."),
         correct_answer="-".join(chain),
-        topic="Projects", question_type="Networks",
+        topic="Planning", question_type="Networks",
         scaffold_steps=scaffold_steps, worked_solution=worked, notes=NOTES,
         metadata={"table": _context_block(net, scenario), "diagram": "pert_chart",
                   "diagram_params": _pert_diagram_params(net)},
@@ -392,7 +392,7 @@ def generate_networks_l4():
     return Question(
         question_text=f"What is the minimum total time required to complete the whole job, in {scenario['unit']}?",
         correct_answer=net["project_duration"],
-        topic="Projects", question_type="Networks",
+        topic="Planning", question_type="Networks",
         scaffold_steps=scaffold_steps, worked_solution=worked, notes=NOTES,
         metadata={"table": _context_block(net, scenario), "diagram": "pert_chart",
                   "diagram_params": _pert_diagram_params(net)},
@@ -417,7 +417,7 @@ def generate_networks_l5():
                         f"time that task {target} can be delayed without affecting the overall completion "
                         f"time, in {scenario['unit']}?"),
         correct_answer=net["float"][target],
-        topic="Projects", question_type="Networks",
+        topic="Planning", question_type="Networks",
         scaffold_steps=scaffold_steps, worked_solution=worked, notes=NOTES,
         metadata={"table": _context_block(net, scenario), "diagram": "pert_chart",
                   "diagram_params": _pert_diagram_params(net)},
@@ -482,7 +482,7 @@ def generate_networks_l6():
     return Question(
         question_text=question_text,
         correct_answer=correct_answer,
-        topic="Projects", question_type="Networks",
+        topic="Planning", question_type="Networks",
         scaffold_steps=scaffold_steps, worked_solution=worked, notes=GANTT_NOTES,
         metadata={"table": _context_block(net, scenario), "diagram": "gantt_chart",
                   "diagram_params": diagram_params},

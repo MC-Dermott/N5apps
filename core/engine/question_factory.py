@@ -293,7 +293,7 @@ _HIGHER_TOPICS = {
         "Standard Deviation": generate_standard_deviation_question,
         "Probability": generate_probability_question,
     },
-    "Projects": {
+    "Planning": {
         "Networks": generate_networks_question,
     },
 }
@@ -445,7 +445,7 @@ _HIGHER_LEVELS = {
             "LBTT": generate_lbtt,
         },
     },
-    "Projects": {
+    "Planning": {
         "Networks": {
             "Earliest Start Time": generate_networks_l1,
             "Latest Finish Time": generate_networks_l2,
