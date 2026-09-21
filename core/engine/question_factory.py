@@ -163,6 +163,12 @@ from topics.geometry_measure.tolerance import (
 )
 from topics.statistics.standard_deviation import generate_standard_deviation_question
 from topics.statistics.probability import generate_probability_question
+from topics.statistics.expected_value import (
+    generate_expected_value_question,
+    generate_expected_value_l1,
+    generate_expected_value_l2,
+    generate_expected_value_l3,
+)
 from topics.numeracy_assessment.compound_percentages import generate_compound_percentages
 from topics.numeracy_assessment.fractions import generate_fractions as generate_num_fractions
 from topics.numeracy_assessment.liquid_volume import generate_liquid_volume
@@ -292,6 +298,7 @@ _HIGHER_TOPICS = {
     },
     "Planning": {
         "Networks": generate_networks_question,
+        "Risk and Expected Value": generate_expected_value_question,
     },
 }
 
@@ -447,6 +454,11 @@ _HIGHER_LEVELS = {
             "PERT": generate_networks_pert,
             "Gantt": generate_networks_gantt,
             "Exam Style": generate_networks_exam_style,
+        },
+        "Risk and Expected Value": {
+            "Expected Cost of a Single Risk": generate_expected_value_l1,
+            "Combining Two Independent Risks": generate_expected_value_l2,
+            "Comparing Control Measures": generate_expected_value_l3,
         },
     },
 }
