@@ -43,6 +43,17 @@ from topics.numeracy.indirect_proportion import (
     generate_indirect_proportion_l1,
     generate_indirect_proportion_l2,
 )
+from topics.numeracy.time_conversion import (
+    generate_minutes_to_hours_question,
+    generate_minutes_to_hours_l1,
+    generate_minutes_to_hours_l2,
+    generate_hours_to_minutes_question,
+    generate_hours_to_minutes_l1,
+    generate_hours_to_minutes_l2,
+    generate_indirect_proportion_hm_question,
+    generate_indirect_proportion_hm_l1,
+    generate_indirect_proportion_hm_l2,
+)
 from topics.numeracy.currency_exchange import (
     generate_currency_question,
     generate_currency_l1,
@@ -207,6 +218,9 @@ _N5_TOPICS = {
         "Probability": generate_numeracy_probability_question,
         "Ratio and Direct Proportion": generate_ratio_and_proportion_question,
         "Indirect Proportion": generate_indirect_proportion_question,
+        "Minutes to Hours": generate_minutes_to_hours_question,
+        "Hours to Hours and Minutes": generate_hours_to_minutes_question,
+        "Indirect Proportion (Hours and Minutes)": generate_indirect_proportion_hm_question,
         "Currency Exchange": generate_currency_question,
         "Pie Charts": generate_numeracy_pie_charts_question,
         "Division": generate_division_question,
@@ -348,6 +362,18 @@ _N5_LEVELS = {
         "Indirect Proportion": {
             "People and Time": generate_indirect_proportion_l1,
             "Other Contexts": generate_indirect_proportion_l2,
+        },
+        "Minutes to Hours": {
+            "Under 60 Minutes": generate_minutes_to_hours_l1,
+            "60 Minutes or More": generate_minutes_to_hours_l2,
+        },
+        "Hours to Hours and Minutes": {
+            "Under 1 Hour": generate_hours_to_minutes_l1,
+            "1 Hour or More": generate_hours_to_minutes_l2,
+        },
+        "Indirect Proportion (Hours and Minutes)": {
+            "People and Work Rate": generate_indirect_proportion_hm_l1,
+            "Speed, Distance and Time": generate_indirect_proportion_hm_l2,
         },
         "Currency Exchange": {
             "Basic Exchange": generate_currency_l1,
@@ -559,6 +585,9 @@ _CALC_MODE_AWARE = {
     generate_numeracy_ratio_l1, generate_numeracy_ratio_l2,
     generate_direct_proportion_l1, generate_direct_proportion_l2, generate_direct_proportion_l3,
     generate_indirect_proportion_question, generate_indirect_proportion_l1, generate_indirect_proportion_l2,
+    generate_indirect_proportion_hm_question, generate_indirect_proportion_hm_l1, generate_indirect_proportion_hm_l2,
+    generate_minutes_to_hours_question, generate_minutes_to_hours_l2,
+    generate_hours_to_minutes_question, generate_hours_to_minutes_l2,
     generate_percentage_question, generate_percentage_l1, generate_percentage_single_change,
     generate_percentage_appreciation, generate_percentage_depreciation, generate_percentage_mixed_changes,
     generate_gradient_question, generate_gradient_question_n4,
@@ -588,6 +617,7 @@ _ALWAYS_CALC_SAFE = {
     generate_subtraction_question, generate_subtraction_l1, generate_subtraction_l2,
     generate_core_skills_rounding_question, generate_core_skills_rounding_l1, generate_core_skills_rounding_l2,
     generate_simplifying_fractions_question, generate_simplifying_fractions_l1, generate_simplifying_fractions_l2,
+    generate_minutes_to_hours_l1, generate_hours_to_minutes_l1,
 }
 
 _CALC_MODE_SAFE = _CALC_MODE_AWARE | _ALWAYS_CALC_SAFE
