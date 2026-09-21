@@ -94,12 +94,9 @@ from topics.numeracy.pie_charts import (
 )
 from topics.numeracy.networks import (
     generate_networks_question,
-    generate_networks_l1,
-    generate_networks_l2,
-    generate_networks_l3,
-    generate_networks_l4,
-    generate_networks_l5,
-    generate_networks_l6,
+    generate_networks_pert,
+    generate_networks_gantt,
+    generate_networks_exam_style,
 )
 from topics.rounding.rounding import (
     generate_rounding_decimal_places,
@@ -447,12 +444,9 @@ _HIGHER_LEVELS = {
     },
     "Planning": {
         "Networks": {
-            "Earliest Start Time": generate_networks_l1,
-            "Latest Finish Time": generate_networks_l2,
-            "Critical Path": generate_networks_l3,
-            "Total Project Time": generate_networks_l4,
-            "Float": generate_networks_l5,
-            "Gantt Chart": generate_networks_l6,
+            "PERT": generate_networks_pert,
+            "Gantt": generate_networks_gantt,
+            "Exam Style": generate_networks_exam_style,
         },
     },
 }

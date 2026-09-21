@@ -117,6 +117,13 @@ def render_question(question, suffix="default"):
         render_pert_diagram_widget(qid=question.qid, **question.metadata["diagram_params"])
     elif question.metadata.get("diagram") == "gantt_chart":
         _render_gantt_chart(question.metadata["diagram_params"])
+    elif question.metadata.get("diagram") == "pert_and_blank_gantt":
+        p = question.metadata["diagram_params"]
+        render_pert_diagram_widget(qid=question.qid, layout=p["layout"], deps=p["deps"],
+                                    durations=p["durations"], est=p["est"], lft=p["lft"])
+        st.markdown("**(b)** Now use your completed PERT chart to construct a Gantt chart "
+                    "(without float times) on the grid below:")
+        _render_gantt_chart(p, blank=True)
 
     if question.metadata.get("answer_type") == "duration":
         return _render_duration_input(question.qid, suffix)
@@ -515,9 +522,11 @@ def _render_pie_chart(p):
     plt.close(fig)
 
 
-def _render_gantt_chart(p):
+def _render_gantt_chart(p, blank=False):
     """Gantt chart: one bar per task, positioned at its EST and running for its duration.
-    Non-critical tasks get a hatched extension out to their LFT, showing their float."""
+    Non-critical tasks get a hatched extension out to their LFT, showing their float.
+    `blank=True` draws just the empty task/time grid (no bars) for the student to fill in
+    themselves, matching the blank grid given alongside real exam questions."""
     tasks = p["tasks"]
     est = p["est"]
     durations = p["durations"]
@@ -528,15 +537,16 @@ def _render_gantt_chart(p):
     fig, ax = plt.subplots(figsize=(9, max(3, 0.5 * len(tasks) + 1)))
     y_positions = list(range(len(tasks)))[::-1]
 
-    for y, t in zip(y_positions, tasks):
-        start = est[t]
-        dur = durations[t]
-        ax.barh(y, dur, left=start, height=0.6, color="#2c3e50", zorder=3)
-        if t not in critical:
-            float_len = lft[t] - (start + dur)
-            if float_len > 0:
-                ax.barh(y, float_len, left=start + dur, height=0.6, facecolor="none",
-                        edgecolor="#2c3e50", hatch="///", linewidth=1.2, zorder=3)
+    if not blank:
+        for y, t in zip(y_positions, tasks):
+            start = est[t]
+            dur = durations[t]
+            ax.barh(y, dur, left=start, height=0.6, color="#2c3e50", zorder=3)
+            if t not in critical:
+                float_len = lft[t] - (start + dur)
+                if float_len > 0:
+                    ax.barh(y, float_len, left=start + dur, height=0.6, facecolor="none",
+                            edgecolor="#2c3e50", hatch="///", linewidth=1.2, zorder=3)
 
     ax.set_yticks(y_positions)
     ax.set_yticklabels(tasks)
@@ -544,8 +554,16 @@ def _render_gantt_chart(p):
     ax.set_xlabel(f"time ({unit})", fontsize=11)
     max_t = max(lft.values())
     ax.set_xlim(0, max_t + 1)
-    ax.xaxis.set_major_locator(plt.MultipleLocator(max(1, max_t // 15)))
-    ax.grid(axis="x", linestyle="--", alpha=0.4, zorder=0)
+    ax.set_ylim(min(y_positions) - 0.6, max(y_positions) + 0.6)
+    tick_step = max(1, max_t // 15)
+    ax.xaxis.set_major_locator(plt.MultipleLocator(tick_step))
+    if blank:
+        ax.xaxis.set_minor_locator(plt.MultipleLocator(1))
+        ax.set_yticks([y + 0.5 for y in range(min(y_positions) - 1, max(y_positions) + 1)], minor=True)
+        ax.grid(which="both", axis="x", color="#ccc", linewidth=0.6, zorder=0)
+        ax.grid(which="minor", axis="y", color="#ccc", linewidth=0.6, zorder=0)
+    else:
+        ax.grid(axis="x", linestyle="--", alpha=0.4, zorder=0)
     fig.patch.set_facecolor("white")
     plt.tight_layout()
     st.pyplot(fig, use_container_width=False)
