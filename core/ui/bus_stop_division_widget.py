@@ -178,14 +178,18 @@ def _build_html(dividend, divisor, max_decimals, height):
       }}
 
       const result = computeSteps(DIVIDEND, DIVISOR, MAX_DECIMALS);
-      let columns = result.wholeDigits.map(d => ({{ type:'digit', digit:String(d), quotient:null, exchange:null }}));
+      // 'setupDivisor' -> 'setupDividend' -> 'working': the pupil sets the sum
+      // out in the bus stop themselves (divisor, then each dividend digit in
+      // order) before working through the quotient/remainder columns.
+      let phase = 'setupDivisor';
+      let dividendDigitsEntered = 0;
+      let columns = [];
       let stepIndex = 0;
       let substage = 'quotient';
       let finished = false;
       let pendingNextColIdx = null;
 
       document.getElementById('bsw-questionLabel').textContent = `${{DIVIDEND}} ÷ ${{DIVISOR}}`;
-      document.getElementById('bsw-divisorLabel').textContent = DIVISOR;
 
       const tableToggleBtn = document.getElementById('bsw-tableToggleBtn');
       function buildTimesTable(){{
@@ -222,6 +226,39 @@ def _build_html(dividend, divisor, max_decimals, height):
 
         quotientRow.innerHTML = '';
         dividendArea.innerHTML = '';
+
+        if (phase === 'setupDivisor'){{
+          document.getElementById('bsw-divisorLabel').innerHTML = `<input type="number" inputmode="numeric" class="quotInputBox" id="bsw-divisorInput">`;
+          stagePrompt.textContent = 'First, what is the divisor — the number you are dividing by?';
+          quotHint.textContent = 'Type it in the box, then check it.';
+          answerRow.style.display = 'none';
+          checkFeedback.textContent = '';
+          checkFeedback.className = 'checkFeedback';
+          finishHost.innerHTML = '';
+          const divisorInput = document.getElementById('bsw-divisorInput');
+          divisorInput.addEventListener('keydown', (e) => {{ if (e.key === 'Enter') doCheck(); }});
+          setTimeout(() => divisorInput.focus(), 30);
+          return;
+        }}
+
+        if (phase === 'setupDividend'){{
+          document.getElementById('bsw-divisorLabel').textContent = DIVISOR;
+          columns.forEach(col => {{
+            dividendArea.innerHTML += `<div class="digitCell">${{col.digit}}</div>`;
+          }});
+          dividendArea.innerHTML += `<div class="digitCell active"><input type="number" inputmode="numeric" class="quotInputBox" id="bsw-dividendDigitInput"></div>`;
+          stagePrompt.innerHTML = `Now set out <span class="n">${{DIVIDEND}}</span> in the bus stop — what is digit ${{dividendDigitsEntered + 1}}?`;
+          quotHint.textContent = 'Type the next digit of the number you are dividing, then check it.';
+          answerRow.style.display = 'none';
+          checkFeedback.textContent = '';
+          checkFeedback.className = 'checkFeedback';
+          finishHost.innerHTML = '';
+          const digitInput = document.getElementById('bsw-dividendDigitInput');
+          digitInput.addEventListener('keydown', (e) => {{ if (e.key === 'Enter') doCheck(); }});
+          setTimeout(() => digitInput.focus(), 30);
+          return;
+        }}
+
         columns.forEach((col, idx) => {{
           if (col.type === 'point'){{
             quotientRow.innerHTML += `<div class="pointGap">.</div>`;
@@ -287,6 +324,58 @@ def _build_html(dividend, divisor, max_decimals, height):
 
       function doCheck(){{
         const checkFeedback = document.getElementById('bsw-checkFeedback');
+
+        if (phase === 'setupDivisor'){{
+          const divisorInput = document.getElementById('bsw-divisorInput');
+          if (!divisorInput) return;
+          const val = parseInt(divisorInput.value, 10);
+          if (isNaN(val)){{
+            checkFeedback.textContent = 'Type a number in the box first.';
+            checkFeedback.className = 'checkFeedback bad';
+            return;
+          }}
+          if (val === DIVISOR){{
+            checkFeedback.textContent = 'Correct!';
+            checkFeedback.className = 'checkFeedback good';
+            phase = 'setupDividend';
+            setTimeout(() => {{ render(); }}, 350);
+          }} else {{
+            checkFeedback.textContent = 'Not quite — try again.';
+            checkFeedback.className = 'checkFeedback bad';
+            divisorInput.value = '';
+            divisorInput.focus();
+          }}
+          return;
+        }}
+
+        if (phase === 'setupDividend'){{
+          const digitInput = document.getElementById('bsw-dividendDigitInput');
+          if (!digitInput) return;
+          const val = parseInt(digitInput.value, 10);
+          if (isNaN(val)){{
+            checkFeedback.textContent = 'Type a number in the box first.';
+            checkFeedback.className = 'checkFeedback bad';
+            return;
+          }}
+          const expected = result.wholeDigits[dividendDigitsEntered];
+          if (val === expected){{
+            columns.push({{ type:'digit', digit:String(val), quotient:null, exchange:null }});
+            dividendDigitsEntered++;
+            checkFeedback.textContent = 'Correct!';
+            checkFeedback.className = 'checkFeedback good';
+            if (dividendDigitsEntered === result.wholeDigits.length){{
+              phase = 'working';
+            }}
+            setTimeout(() => {{ render(); }}, 350);
+          }} else {{
+            checkFeedback.textContent = 'Not quite — try again.';
+            checkFeedback.className = 'checkFeedback bad';
+            digitInput.value = '';
+            digitInput.focus();
+          }}
+          return;
+        }}
+
         const step = result.steps[stepIndex];
         const colIdx = activeColumnIndex();
         const input = substage === 'quotient'

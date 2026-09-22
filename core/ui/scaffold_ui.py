@@ -109,7 +109,7 @@ def render_simulation(question):
         with st.expander("🎮 Simulation"):
             render_tax_band_simulator(**question.metadata["diagram_params"])
     elif question.metadata.get("diagram") == "bus_stop_division":
-        with st.expander("🎮 Simulation"):
+        with st.expander("🎮 Interactive Scaffold"):
             render_bus_stop_division_widget(**question.metadata["diagram_params"])
     elif question.metadata.get("diagram") == "frequency_table_angles":
         with st.expander("🎮 Simulation"):
