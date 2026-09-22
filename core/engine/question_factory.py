@@ -577,6 +577,11 @@ def generate_unit_assessment(topic, qualification="National 5", num_questions=10
 # Higher is deliberately excluded entirely (no non-calculator mode there), as
 # are any topics whose arithmetic can't be made non-calc-safe without
 # falsifying the numbers (e.g. real exchange rates, compounding, π).
+#
+# Division is deliberately left out of both sets: its divisors are always
+# non-calculator-safe by construction (single-figure, or a multiple of 10,
+# 100 or 1000 — see topics/numeracy/division.py), so there's no calculator
+# variant to offer and no Calculator/Non-calculator toggle should appear.
 # ---------------------------------------------------------------------------
 
 _CALC_MODE_AWARE = {
@@ -611,7 +616,6 @@ _ALWAYS_CALC_SAFE = {
     generate_time_zone_l1, generate_time_zone_l2, generate_time_zone_l3,
     generate_stem_and_leaf, generate_pie_charts, generate_reading_bar_charts,
     generate_reading_scale, generate_num_fractions, generate_time_zones_reading_tables,
-    generate_division_question, generate_division_l1, generate_division_l2, generate_division_l3,
     generate_multiplication_question, generate_multiplication_l1, generate_multiplication_l2, generate_multiplication_l3,
     generate_addition_question, generate_addition_l1, generate_addition_l2,
     generate_subtraction_question, generate_subtraction_l1, generate_subtraction_l2,

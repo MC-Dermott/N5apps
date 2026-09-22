@@ -27,7 +27,19 @@ too — that's a **recurring decimal**. Round to the number of decimal places as
 **Example:** 10 ÷ 3 = 3.333... — the 3s repeat forever, so to 2 decimal places that's **3.33**.
 """
 
-_DIVISOR_POOL = [3, 4, 6, 7, 8, 9, 11, 12]
+_SINGLE_FIGURE_DIVISORS = [2, 3, 4, 5, 6, 7, 8, 9]
+
+
+def _divisor_pool(digit_count):
+    """Non-calculator-safe divisors: a single-figure whole number, or a
+    multiple of 10, 100 or 1000 — scaled to the dividend's size so the
+    quotient stays sensible (e.g. no dividing a 2-digit number by 100)."""
+    pool = list(_SINGLE_FIGURE_DIVISORS)
+    if digit_count >= 3:
+        pool += [10, 20, 30, 40, 50, 60, 70, 80, 90]
+    if digit_count >= 4:
+        pool += [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]
+    return pool
 
 
 def _compute_division(dividend, divisor, max_decimals=10):
@@ -63,10 +75,13 @@ def _compute_division(dividend, divisor, max_decimals=10):
     }
 
 
+_DIGIT_RANGES = {2: (10, 99), 3: (100, 999), 4: (1000, 9999)}
+
+
 def _generate(digit_count, want_type, max_decimals=10):
-    lo, hi = (10, 99) if digit_count == 2 else (100, 999)
+    lo, hi = _DIGIT_RANGES[digit_count]
     for _ in range(4000):
-        divisor = random.choice(_DIVISOR_POOL)
+        divisor = random.choice(_divisor_pool(digit_count))
         dividend = random.randint(lo, hi)
         if dividend <= divisor:
             continue
@@ -95,7 +110,7 @@ def _diagram(dividend, divisor):
 # ---------------------------------------------------------------------------
 
 def generate_division_l1(calc_mode=False):
-    digit_count = random.choice([2, 3])
+    digit_count = random.choice([2, 3, 4])
     dividend, divisor, res = _generate(digit_count, "exact")
     answer = res["whole_value"]
 
@@ -127,7 +142,7 @@ def generate_division_l1(calc_mode=False):
 # ---------------------------------------------------------------------------
 
 def generate_division_l2(calc_mode=False):
-    digit_count = random.choice([2, 3])
+    digit_count = random.choice([2, 3, 4])
     dividend, divisor, res = _generate(digit_count, "terminating")
     answer = round(dividend / divisor, 2)
 
@@ -163,7 +178,7 @@ def generate_division_l2(calc_mode=False):
 # ---------------------------------------------------------------------------
 
 def generate_division_l3(calc_mode=False):
-    digit_count = random.choice([2, 3])
+    digit_count = random.choice([2, 3, 4])
     dividend, divisor, res = _generate(digit_count, "recurring")
     answer = round(dividend / divisor, 2)
 
