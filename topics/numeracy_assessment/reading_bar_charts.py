@@ -1,5 +1,5 @@
 import random
-from core.models.question_model import Question
+from core.models.question_model import Question, make_part, multipart_worked_solution
 
 NOTES = """
 **Reading Bar Charts:**
@@ -74,38 +74,40 @@ def generate_reading_bar_charts():
     g1_wins = [sc["categories"][i] for i in range(n) if g1[i] > g2[i]]
     total_g2 = sum(g2)
 
-    question_text = (
-        f"The bar chart above shows **{sc['title'].lower()}**.\n\n"
-        f"**(a)** In which categories did **{sc['group1']}** outnumber **{sc['group2']}**?\n\n"
-        f"**(b)** Estimate how many **{sc['group2']}** in total are shown in the chart.\n\n"
-        f"**(c)** What does the chart tell you about the difference between "
-        f"{sc['group1']} and {sc['group2']}?\n\n"
-        f"**Enter your answer for part (b) — the total for {sc['group2']}.**"
-    )
-
-    scaffold_steps = [
-        {"prompt": f"Read each {sc['group2']} bar value", "answer": str(g2)},
-        {"prompt": f"Total for {sc['group2']}", "answer": total_g2},
-    ]
-
-    worked = [
-        f"**(a)** {sc['group1']} outnumber {sc['group2']} in: **{', '.join(g1_wins)}**",
-        "",
-        f"**(b)** {sc['group2']} bar values: {g2}",
-        f"Total = {' + '.join(str(v) for v in g2)} = **{total_g2}**",
-        "",
-        f"**(c)** The chart shows the relative patterns of {sc['group1']} vs {sc['group2']} "
-        f"across the different categories.",
+    parts = [
+        make_part(
+            "(a)", f"In which categories did **{sc['group1']}** outnumber **{sc['group2']}**?",
+            ", ".join(g1_wins), explain=True,
+        ),
+        make_part(
+            "(b)", f"Estimate how many **{sc['group2']}** in total are shown in the chart.", total_g2,
+            scaffold_steps=[
+                {"prompt": f"Read each {sc['group2']} bar value", "answer": str(g2)},
+                {"prompt": f"Total for {sc['group2']}", "answer": total_g2},
+            ],
+            worked_solution=[
+                f"{sc['group2']} bar values: {g2}",
+                f"Total = {' + '.join(str(v) for v in g2)} = **{total_g2}**",
+            ],
+        ),
+        make_part(
+            "(c)", f"What does the chart tell you about the difference between "
+                   f"{sc['group1']} and {sc['group2']}?",
+            f"{sc['group1']} outnumber {sc['group2']} in {', '.join(g1_wins)}; {sc['group2']} "
+            f"outnumber {sc['group1']} in the other categories — neither group is higher "
+            f"across every category.",
+            explain=True,
+        ),
     ]
 
     return Question(
-        question_text=question_text,
+        question_text=f"The bar chart shows **{sc['title'].lower()}**.",
         correct_answer=total_g2,
         topic="Data and Analysis",
         question_type="Reading Bar Charts",
-        scaffold_steps=scaffold_steps,
-        worked_solution=worked,
+        worked_solution=multipart_worked_solution(parts),
         notes=NOTES,
+        parts=parts,
         metadata={
             "diagram": "bar_chart",
             "diagram_params": {

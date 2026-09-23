@@ -75,12 +75,33 @@ def _render_spreadsheet_input(question, suffix):
 
 
 def render_question(question, suffix="default"):
+    render_question_header(question)
+    return render_answer_input(question, suffix)
+
+
+def render_answer_input(question, suffix="default"):
+    if question.metadata.get("options"):
+        return st.radio("Your answer", question.metadata["options"], index=None,
+                        key=f"ans_{question.qid}_{suffix}") or ""
+    if question.metadata.get("answer_type") == "duration":
+        return _render_duration_input(question.qid, suffix)
+    if question.metadata.get("spreadsheet_bytes"):
+        return _render_spreadsheet_input(question, suffix)
+    return st.text_input("Your answer", key=f"ans_{question.qid}_{suffix}")
+
+
+def render_question_header(question):
+    """Everything above the answer box: reference sheet, table, question text, diagram. For a
+    multipart question, question_text is the shared context for all its parts."""
     if question.metadata.get("reference_sheet"):
         st.markdown(question.metadata["reference_sheet"])
         st.divider()
     if question.metadata.get("table"):
         st.markdown(question.metadata["table"])
-    st.subheader(question.question_text)
+    if question.parts:
+        st.info(question.question_text)
+    else:
+        st.subheader(question.question_text)
 
     if question.metadata.get("diagram") == "two_triangle":
         _render_two_triangle_diagram(
@@ -117,12 +138,6 @@ def render_question(question, suffix="default"):
         render_pert_diagram_widget(qid=question.qid, **question.metadata["diagram_params"])
     elif question.metadata.get("diagram") == "gantt_chart":
         _render_gantt_chart(question.metadata["diagram_params"])
-
-    if question.metadata.get("answer_type") == "duration":
-        return _render_duration_input(question.qid, suffix)
-    if question.metadata.get("spreadsheet_bytes"):
-        return _render_spreadsheet_input(question, suffix)
-    return st.text_input("Your answer", key=f"ans_{question.qid}_{suffix}")
 
 
 def _render_two_triangle_diagram(p, unit):

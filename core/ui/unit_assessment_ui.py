@@ -3,7 +3,8 @@ import streamlit as st
 from core.engine.question_factory import generate_unit_assessment
 from core.engine.session_manager import reset_unit_assessment
 from core.ui.question_ui import render_question
-from core.ui.solution_ui import render_solution
+from core.ui.solution_ui import render_solution, answer_display, correct_answer_display
+from core.ui.multipart_ui import render_multipart_assessment
 from core.db.tracker import save_test_result
 
 _NUM_QUESTIONS = 10
@@ -61,16 +62,23 @@ def render_unit_assessment(topic, qualification="National 5", user_id=None, calc
     st.progress((idx + 1) / _NUM_QUESTIONS,
                 text=f"Q{idx + 1} – {label}  ({idx + 1} of {_NUM_QUESTIONS})")
 
-    user_answer = render_question(question, suffix="unit_assess")
-
-    if st.button("Submit", key=f"unit_assess_submit_{idx}", type="primary"):
+    if question.parts:
+        result = render_multipart_assessment(question, f"unit_assess_{question.qid}", _is_correct)
+        if result is None:
+            return
+        user_answer, correct = result
+    else:
+        user_answer = render_question(question, suffix="unit_assess")
+        if not st.button("Submit", key=f"unit_assess_submit_{idx}", type="primary"):
+            return
         correct = _is_correct(user_answer, question.correct_answer)
-        assessment["answers"].append(user_answer)
-        assessment["results"].append(correct)
-        assessment["index"] += 1
-        if assessment["index"] >= _NUM_QUESTIONS:
-            assessment["complete"] = True
-        st.rerun()
+
+    assessment["answers"].append(user_answer)
+    assessment["results"].append(correct)
+    assessment["index"] += 1
+    if assessment["index"] >= _NUM_QUESTIONS:
+        assessment["complete"] = True
+    st.rerun()
 
 
 def _render_summary(assessment, topic):
@@ -97,15 +105,15 @@ def _render_summary(assessment, topic):
             st.success(
                 f"**{label}**  \n"
                 f"{question.question_text[:120]}{'...' if len(question.question_text) > 120 else ''}  \n"
-                f"Your answer: **{answer}** ✅"
+                f"Your answer: **{answer_display(question, answer)}** ✅"
             )
         else:
             with st.container(border=True):
                 st.error(
                     f"**{label}**  \n"
                     f"{question.question_text[:120]}{'...' if len(question.question_text) > 120 else ''}  \n"
-                    f"Your answer: **{answer or '(blank)'}** ❌  \n"
-                    f"Correct answer: **{question.correct_answer}**"
+                    f"Your answer: **{answer_display(question, answer)}** ❌  \n"
+                    f"Correct answer: **{correct_answer_display(question)}**"
                 )
                 render_solution(question)
 

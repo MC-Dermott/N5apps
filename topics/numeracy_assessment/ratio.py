@@ -1,5 +1,5 @@
 import random
-from core.models.question_model import Question
+from core.models.question_model import Question, make_part, multipart_worked_solution
 
 NOTES = """
 **Ratio Problems:**
@@ -68,55 +68,66 @@ def generate_ratio():
     qa, qb, qc = qty_ratio[0] * share, qty_ratio[1] * share, qty_ratio[2] * share
     revenue = qa * price_a + qb * price_b + qc * price_c
 
-    question_text = (
+    context = (
         f"At a {event} there were three grades of {ticket_pl} available:\n\n"
         f"- **{grade_a}** — most expensive\n"
         f"- **{grade_b}** — middle price\n"
         f"- **{grade_c}** — cheapest (£{price_c})\n\n"
         f"The ratio of {ticket_pl} prices was "
-        f"{grade_a[0]}:{grade_b[0]}:{grade_c[0]} = {pa_r}:{pb_r}:{pc_r}\n\n"
-        f"**(a)** Find the price of each type of {ticket_sg}.\n\n"
-        f"The ratio of the number of each type of {ticket_sg} sold was "
-        f"{grade_a[0]}:{grade_b[0]}:{grade_c[0]} = {qty_ratio[0]}:{qty_ratio[1]}:{qty_ratio[2]}\n\n"
-        f"There were {total:,} {ticket_pl} sold in total.\n\n"
-        f"**(b)** Find the total amount taken in {ticket_sg} sales.\n\n"
-        f"**Enter your answer for part (b).**"
+        f"{grade_a[0]}:{grade_b[0]}:{grade_c[0]} = {pa_r}:{pb_r}:{pc_r}"
     )
 
-    scaffold_steps = [
-        {"prompt": "Price per ratio unit (cheapest price ÷ its ratio number)", "answer": unit},
-        {"prompt": f"Price of {grade_a} {ticket_sg} (its ratio number × price per unit)", "answer": price_a},
-        {"prompt": f"Price of {grade_b} {ticket_sg} (its ratio number × price per unit)", "answer": price_b},
-        {"prompt": "Total quantity ratio shares (add the three ratio numbers)", "answer": sum(qty_ratio)},
-        {"prompt": "Each share = total sold ÷ total quantity ratio shares", "answer": share},
-        {"prompt": f"Number of {grade_a} {ticket_pl}", "answer": qa},
-        {"prompt": f"Number of {grade_b} {ticket_pl}", "answer": qb},
-        {"prompt": f"Number of {grade_c} {ticket_pl}", "answer": qc},
-        {"prompt": "Total revenue", "answer": revenue},
-    ]
-
-    worked = [
-        f"**(a) {ticket_sg.capitalize()} prices:**",
-        f"Price per unit = £{price_c} ÷ {pc_r} = £{unit}",
-        f"{grade_a}: {pa_r} × £{unit} = £{price_a}",
-        f"{grade_b}: {pb_r} × £{unit} = £{price_b}",
-        f"{grade_c}: £{price_c}",
-        "",
-        f"**(b) Total revenue:**",
-        f"Total shares = {qty_ratio[0]} + {qty_ratio[1]} + {qty_ratio[2]} = {sum(qty_ratio)}",
-        f"Each share = {total:,} ÷ {sum(qty_ratio)} = {share}",
-        f"{grade_a}: {qty_ratio[0]} × {share} = {qa} {ticket_pl} @ £{price_a} = £{qa * price_a:,}",
-        f"{grade_b}: {qty_ratio[1]} × {share} = {qb} {ticket_pl} @ £{price_b} = £{qb * price_b:,}",
-        f"{grade_c}: {qty_ratio[2]} × {share} = {qc} {ticket_pl} @ £{price_c} = £{qc * price_c:,}",
-        f"Total = £{qa*price_a:,} + £{qb*price_b:,} + £{qc*price_c:,} = **£{revenue:,}**",
+    parts = [
+        make_part(
+            "(a)(i)", f"Find the price of a **{grade_a}** {ticket_sg}.", price_a,
+            scaffold_steps=[
+                {"prompt": "Price per ratio unit (cheapest price ÷ its ratio number)", "answer": unit},
+                {"prompt": f"Price of {grade_a} {ticket_sg} (its ratio number × price per unit)", "answer": price_a},
+            ],
+            worked_solution=[
+                f"Price per unit = £{price_c} ÷ {pc_r} = £{unit}",
+                f"{grade_a}: {pa_r} × £{unit} = £{price_a}",
+            ],
+        ),
+        make_part(
+            "(a)(ii)", f"Find the price of a **{grade_b}** {ticket_sg}.", price_b,
+            scaffold_steps=[
+                {"prompt": f"Price of {grade_b} {ticket_sg} (its ratio number × price per unit)", "answer": price_b},
+            ],
+            worked_solution=[f"{grade_b}: {pb_r} × £{unit} = £{price_b}"],
+        ),
+        make_part(
+            "(b)",
+            f"The ratio of the number of each type of {ticket_sg} sold was "
+            f"{grade_a[0]}:{grade_b[0]}:{grade_c[0]} = {qty_ratio[0]}:{qty_ratio[1]}:{qty_ratio[2]}\n\n"
+            f"There were {total:,} {ticket_pl} sold in total.\n\n"
+            f"Find the total amount taken in {ticket_sg} sales.",
+            revenue,
+            scaffold_steps=[
+                {"prompt": "Total quantity ratio shares (add the three ratio numbers)", "answer": sum(qty_ratio)},
+                {"prompt": "Each share = total sold ÷ total quantity ratio shares", "answer": share},
+                {"prompt": f"Number of {grade_a} {ticket_pl}", "answer": qa},
+                {"prompt": f"Number of {grade_b} {ticket_pl}", "answer": qb},
+                {"prompt": f"Number of {grade_c} {ticket_pl}", "answer": qc},
+                {"prompt": "Total revenue", "answer": revenue},
+            ],
+            worked_solution=[
+                f"Total shares = {qty_ratio[0]} + {qty_ratio[1]} + {qty_ratio[2]} = {sum(qty_ratio)}",
+                f"Each share = {total:,} ÷ {sum(qty_ratio)} = {share}",
+                f"{grade_a}: {qty_ratio[0]} × {share} = {qa} {ticket_pl} @ £{price_a} = £{qa * price_a:,}",
+                f"{grade_b}: {qty_ratio[1]} × {share} = {qb} {ticket_pl} @ £{price_b} = £{qb * price_b:,}",
+                f"{grade_c}: {qty_ratio[2]} × {share} = {qc} {ticket_pl} @ £{price_c} = £{qc * price_c:,}",
+                f"Total = £{qa*price_a:,} + £{qb*price_b:,} + £{qc*price_c:,} = **£{revenue:,}**",
+            ],
+        ),
     ]
 
     return Question(
-        question_text=question_text,
+        question_text=context,
         correct_answer=revenue,
         topic="Numbers and Money",
         question_type="Ratio",
-        scaffold_steps=scaffold_steps,
-        worked_solution=worked,
+        worked_solution=multipart_worked_solution(parts),
         notes=NOTES,
+        parts=parts,
     )

@@ -1,7 +1,7 @@
 import math
 import random
 
-from core.models.question_model import Question
+from core.models.question_model import Question, make_part, multipart_worked_solution
 
 _HEADLINE = "### **The fraction of a pie chart covered by a segment = the fraction of the total**"
 
@@ -232,31 +232,33 @@ def generate_pie_charts_l2():
     cat1, cat2, cat3 = labels
     colors = random.sample(_PALETTE, 3)
 
-    question_text = (
-        f"{context}. The pie chart above shows: **{cat1}**: {a1}°, **{cat2}**: {a2}°, "
-        f"and **{cat3}**: **?**.\n\n"
-        f"(a) Work out the missing angle marked '?'.\n\n"
-        f"(b) Write **{cat3}** as a fraction of the whole pie chart, in its simplest form."
+    context = (
+        f"{context}. The pie chart shows: **{cat1}**: {a1}°, **{cat2}**: {a2}°, "
+        f"and **{cat3}**: **?**."
     )
 
-    scaffold_steps = [
-        {"prompt": "Missing angle = 360 − (the two known angles)", "answer": missing},
-        {"prompt": "Fraction = missing angle ÷ 360, simplified", "answer": fraction_str},
-    ]
-
-    worked = [
-        f"Missing angle = 360 − {a1} − {a2} = {missing}°",
-        f"Fraction = {missing} ÷ 360 = {fraction_str}",
+    parts = [
+        make_part(
+            "(a)", "Work out the missing angle marked '?'.", missing,
+            scaffold_steps=[{"prompt": "Missing angle = 360 − (the two known angles)", "answer": missing}],
+            worked_solution=[f"Missing angle = 360 − {a1} − {a2} = {missing}°"],
+        ),
+        make_part(
+            "(b)", f"Write **{cat3}** as a fraction of the whole pie chart, in its simplest form.",
+            fraction_str,
+            scaffold_steps=[{"prompt": "Fraction = missing angle ÷ 360, simplified", "answer": fraction_str}],
+            worked_solution=[f"Fraction = {missing}/360 = {fraction_str}"],
+        ),
     ]
 
     return Question(
-        question_text=question_text,
+        question_text=context,
         correct_answer=fraction_str,
         topic="Numeracy",
         question_type="Pie Charts",
-        scaffold_steps=scaffold_steps,
-        worked_solution=worked,
+        worked_solution=multipart_worked_solution(parts),
         notes=NOTES_L2,
+        parts=parts,
         metadata={
             "diagram": "pie_chart",
             "diagram_params": {
@@ -424,24 +426,29 @@ def generate_pie_charts_l4():
     total = k * 360
     unit = sc["unit"]
 
-    question_text = (
-        f"{sc['context']} The pie chart above shows: **{sc['known']}**: {sc['known_angle']}°, "
-        f"{known_value} {unit}. **{sc['target']}**: {sc['target_angle']}°, **?**.\n\n"
-        f"(a) Find the value of the segment marked '?'.\n\n"
-        f"(b) Find the total represented by the whole pie chart.\n\n"
-        f"**Enter your answer for part (b).**"
+    context = (
+        f"{sc['context']} The pie chart shows: **{sc['known']}**: {sc['known_angle']}°, "
+        f"{known_value} {unit}. **{sc['target']}**: {sc['target_angle']}°, **?**."
     )
 
-    scaffold_steps = [
-        {"prompt": "Value per degree = known segment's value ÷ known segment's angle", "answer": k},
-        {"prompt": "(a) Value of ? = target segment's angle × value per degree (from the previous step)", "answer": target_value},
-        {"prompt": "(b) Total = 360 × value per degree", "answer": total},
-    ]
-
-    worked = [
-        f"Value per degree = {known_value} ÷ {sc['known_angle']} = {k}",
-        f"(a) {sc['target']} = {sc['target_angle']} × {k} = {target_value} {unit}",
-        f"(b) Total = 360 × {k} = {total} {unit}",
+    parts = [
+        make_part(
+            "(a)", "Find the value of the segment marked '?'.", target_value,
+            scaffold_steps=[
+                {"prompt": "Value per degree = known segment's value ÷ known segment's angle", "answer": k},
+                {"prompt": "Value of ? = target segment's angle × value per degree (from the previous step)",
+                 "answer": target_value},
+            ],
+            worked_solution=[
+                f"Value per degree = {known_value} ÷ {sc['known_angle']} = {k}",
+                f"{sc['target']} = {sc['target_angle']} × {k} = {target_value} {unit}",
+            ],
+        ),
+        make_part(
+            "(b)", "Find the total represented by the whole pie chart.", total,
+            scaffold_steps=[{"prompt": "Total = 360 × value per degree", "answer": total}],
+            worked_solution=[f"Total = 360 × {k} = {total} {unit}"],
+        ),
     ]
 
     rest_angle = 360 - sc["known_angle"] - sc["target_angle"]
@@ -455,13 +462,13 @@ def generate_pie_charts_l4():
     )
 
     return Question(
-        question_text=question_text,
+        question_text=context,
         correct_answer=total,
         topic="Numeracy",
         question_type="Pie Charts",
-        scaffold_steps=scaffold_steps,
-        worked_solution=worked,
+        worked_solution=multipart_worked_solution(parts),
         notes=NOTES_L4,
+        parts=parts,
         metadata={
             "diagram": "pie_chart",
             "diagram_params": {

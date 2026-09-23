@@ -7,7 +7,8 @@ import streamlit.components.v1 as components
 from core.engine.question_factory import generate_test_question
 from core.engine.session_manager import reset_test
 from core.ui.question_ui import render_question
-from core.ui.solution_ui import render_solution
+from core.ui.solution_ui import render_solution, answer_display, correct_answer_display
+from core.ui.multipart_ui import render_multipart_assessment
 from core.db.tracker import save_test_result
 
 _NUM_QUESTIONS = 5
@@ -68,16 +69,23 @@ def render_test(topic, question_type, qualification="National 5", user_id=None, 
 
     st.progress((idx + 1) / _NUM_QUESTIONS, text=f"Question {idx + 1} of {_NUM_QUESTIONS}")
 
-    user_answer = render_question(question, suffix="test")
-
-    if st.button("Submit", key=f"test_submit_{idx}", type="primary"):
+    if question.parts:
+        result = render_multipart_assessment(question, f"test_{question.qid}", _is_correct)
+        if result is None:
+            return
+        user_answer, correct = result
+    else:
+        user_answer = render_question(question, suffix="test")
+        if not st.button("Submit", key=f"test_submit_{idx}", type="primary"):
+            return
         correct = _is_correct(user_answer, question.correct_answer)
-        test["answers"].append(user_answer)
-        test["results"].append(correct)
-        test["index"] += 1
-        if test["index"] >= _NUM_QUESTIONS:
-            test["complete"] = True
-        st.rerun()
+
+    test["answers"].append(user_answer)
+    test["results"].append(correct)
+    test["index"] += 1
+    if test["index"] >= _NUM_QUESTIONS:
+        test["complete"] = True
+    st.rerun()
 
 
 def _render_summary(test):
@@ -132,14 +140,14 @@ def _render_summary(test):
         if correct:
             st.success(
                 f"**Q{i + 1}:** {question.question_text}  \n"
-                f"Your answer: **{answer}** ✅"
+                f"Your answer: **{answer_display(question, answer)}** ✅"
             )
         else:
             with st.container(border=True):
                 st.error(
                     f"**Q{i + 1}:** {question.question_text}  \n"
-                    f"Your answer: **{answer or '(blank)'}** ❌  \n"
-                    f"Correct answer: **{question.correct_answer}**"
+                    f"Your answer: **{answer_display(question, answer)}** ❌  \n"
+                    f"Correct answer: **{correct_answer_display(question)}**"
                 )
                 render_solution(question)
 

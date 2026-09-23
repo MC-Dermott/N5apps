@@ -8,7 +8,8 @@ from core.engine.session_manager import (
     initialise_session, reset_test, reset_numeracy_assessment, reset_unit_assessment,
 )
 from core.engine.question_factory import generate_question, get_levels, QUAL_REGISTRY, calc_mode_available
-from core.ui.question_ui import render_question
+from core.ui.question_ui import render_question, render_question_header
+from core.ui.multipart_ui import render_multipart_practice
 from core.ui.scaffold_ui import render_scaffold, render_simulation
 from core.ui.notes_ui import render_notes, render_examples, split_notes_and_example
 from core.ui.solution_ui import render_solution
@@ -320,7 +321,21 @@ else:
     with notes_container:
         render_notes(concept_text)
 
-    if question:
+    if question and question.parts:
+        render_question_header(question)
+        parts_submitted = [f"mp_{question.qid}_{i}" in st.session_state for i in range(len(question.parts))]
+        if not all(parts_submitted):
+            render_examples(example_text)
+            render_simulation(question)
+        st.divider()
+
+        all_done, all_correct = render_multipart_practice(question, _answers_match)
+
+        if all_done and user_id and st.session_state.get("last_tracked_qid") != question.qid:
+            save_practice_attempt(user_id, qualification, topic, question_type, all_correct)
+            st.session_state.last_tracked_qid = question.qid
+
+    elif question:
         top_answer = render_question(question, suffix="top")
 
         if not st.session_state.submitted:

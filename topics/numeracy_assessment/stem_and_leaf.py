@@ -1,5 +1,5 @@
 import random
-from core.models.question_model import Question
+from core.models.question_model import Question, make_part, multipart_worked_solution
 
 NOTES = """
 **Back-to-Back Stem and Leaf Diagrams:**
@@ -98,45 +98,44 @@ def generate_stem_and_leaf():
 
     display = "\n".join(lines)
 
-    question_text = (
-        f"The {ctx['measure']} for two groups is shown in the back-to-back stem and leaf diagram.\n\n"
-        f"**(a)** What was the highest recorded value?\n\n"
-        f"**(b)** Find the mean {ctx['measure']} for **{ctx['group1']}**.\n\n"
-        f"The mean for **{ctx['group2']}** was {mean2} {ctx['unit']}.\n\n"
-        f"**(c)** Has the {ctx['measure']} changed between the two groups? Explain your answer.\n\n"
-        f"**Enter your answer for part (b) — the mean for {ctx['group1']}.**"
-    )
-
     direction = "decreased" if mean1 > mean2 else "increased"
     diff = round(abs(mean1 - mean2), 1)
 
-    scaffold_steps = [
-        {"prompt": f"Highest value in the whole diagram", "answer": highest},
-        {"prompt": f"Sum of all {ctx['group1']} values", "answer": sum(group1)},
-        {"prompt": f"Mean = (sum from the previous step) ÷ {n}", "answer": mean1},
-    ]
-
-    worked = [
-        f"**(a) Highest value:** {highest} {ctx['unit']}",
-        "",
-        f"**(b) Mean for {ctx['group1']}:**",
-        f"Values (reading left side): {group1}",
-        f"Sum = {sum(group1)}",
-        f"Mean = {sum(group1)} ÷ {n} = **{mean1} {ctx['unit']}**",
-        "",
-        f"**(c) Comparison:**",
-        f"Mean for {ctx['group1']} = {mean1} {ctx['unit']}",
-        f"Mean for {ctx['group2']} = {mean2} {ctx['unit']} (given)",
-        f"The {ctx['measure']} has **{direction}** by {diff} {ctx['unit']} between the two groups.",
+    parts = [
+        make_part(
+            "(a)", "What was the highest recorded value?", highest,
+            scaffold_steps=[{"prompt": "Highest value in the whole diagram", "answer": highest}],
+            worked_solution=[f"Highest value: {highest} {ctx['unit']}"],
+        ),
+        make_part(
+            "(b)", f"Find the mean {ctx['measure']} for **{ctx['group1']}**.", mean1,
+            scaffold_steps=[
+                {"prompt": f"Sum of all {ctx['group1']} values", "answer": sum(group1)},
+                {"prompt": f"Mean = (sum from the previous step) ÷ {n}", "answer": mean1},
+            ],
+            worked_solution=[
+                f"Values (reading left side): {group1}",
+                f"Sum = {sum(group1)}",
+                f"Mean = {sum(group1)} ÷ {n} = **{mean1} {ctx['unit']}**",
+            ],
+        ),
+        make_part(
+            "(c)",
+            f"The mean for **{ctx['group2']}** was {mean2} {ctx['unit']}. Has the "
+            f"{ctx['measure']} changed between the two groups? Explain your answer.",
+            f"The mean {ctx['measure']} has {direction} by {diff} {ctx['unit']} "
+            f"({mean1} → {mean2} {ctx['unit']}).",
+            explain=True,
+        ),
     ]
 
     return Question(
-        question_text=question_text,
+        question_text=f"The {ctx['measure']} for two groups is shown in the back-to-back stem and leaf diagram.",
         correct_answer=mean1,
         topic="Data and Analysis",
         question_type="Stem and Leaf",
-        scaffold_steps=scaffold_steps,
-        worked_solution=worked,
+        worked_solution=multipart_worked_solution(parts),
         notes=NOTES,
         metadata={"table": display},
+        parts=parts,
     )

@@ -1,6 +1,6 @@
 import random
 
-from core.models.question_model import Question
+from core.models.question_model import Question, make_part, multipart_worked_solution
 
 NOTES = """
 **Risk and Expected Value:**
@@ -157,62 +157,99 @@ def generate_expected_value_l3():
     base_cost = _r2(p_event * penalty)
     cm1_total = _r2(cost1 + p_b * penalty)
     cm2_total = _r2(cost2 + p_a * penalty)
+    if cm1_total == cm2_total:  # (c) needs a clear winner
+        cost2 += 100
+        cm2_total = _r2(cost2 + p_a * penalty)
 
     if cm1_total <= cm2_total:
         chosen, chosen_cost = "Control Measure 1", cm1_total
     else:
         chosen, chosen_cost = "Control Measure 2", cm2_total
 
-    question_text = (
+    context = (
         f"{scenario['subject'].capitalize()} faces a £{penalty:,} {scenario['penalty']} if a "
         f"{scenario['event']} is {scenario['verb']}. For the purposes of a cost-benefit "
         f"analysis, only two events are assumed to cause a {scenario['verb']} {scenario['event']}: "
         f"{risk_a}, or {risk_b}.\n\n"
-        f"The probability of no {scenario['verb']} {scenario['event']} is {p_no_event}.\n\n"
-        f"(a) Calculate the expected cost of a {scenario['verb']} {scenario['event']} before any "
-        f"control measures are applied.\n\n"
-        f"Two control measures are being considered:\n"
-        f"Control Measure 1 — at a cost of £{cost1:,}, eliminates the risk of {risk_a} entirely.\n"
-        f"Control Measure 2 — at a cost of £{cost2:,}, eliminates the risk of {risk_b} entirely.\n"
+        f"The probability of no {scenario['verb']} {scenario['event']} is {p_no_event}."
+    )
+    measures = (
+        f"Two control measures are being considered:\n\n"
+        f"- **Control Measure 1** — at a cost of £{cost1:,}, eliminates the risk of {risk_a} entirely.\n"
+        f"- **Control Measure 2** — at a cost of £{cost2:,}, eliminates the risk of {risk_b} entirely.\n\n"
         f"The probability of {risk_a} is {p_a}. The probability of {risk_b} is {p_b}.\n\n"
-        f"(b) Calculate the total expected cost (control measure cost plus remaining expected "
-        f"penalty) if the company uses: (i) Control Measure 1, (ii) Control Measure 2.\n\n"
-        f"The company will only use one control measure.\n\n"
-        f"(c) State which control measure minimises the total expected cost."
     )
 
-    scaffold_steps = [
-        {"prompt": "(a) P(delay) = 1 − P(no delay)", "answer": p_event},
-        {"prompt": "(a) Expected cost before any control measure = P(delay) × penalty",
-         "answer": base_cost},
-        {"prompt": "(b)(i) Control Measure 1 eliminates risk A — the remaining risk is B. "
-                    "Total expected cost = cost of measure + (P(risk B) × penalty)",
-         "answer": cm1_total},
-        {"prompt": "(b)(ii) Control Measure 2 eliminates risk B — the remaining risk is A. "
-                    "Total expected cost = cost of measure + (P(risk A) × penalty)",
-         "answer": cm2_total},
-        {"prompt": "(c) Which control measure gives the lower total expected cost?",
-         "answer": chosen},
-    ]
-    worked = [
-        f"(a) P(delay) = 1 − {p_no_event} = {p_event}. "
-        f"Expected cost = {p_event} × £{penalty:,} = £{base_cost:,.2f}",
-        f"(b)(i) Control Measure 1: £{cost1:,} + ({p_b} × £{penalty:,}) "
-        f"= £{cost1:,} + £{_r2(p_b * penalty):,.2f} = £{cm1_total:,.2f}",
-        f"(b)(ii) Control Measure 2: £{cost2:,} + ({p_a} × £{penalty:,}) "
-        f"= £{cost2:,} + £{_r2(p_a * penalty):,.2f} = £{cm2_total:,.2f}",
-        f"(c) {chosen} should be used, since its total expected cost (£{chosen_cost:,.2f}) is "
-        f"the lower of the two.",
+    parts = [
+        make_part(
+            "(a)",
+            f"Calculate the expected cost of a {scenario['verb']} {scenario['event']} before any "
+            f"control measures are applied.",
+            base_cost,
+            scaffold_steps=[
+                {"prompt": "P(delay) = 1 − P(no delay)", "answer": p_event},
+                {"prompt": "Expected cost before any control measure = P(delay) × penalty",
+                 "answer": base_cost},
+            ],
+            worked_solution=[
+                f"P(delay) = 1 − {p_no_event} = {p_event}",
+                f"Expected cost = {p_event} × £{penalty:,} = £{base_cost:,.2f}",
+            ],
+        ),
+        make_part(
+            "(b)(i)",
+            measures + "Calculate the total expected cost (control measure cost plus remaining "
+            "expected penalty) if the company uses Control Measure 1.",
+            cm1_total,
+            scaffold_steps=[
+                {"prompt": "Control Measure 1 eliminates risk A, so the remaining risk is B. "
+                           "What is the remaining expected penalty, P(risk B) × penalty?",
+                 "answer": _r2(p_b * penalty)},
+                {"prompt": "Total expected cost = cost of measure + remaining expected penalty",
+                 "answer": cm1_total},
+            ],
+            worked_solution=[
+                f"Control Measure 1: £{cost1:,} + ({p_b} × £{penalty:,}) "
+                f"= £{cost1:,} + £{_r2(p_b * penalty):,.2f} = £{cm1_total:,.2f}",
+            ],
+        ),
+        make_part(
+            "(b)(ii)",
+            "Calculate the total expected cost if the company uses Control Measure 2.",
+            cm2_total,
+            scaffold_steps=[
+                {"prompt": "Control Measure 2 eliminates risk B, so the remaining risk is A. "
+                           "What is the remaining expected penalty, P(risk A) × penalty?",
+                 "answer": _r2(p_a * penalty)},
+                {"prompt": "Total expected cost = cost of measure + remaining expected penalty",
+                 "answer": cm2_total},
+            ],
+            worked_solution=[
+                f"Control Measure 2: £{cost2:,} + ({p_a} × £{penalty:,}) "
+                f"= £{cost2:,} + £{_r2(p_a * penalty):,.2f} = £{cm2_total:,.2f}",
+            ],
+        ),
+        make_part(
+            "(c)",
+            "The company will only use one control measure. State which control measure "
+            "minimises the total expected cost.",
+            chosen,
+            options=["Control Measure 1", "Control Measure 2"],
+            worked_solution=[
+                f"{chosen} should be used, since its total expected cost (£{chosen_cost:,.2f}) is "
+                f"the lower of the two.",
+            ],
+        ),
     ]
 
     return Question(
-        question_text=question_text,
-        correct_answer=chosen_cost,
+        question_text=context,
+        correct_answer=chosen,
         topic="Planning",
         question_type="Risk and Expected Value",
-        scaffold_steps=scaffold_steps,
-        worked_solution=worked,
+        worked_solution=multipart_worked_solution(parts),
         notes=NOTES,
+        parts=parts,
     )
 
 

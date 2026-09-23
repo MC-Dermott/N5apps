@@ -75,6 +75,18 @@ class Question:
   demo example), dispatch on a new `"diagram"` key in `scaffold_ui.py`, and stress-test that the
   widget actually builds from every generated question's `diagram_params`, not just that the
   question itself is valid.
+- **Multipart questions** ((a), (b), (c)…) — never cram the parts into one `question_text` with
+  "Enter your answer for part (b)". Build each part with `make_part(label, text, answer,
+  scaffold_steps=..., worked_solution=..., options=None, explain=False)` from
+  `core/models/question_model.py` and return `Question(question_text=<shared context>,
+  parts=parts, worked_solution=multipart_worked_solution(parts), ...)` — table/diagram metadata
+  stays on the parent. `core/ui/multipart_ui.py` then renders it like the N5 Physics app's
+  scenarios: in Practice each part unlocks after the previous one, with its own scaffold,
+  Submit button and feedback; in Test/Unit/Numeracy assessments the scored parts are answered
+  one at a time and the question only counts as correct if every part is. `options` gives a
+  radio choice (e.g. "which control measure?"); `explain=True` marks an unmarked written part
+  (reveal-the-expected-answer in Practice, skipped in tests). Examples:
+  `statistics/expected_value.py` (level 3), `numeracy/pie_charts.py` (levels 2 and 4).
 - `metadata["reference_sheet"]`: a fixed markdown block (tables/rules, no worked example) shown
   directly above the question text, unconditionally — for real-world reference data (e.g. tax
   bands, NI rates) pupils are given alongside the question rather than expected to memorise.
