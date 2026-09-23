@@ -54,6 +54,13 @@ from topics.numeracy.time_conversion import (
     generate_indirect_proportion_hm_l1,
     generate_indirect_proportion_hm_l2,
 )
+from topics.numeracy.speed_distance_time import (
+    generate_sdt_question,
+    generate_sdt_l1,
+    generate_sdt_l2,
+    generate_sdt_l3,
+    generate_sdt_l4,
+)
 from topics.numeracy.currency_exchange import (
     generate_currency_question,
     generate_currency_l1,
@@ -221,6 +228,7 @@ _N5_TOPICS = {
         "Minutes to Hours": generate_minutes_to_hours_question,
         "Hours to Hours and Minutes": generate_hours_to_minutes_question,
         "Indirect Proportion (Hours and Minutes)": generate_indirect_proportion_hm_question,
+        "Speed, Distance and Time": generate_sdt_question,
         "Currency Exchange": generate_currency_question,
         "Pie Charts": generate_numeracy_pie_charts_question,
         "Division": generate_division_question,
@@ -374,6 +382,12 @@ _N5_LEVELS = {
         "Indirect Proportion (Hours and Minutes)": {
             "People and Work Rate": generate_indirect_proportion_hm_l1,
             "Speed, Distance and Time": generate_indirect_proportion_hm_l2,
+        },
+        "Speed, Distance and Time": {
+            "Choosing the Correct Formula": generate_sdt_l1,
+            "Hours and Minutes": generate_sdt_l2,
+            "Departure and Arrival Times": generate_sdt_l3,
+            "Converting Distance Units": generate_sdt_l4,
         },
         "Currency Exchange": {
             "Basic Exchange": generate_currency_l1,
@@ -593,6 +607,7 @@ _CALC_MODE_AWARE = {
     generate_indirect_proportion_hm_question, generate_indirect_proportion_hm_l1, generate_indirect_proportion_hm_l2,
     generate_minutes_to_hours_question, generate_minutes_to_hours_l2,
     generate_hours_to_minutes_question, generate_hours_to_minutes_l2,
+    generate_sdt_question, generate_sdt_l1, generate_sdt_l2, generate_sdt_l3, generate_sdt_l4,
     generate_percentage_question, generate_percentage_l1, generate_percentage_single_change,
     generate_percentage_appreciation, generate_percentage_depreciation, generate_percentage_mixed_changes,
     generate_gradient_question, generate_gradient_question_n4,
