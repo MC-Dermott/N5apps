@@ -96,6 +96,8 @@ if not user:
     admin_key = st.query_params.get("admin_key")
     if admin_key:
         admin_user = login_as_admin(admin_key)
+        # Strip the key from the address bar so it doesn't linger in browser history.
+        del st.query_params["admin_key"]
         if admin_user:
             st.session_state.user = admin_user
             user = admin_user
