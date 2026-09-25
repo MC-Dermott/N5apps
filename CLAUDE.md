@@ -79,7 +79,12 @@ class Question:
   "mode"` (`"interval"`/`"forward"`/`"backward"`)`, "start_label", "end_label", "ask_total"}`
   (`ask_total=True` hides the time to add until the pupil works it out, for questions where it
   comes from T = D ÷ S). Its steps come from `core/models/time_bar.py`, which generators also
-  turn into `scaffold_steps`, so the two always agree — reuse it for any time-interval question. **When you build any new simulation/widget for a question type,
+  turn into `scaffold_steps`, so the two always agree — reuse it for any time-interval question.
+- **Worked examples must match the worksheet's** — the "**Example**" part of each level's NOTES
+  should be the same worked example(s), in the same wording and order, as the matching worksheet
+  section. A worked example can show the worksheet's time-bar diagram with a line
+  `[[time_bar 07:35-12:20 interval | Leaves Oban | Arrives Castlebay]]` (mode interval / forward /
+  backward), rendered by `core/ui/notes_ui.py`'s `render_examples()`. **When you build any new simulation/widget for a question type,
   attach it the same way** — parameterise it from the question's own numbers (never hardcode a
   demo example), dispatch on a new `"diagram"` key in `scaffold_ui.py`, and stress-test that the
   widget actually builds from every generated question's `diagram_params`, not just that the

@@ -24,7 +24,8 @@ import streamlit.components.v1 as components
 from core.models.time_bar import clock, hm, time_bar_segments, time_bar_steps, time_bar_ticks
 
 
-def _build_html(start, end, mode="interval", start_label="", end_label="", ask_total=False):
+def _build_html(start, end, mode="interval", start_label="", end_label="", ask_total=False,
+                static=False):
     ticks = time_bar_ticks(start, end)
     segs = time_bar_segments(start, end)
     steps = time_bar_steps(start, end, mode)
@@ -49,6 +50,12 @@ def _build_html(start, end, mode="interval", start_label="", end_label="", ask_t
         "given": given,
         "hideGiven": bool(ask_total and mode != "interval"),
         "givenHidden": "" if mode == "interval" else f"Time to {verb}: <b>?</b>",
+        # static: a fully labelled worked-example diagram (no steps), with the pieces added up
+        # underneath and the time being found highlighted — matches the worksheet's diagrams.
+        "static": static,
+        "found": {"forward": len(ticks) - 1, "backward": 0}.get(mode, -1),
+        "total": " + ".join(hm(b - a).replace("minutes", "min").replace("minute", "min") for a, b, _ in segs)
+                 + f" = {hm(end - start)}",
     }
     payload = json.dumps(data)
 
@@ -119,7 +126,8 @@ def _build_html(start, end, mode="interval", start_label="", end_label="", ask_t
         D.ticks.forEach((t, j) => {
           const x = xs[j], shown = revealedTicks.has(j);
           s += `<line x1="${x}" y1="${barY - 6}" x2="${x}" y2="${barY + barH + 8}" stroke="var(--ink)" stroke-width="2"/>`;
-          s += `<text x="${x}" y="${barY + barH + 30}" text-anchor="middle" font-size="18" font-weight="700" fill="${shown ? 'var(--ink)' : '#9aa0a8'}">${shown ? t : '?'}</text>`;
+          if (D.static && j === D.found) s += `<rect x="${x - 34}" y="${barY + barH + 11}" width="68" height="26" rx="6" fill="#fff" stroke="var(--accent)" stroke-width="2"/>`;
+          s += `<text x="${x}" y="${barY + barH + 30}" text-anchor="middle" font-size="18" font-weight="700" fill="${D.static && j === D.found ? 'var(--accent)' : shown ? 'var(--ink)' : '#9aa0a8'}">${shown ? t : '?'}</text>`;
         });
         if (D.startLabel) s += `<text x="${xs[0]}" y="${barY + barH + 52}" text-anchor="middle" font-size="13" font-style="italic" fill="var(--soft)">${D.startLabel}</text>`;
         if (D.endLabel) s += `<text x="${xs[xs.length - 1]}" y="${barY + barH + 52}" text-anchor="middle" font-size="13" font-style="italic" fill="var(--soft)">${D.endLabel}</text>`;
@@ -202,7 +210,16 @@ def _build_html(start, end, mode="interval", start_label="", end_label="", ask_t
         }));
       }
 
-      draw(); renderStep();
+      if (D.static){
+        D.segs.forEach((_, i) => revealedSegs.add(i));
+        D.ticks.forEach((_, j) => revealedTicks.add(j));
+        givenEl.innerHTML = '';
+        draw();
+        document.getElementById('tb-step').innerHTML =
+          `<div style="text-align:center;margin-top:4px"><span style="display:inline-block;padding:6px 14px;border-radius:8px;background:#f4f1ea;border:1px solid var(--line);font-weight:700;font-size:15px">${D.total}</span></div>`;
+      } else {
+        draw(); renderStep();
+      }
     })();
     </script>
     """
@@ -213,3 +230,9 @@ def render_time_bar_widget(start, end, mode="interval", start_label="", end_labe
     steps = len(time_bar_steps(start, end, mode)) + (1 if ask_total else 0)
     components.html(_build_html(start, end, mode, start_label, end_label, ask_total),
                     height=height or 330 + 26 * steps, scrolling=False)
+
+
+def render_time_bar_diagram(start, end, mode="interval", start_label="", end_label=""):
+    """Static, fully labelled time bar for a worked example (see core/ui/notes_ui.py)."""
+    components.html(_build_html(start, end, mode, start_label, end_label, static=True),
+                    height=240, scrolling=False)

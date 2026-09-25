@@ -75,8 +75,9 @@ you want.
 
 **Example:** A CalMac ferry travels 78 km at an average speed of 24 km/h. How long does the
 crossing take?
-- Know: D = 78 km, S = 24 km/h. Want: T → use T = D ÷ S
-- T = 78 ÷ 24 = **3.25 hours**
+- Know: D = 78 km, S = 24 km/h.  Want: T  →  use T = D ÷ S
+- T = 78 ÷ 24 = 3.25
+- **The crossing takes 3.25 hours.**
 """
 
 NOTES_HOURS_MINUTES = """
@@ -87,13 +88,17 @@ A time must be a **decimal number of hours** before it goes into a formula.
 - Minutes → decimal hours: **÷ 60** (e.g. 45 minutes = 45 ÷ 60 = 0.75 hours)
 - Decimal hours → minutes: multiply the decimal part **× 60** (e.g. 0.4 hours = 24 minutes)
 
-**Example 1:** A ferry sails 51 km at 12 km/h. How long does it take, in hours and minutes?
-- T = 51 ÷ 12 = 4.25 hours
-- 0.25 × 60 = 15 → **4 hours 15 minutes**
+**Example 1:** A ferry sails 51 km at an average speed of 12 km/h. How long does the crossing
+take? Give your answer in hours and minutes.
+- T = D ÷ S = 51 ÷ 12 = 4.25 hours
+- 0.25 × 60 = 15 minutes
+- **The crossing takes 4 hours 15 minutes.**
 
-**Example 2:** A bus travels for 2 hours 45 minutes at 48 km/h. How far does it travel?
-- 45 ÷ 60 = 0.75, so T = 2.75 hours
-- D = 48 × 2.75 = **132 km**
+**Example 2:** A bus travels for 2 hours 45 minutes at an average speed of 48 km/h. How far does
+it travel?
+- 45 minutes = 45 ÷ 60 = 0.75 hours, so T = 2.75 hours
+- D = S × T = 48 × 2.75 = 132
+- **The bus travels 132 km.**
 """
 
 NOTES_CLOCK = """
@@ -122,9 +127,15 @@ in metres, a speed in cm/s needs a distance in centimetres, and so on.
 - Bigger unit → smaller unit: **multiply**
 - Smaller unit → bigger unit: **divide**
 
-**Example:** A runner runs at 5 m/s. How long does it take her to run 3 km?
-- 3 km = 3 × 1000 = 3000 m
-- T = 3000 ÷ 5 = **600 seconds**
+**Example 1:** A runner runs at an average speed of 5 m/s. How long does it take her to run 3 km?
+- The speed is in m/s, so change km to m: 3 km = 3 × 1000 = 3000 m
+- T = D ÷ S = 3000 ÷ 5 = 600
+- **It takes her 600 seconds.**
+
+**Example 2:** A snail crawls 36 mm in 12 seconds. Calculate its average speed in cm/s.
+- The answer is needed in cm/s, so change mm to cm: 36 mm = 36 ÷ 10 = 3.6 cm
+- S = D ÷ T = 3.6 ÷ 12 = 0.3
+- **The snail's average speed is 0.3 cm/s.**
 """
 
 
@@ -481,12 +492,36 @@ before the finish** → the **finish time**.
 To **find a finish time**, add the pieces on in that order. To **find a start time**, work
 backwards from the finish time in the same way.
 
-**Example:** The ferry leaves Oban at 07:35 and arrives in Castlebay at 12:20. How long does the
-crossing take?
-- 07:35 → 08:00 = 25 minutes
-- 08:00 → 12:00 = 4 hours
-- 12:00 → 12:20 = 20 minutes
-- Total = **4 hours 45 minutes**
+**Example 1:** The ferry leaves Oban at 07:35 and arrives in Castlebay at 12:20. How long does
+the crossing take?
+
+[[time_bar 07:35-12:20 interval | Leaves Oban | Arrives Castlebay]]
+
+- Step 1:  07:35 → 08:00 = 25 minutes
+- Step 2:  08:00 → 12:00 = 4 hours
+- Step 3:  12:00 → 12:20 = 20 minutes
+- Total = 25 min + 4 hours + 20 min.  **The crossing takes 4 hours 45 minutes.**
+
+**Example 2:** A train leaves Glasgow at 10:48. The journey to Oban takes 3 hours 17 minutes.
+What time does the train arrive in Oban?
+
+[[time_bar 10:48-14:05 forward | Leaves Glasgow | Arrives Oban]]
+
+- Step 1:  10:48 → 11:00 = 12 minutes.  Time still to add: 3 h 17 min − 12 min = 3 h 5 min
+- Step 2:  11:00 + 3 hours = 14:00.  Time still to add: 5 min
+- Step 3:  14:00 + 5 minutes = 14:05
+- **The train arrives in Oban at 14:05.**
+
+**Example 3:** A family must check in at Glasgow Airport by 14:10. The drive from Fort William
+takes 2 hours 25 minutes. What is the latest time they can leave Fort William?
+
+[[time_bar 11:45-14:10 backward | Leave Fort William | Check in at airport]]
+
+- Work backwards from 14:10.
+- Step 1:  14:10 → back to 14:00 = 10 minutes.  Time still to take away: 2 h 25 min − 10 min = 2 h 15 min
+- Step 2:  14:00 − 2 hours = 12:00.  Time still to take away: 15 min
+- Step 3:  12:00 − 15 minutes = 11:45
+- **The latest they can leave is 11:45.**
 """
 
 # `mins`: realistic range for the time taken; `starts`: (earliest, latest) start, minutes after
@@ -580,11 +615,26 @@ NOTES_SDT_INTERVALS = """
 **Finding a speed from two clock times:** use a time bar to find the journey time, change it
 into a decimal number of hours, then use **S = D ÷ T**.
 
-**Example:** Callum drives 95.4 miles from Glasgow to Oban at an average speed of 36 mph. He
+**Example 1:** Callum drives 95.4 miles from Glasgow to Oban at an average speed of 36 mph. He
 leaves Glasgow at 08:47. What time does he arrive in Oban?
-- T = 95.4 ÷ 36 = 2.65 hours
-- 0.65 × 60 = 39, so 2 hours 39 minutes
-- 08:47 → 09:00 = 13 min;  09:00 + 2 hours = 11:00;  11:00 + 26 min = **11:26**
+
+[[time_bar 08:47-11:26 forward | Leaves Glasgow | Arrives Oban]]
+
+- T = D ÷ S = 95.4 ÷ 36 = 2.65 hours
+- 0.65 × 60 = 39 minutes, so the journey takes 2 hours 39 minutes
+- Step 1:  08:47 → 09:00 = 13 min.  Still to add: 2 h 26 min
+- Step 2:  09:00 + 2 hours = 11:00.   Step 3:  11:00 + 26 min = 11:26
+- **Callum arrives in Oban at 11:26.**
+
+**Example 2:** The ferry leaves Mallaig at 09:40 and arrives in Lochboisdale at 13:10. The
+crossing is 87.5 km. Calculate the average speed of the ferry.
+
+[[time_bar 09:40-13:10 interval | Leaves Mallaig | Arrives Lochboisdale]]
+
+- Journey time = 20 min + 3 hours + 10 min = 3 hours 30 minutes
+- 30 minutes = 30 ÷ 60 = 0.5 hours, so T = 3.5 hours
+- S = D ÷ T = 87.5 ÷ 3.5 = 25
+- **The average speed of the ferry is 25 km/h.**
 """
 
 _NAMES = ["Finlay", "Eilidh", "Callum", "Morag", "Iain", "Kirsty", "Ruaridh", "Catriona", "Calum", "Mhairi"]
@@ -702,10 +752,15 @@ NOTES_DELAYS = """
   moving.
 
 **Example:** The ferry from Ullapool to Stornoway is due to leave at 09:50 but is delayed by
-25 minutes. The crossing is 86.4 km at an average speed of 32 km/h. When does it arrive?
-- T = 86.4 ÷ 32 = 2.7 hours = 2 hours 42 minutes
-- Total time from 09:50 = 2 h 42 min + 25 min = 3 hours 7 minutes
-- 09:50 → 10:00 = 10 min;  10:00 + 2 hours = 12:00;  12:00 + 57 min = **12:57**
+25 minutes. The crossing is 86.4 km and the ferry sails at an average speed of 32 km/h. What
+time does it arrive in Stornoway?
+
+[[time_bar 09:50-12:57 forward | Timetabled departure | Arrives Stornoway]]
+
+- T = D ÷ S = 86.4 ÷ 32 = 2.7 hours;  0.7 × 60 = 42, so the crossing takes 2 hours 42 minutes
+- Total time from 09:50 = 2 h 42 min + 25 min delay = 3 hours 7 minutes
+- Step 1:  09:50 → 10:00 = 10 min.  Step 2:  10:00 + 2 hours = 12:00.  Step 3:  12:00 + 57 min = 12:57
+- **The ferry arrives in Stornoway at 12:57.**
 """
 
 _ADV = "**★ More advanced**\n\n"
