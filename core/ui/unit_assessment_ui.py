@@ -6,11 +6,15 @@ from core.ui.question_ui import render_question
 from core.ui.solution_ui import render_solution, answer_display, correct_answer_display
 from core.ui.multipart_ui import render_multipart_assessment
 from core.db.tracker import save_test_result
+from core.models.answers import clock_answers_match
 
 _NUM_QUESTIONS = 10
 
 
 def _is_correct(user_input, expected):
+    clock = clock_answers_match(user_input, expected)
+    if clock is not None:
+        return clock
     try:
         student = float(str(user_input).replace(",", "").strip())
         exp = float(expected)

@@ -60,6 +60,9 @@ from topics.numeracy.speed_distance_time import (
     generate_sdt_l2,
     generate_sdt_l3,
     generate_sdt_l4,
+    generate_sdt_l5,
+    generate_sdt_l6,
+    generate_sdt_l7,
 )
 from topics.numeracy.currency_exchange import (
     generate_currency_question,
@@ -388,6 +391,9 @@ _N5_LEVELS = {
             "Hours and Minutes": generate_sdt_l2,
             "Departure and Arrival Times": generate_sdt_l3,
             "Converting Distance Units": generate_sdt_l4,
+            "Time Intervals": generate_sdt_l5,
+            "Journey Times and Time Intervals": generate_sdt_l6,
+            "Journeys with Delays and Stops (More Advanced)": generate_sdt_l7,
         },
         "Currency Exchange": {
             "Basic Exchange": generate_currency_l1,

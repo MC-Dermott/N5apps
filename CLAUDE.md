@@ -60,6 +60,9 @@ class Question:
 - `scaffold_steps`: guided step-by-step working, shown in a collapsible expander
   (`core/ui/scaffold_ui.py`) only if non-empty. Add `"answer_type": "duration"` on a step whose
   answer is a time duration (renders an hours/minutes widget instead of text).
+- Clock-time answers: use a zero-padded 24-hour string (`"08:18"`). Every answer checker runs
+  `core/models/answers.py`'s `clock_answers_match()` first, so "8:18", "0818" and "08.18" are
+  accepted too.
 - `worked_solution`: full worked-solution lines shown after submission (complete equations, not
   just the final answer).
 - `metadata["diagram"]` / `metadata["diagram_params"]`: only for questions needing a custom
@@ -70,7 +73,13 @@ class Question:
   scaffold expander — `diagram_params` is `{"bands": [(label, lower, upper_or_None, rate_pct),
   ...], "max_income": ..., "initial_income": ...}`. Used by National Insurance (National 5) and
   Income Tax and National Insurance (Higher); reuse it for any other banded-rate topic rather
-  than building a new widget. **When you build any new simulation/widget for a question type,
+  than building a new widget. `"diagram": "time_bar"` renders `core/ui/time_bar_widget.py`'s guided time bar
+  (start → next o'clock → last o'clock → finish, each piece uncovered as the pupil answers) —
+  `diagram_params` is `{"start", "end"` (minutes after midnight; `end` may pass 1440 overnight)`,
+  "mode"` (`"interval"`/`"forward"`/`"backward"`)`, "start_label", "end_label", "ask_total"}`
+  (`ask_total=True` hides the time to add until the pupil works it out, for questions where it
+  comes from T = D ÷ S). Its steps come from `core/models/time_bar.py`, which generators also
+  turn into `scaffold_steps`, so the two always agree — reuse it for any time-interval question. **When you build any new simulation/widget for a question type,
   attach it the same way** — parameterise it from the question's own numbers (never hardcode a
   demo example), dispatch on a new `"diagram"` key in `scaffold_ui.py`, and stress-test that the
   widget actually builds from every generated question's `diagram_params`, not just that the

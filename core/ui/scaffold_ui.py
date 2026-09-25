@@ -6,6 +6,8 @@ from core.ui.column_calculation_widget import render_column_calculation_widget
 from core.ui.lattice_multiplication_widget import render_lattice_multiplication_widget
 from core.ui.rounding_number_line_widget import render_rounding_number_line_widget
 from core.ui.fraction_simplifier_widget import render_fraction_simplifier_widget
+from core.ui.time_bar_widget import render_time_bar_widget
+from core.models.answers import clock_answers_match
 
 
 def _build_duration_str(h, m):
@@ -34,6 +36,9 @@ def _parse_numeric(s):
 
 
 def _is_correct(user_input, expected):
+    clock = clock_answers_match(user_input, expected)
+    if clock is not None:
+        return clock
     student = _parse_numeric(str(user_input))
     exp = _parse_numeric(expected)
     if student is not None and exp is not None:
@@ -126,3 +131,6 @@ def render_simulation(question):
     elif question.metadata.get("diagram") == "fraction_simplifier":
         with st.expander("🎮 Simulation"):
             render_fraction_simplifier_widget(**question.metadata["diagram_params"])
+    elif question.metadata.get("diagram") == "time_bar":
+        with st.expander("🎮 Interactive Time Bar"):
+            render_time_bar_widget(**question.metadata["diagram_params"])

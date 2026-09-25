@@ -21,6 +21,7 @@ from core.auth.auth import login_as_admin
 from core.ui.dashboard_ui import render_dashboard
 from core.ui.student_dashboard_ui import render_student_dashboard
 from core.db.tracker import save_practice_attempt
+from core.models.answers import clock_answers_match
 
 initialise_session()
 
@@ -40,6 +41,9 @@ def _parse_numeric(s):
 
 
 def _answers_match(user, expected):
+    clock = clock_answers_match(user, expected)
+    if clock is not None:
+        return clock
     u = _parse_numeric(user)
     e = _parse_numeric(expected)
     if u is not None and e is not None:
