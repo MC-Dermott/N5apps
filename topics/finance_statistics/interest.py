@@ -20,9 +20,39 @@ different date ranges, and rates may be quoted **per month** or **per year**.
 
 **Example:** £1000 held for 9 months at 4.7% per year (less than a full year):
 - Balance = £1000 × (1 + 0.047 × 9/12) = **£1035.25**
+"""
 
-If more than one deposit is made, grow **each deposit separately** from its
+MULTIPLE_DEPOSITS_NOTES = """
+**Multiple Deposits with Changing Interest Rates:**
+
+When more than one deposit is made, grow **each deposit separately** from its
 own deposit date to the final date, then **add the grown amounts together**.
+
+1. For each deposit, work out how many months it is held for **within each
+   rate period** (a later deposit misses the earlier rate periods)
+2. Write down a **multiplier** for each rate period it is held in:
+   - rate **per month**: (1 + rate)^(months held)
+   - rate **per year**: (1 + rate)^(whole years), and (1 + rate × months/12)
+     for any part of a year left over
+3. Multiply the deposit by **all of its multipliers in one go**
+4. Add the grown deposits together
+
+**Example:** The effective interest rates for a savings account are:
+
+| Dates | Interest rate |
+|---|---|
+| 1 January 2024 to 30 April 2024 | 0.3% per **month** |
+| From 1 May 2024 | 4.2% per **year** |
+
+£1000 is deposited on 1 January 2024 and a further £500 on 1 March 2024.
+Calculate the balance on 1 November 2025.
+
+- £1000 is held for 4 months at 0.3% per month, then 18 months (1 year and
+  6 months) at 4.2% per year:
+  £1000 × 1.003^4 × 1.042 × (1 + 0.042 × 6/12) = £1076.71
+- £500 is held for 2 months at 0.3% per month, then 18 months at 4.2% per year:
+  £500 × 1.003^2 × 1.042 × (1 + 0.042 × 6/12) = £535.14
+- Balance = £1076.71 + £535.14 = **£1611.85**
 """
 
 MIN_DEPOSIT_NOTES = """
@@ -151,6 +181,43 @@ def _grow_amount_with_steps(amount, start_month, end_month, periods):
     return balance, lines, step_answers
 
 
+def _fmt_decimal(x):
+    return f"{round(x, 6):g}"
+
+
+def _growth_one_stage(amount, start_month, end_month, periods):
+    """Grow `amount`, held from month offset `start_month` to `end_month`,
+    with every rate period's multiplier applied in a single calculation.
+    Returns (final_balance, one_line_working, hold_descriptions)."""
+    balance = amount
+    factors = []
+    holds = []
+    for p_start, p_end, rate, rtype in periods:
+        seg_start = max(start_month, p_start)
+        seg_end = end_month if p_end is None else min(end_month, p_end)
+        n_months = seg_end - seg_start
+        if n_months <= 0:
+            continue
+
+        base = _fmt_decimal(1 + rate)
+        rate_label = f"{_fmt_rate(rate * 100)}% per {rtype}"
+        holds.append(f"{n_months} month{'s' if n_months != 1 else ''} at {rate_label}")
+        if rtype == "month":
+            balance *= (1 + rate) ** n_months
+            factors.append(base if n_months == 1 else f"{base}^{n_months}")
+        else:
+            whole_years, rem_months = divmod(n_months, 12)
+            if whole_years:
+                balance *= (1 + rate) ** whole_years
+                factors.append(base if whole_years == 1 else f"{base}^{whole_years}")
+            if rem_months:
+                balance *= 1 + rate * (rem_months / 12)
+                factors.append(f"(1 + {_fmt_decimal(rate)} × {rem_months}/12)")
+
+    line = f"£{_fmt_money(amount)} × " + " × ".join(factors) + f" = £{_fmt_money(balance)}"
+    return balance, line, holds
+
+
 def _random_start():
     start_year = random.randint(2021, 2023)
     start_month = random.randint(1, 12)
@@ -267,10 +334,10 @@ def generate_interest_l2():
 
     scaffold_steps = []
     worked = []
-    total = 0.0
+    grown_amounts = []
     for idx, (off, amt) in enumerate(deposits):
-        grown, lines, _ = _grow_amount_with_steps(amt, off, target_offset, periods)
-        total += grown
+        grown, line, holds = _growth_one_stage(amt, off, target_offset, periods)
+        grown_amounts.append(round(grown, 2))
         if idx == 0:
             scaffold_label = "initial deposit"
             worked_label = f"initial deposit of £{amt:,}"
@@ -280,19 +347,25 @@ def generate_interest_l2():
             worked_label = f"deposit of £{amt:,} made on {_date_str(dy, dm)}"
 
         scaffold_steps.append({
-            "prompt": f"Calculate how much the {scaffold_label} grows to by {target_str}",
+            "prompt": (
+                f"Calculate how much the {scaffold_label} grows to by {target_str} "
+                f"— multiply it by all of its multipliers in one go"
+            ),
             "answer": round(grown, 2),
         })
-        worked.append(f"Growth of the {worked_label}:")
-        worked.extend(f"  {line}" for line in lines)
-        worked.append(f"  → grows to £{_fmt_money(grown)}")
+        worked.append(f"The {worked_label} is held for " + ", then ".join(holds) + ":")
+        worked.append(f"  {line}")
 
-    answer = round(total, 2)
+    answer = round(sum(grown_amounts), 2)
     scaffold_steps.append({
         "prompt": "Add the grown amounts together to find the total balance",
         "answer": answer,
     })
-    worked.append(f"Total balance on {target_str} = £{_fmt_money(answer)}")
+    worked.append(
+        f"Total balance on {target_str} = "
+        + " + ".join(f"£{_fmt_money(g)}" for g in grown_amounts)
+        + f" = £{_fmt_money(answer)}"
+    )
 
     return Question(
         question_text=question_text,
@@ -301,7 +374,7 @@ def generate_interest_l2():
         question_type="Interest",
         scaffold_steps=scaffold_steps,
         worked_solution=worked,
-        notes=NOTES,
+        notes=MULTIPLE_DEPOSITS_NOTES,
     )
 
 
