@@ -165,6 +165,14 @@ from topics.finance_statistics.present_value import (
     generate_present_value_l3,
     generate_present_value_l4,
 )
+from topics.finance_statistics.credit_cards import (
+    generate_credit_cards_question,
+    generate_credit_cards_l1,
+    generate_credit_cards_l2,
+    generate_credit_cards_l3,
+    generate_credit_cards_l4,
+    generate_credit_cards_l5,
+)
 from topics.finance_statistics.effective_rates import (
     generate_effective_rates_question,
     generate_effective_rates_l1,
@@ -342,6 +350,7 @@ _N5_NUMERACY_TOPICS = {
 _HIGHER_TOPICS = {
     "Finance": {
         "Loan Schedules": generate_loan_schedules_question,
+        "Credit Cards": generate_credit_cards_question,
         "Mortgages": generate_mortgages_question,
         "Budgeting": generate_budgeting_question,
         "Reverse Percentages": generate_reverse_percentage_question,
@@ -518,6 +527,13 @@ _HIGHER_LEVELS = {
             "Affordability": generate_mortgages_l3,
             "Paying the Maximum": generate_mortgages_l4,
             "Total Interest": generate_mortgages_l5,
+        },
+        "Credit Cards": {
+            "One Month": generate_credit_cards_l1,
+            "Three Months": generate_credit_cards_l2,
+            "Minimum Payment": generate_credit_cards_l3,
+            "Comparing Cards": generate_credit_cards_l4,
+            "Balance Transfer": generate_credit_cards_l5,
         },
         "Loan Schedules": {
             "Schedule by Hand": generate_loan_schedules_l1,
