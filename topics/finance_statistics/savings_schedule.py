@@ -8,6 +8,7 @@ from openpyxl import Workbook
 from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
 
+from core.engine.spreadsheet_solution import solution_metadata
 from core.models.question_model import Question, make_part, multipart_worked_solution
 
 NOTES = """
@@ -122,9 +123,11 @@ def _add_months(start_mi, n):
 def _excel_round(x, dp=2):
     """Round half away from zero, matching Excel's ROUND() — Python's round()
     uses banker's rounding, which can disagree with what a student's actual
-    spreadsheet computes."""
+    spreadsheet computes. Excel also works to 15 significant figures, so 0.0023 * 350
+    (0.80499999... as a float) is 0.805 to Excel and rounds up to 0.81 — trim to 15 s.f.
+    first to match."""
     quant = Decimal(1).scaleb(-dp)
-    return float(Decimal(str(x)).quantize(quant, rounding=ROUND_HALF_UP))
+    return float(Decimal(f"{x:.15g}").quantize(quant, rounding=ROUND_HALF_UP))
 
 
 def _last_day_of_month(d):
@@ -133,6 +136,40 @@ def _last_day_of_month(d):
 
 
 def _build_workbook(scenario):
+    wb, _, target_cell = _make_workbook(scenario)
+    buf = io.BytesIO()
+    wb.save(buf)
+    return buf.getvalue(), target_cell
+
+
+def _solution_metadata(scenario):
+    """The completed workbook (live formulas in every yellow cell) plus its render-ready
+    view, for the worked solution — see core/engine/spreadsheet_solution.py."""
+    wb, ws, _ = _make_workbook(scenario)
+    ws["A5"] = "Completed solution: the yellow cells contain the formulas used."
+    ws["B10"] = "=(1+B9)^(1/12)-1"
+    values = {"B10": scenario["monthly_equiv_rate"]}
+    filled = ["B10"]
+
+    deposit_row = 14
+    for i, (pay_date, before, payment, after) in enumerate(scenario["schedule_rows"]):
+        row = deposit_row + 1 + i
+        prev = row - 1
+        rate_ref = "$B$8" if pay_date < scenario["switch_date"] else "$B$10"
+        ws[f"B{row}"] = f"=D{prev}+ROUND({rate_ref}*D{prev},2)"
+        ws[f"C{row}"] = "=$B$11"
+        ws[f"D{row}"] = f"=B{row}+C{row}"
+        values.update({f"B{row}": before, f"C{row}": payment, f"D{row}": after})
+        filled += [f"B{row}", f"C{row}", f"D{row}"]
+
+    last_row = deposit_row + len(scenario["schedule_rows"])
+    return solution_metadata(
+        wb, ws, values, filled, min_row=7, max_row=last_row, max_col=4,
+        filename=f"savings_schedule_{scenario['name'].lower()}_solution.xlsx",
+    )
+
+
+def _make_workbook(scenario):
     wb = Workbook()
     ws = wb.active
     ws.title = "Savings"
@@ -199,10 +236,7 @@ def _build_workbook(scenario):
 
     target_row = first_answer_row + len(scenario["payment_dates"]) - 1
     target_cell = f"{get_column_letter(2)}{target_row}"
-
-    buf = io.BytesIO()
-    wb.save(buf)
-    return buf.getvalue(), target_cell
+    return wb, ws, target_cell
 
 
 def _generate_scenario():
@@ -319,6 +353,7 @@ def generate_savings_schedule_spreadsheet():
             "spreadsheet_bytes": spreadsheet_bytes,
             "spreadsheet_filename": f"savings_schedule_{gen['name'].lower()}.xlsx",
             "spreadsheet_answer_cell": ("Savings", target_cell),
+            **_solution_metadata(gen["scenario"]),
         },
     )
 

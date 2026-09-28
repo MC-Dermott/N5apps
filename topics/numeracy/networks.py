@@ -6,6 +6,7 @@ from openpyxl import Workbook
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 
+from core.engine.spreadsheet_solution import solution_metadata
 from core.models.question_model import Question
 
 NOTES = """
@@ -336,6 +337,38 @@ _GANTT_GRID_BORDER = Border(
 
 
 def _build_gantt_workbook(net, scenario, final_prompt):
+    wb, _, answer_cell_ref = _make_gantt_workbook(net, scenario, final_prompt)
+    buf = io.BytesIO()
+    wb.save(buf)
+    return buf.getvalue(), answer_cell_ref
+
+
+def _gantt_solution_metadata(net, scenario, final_prompt, correct_answer):
+    """The completed Gantt chart (each task's bar marked from its EST to its EFT, no float)
+    plus the part (c) answer, for the worked solution — see core/engine/spreadsheet_solution.py."""
+    wb, ws, answer_cell_ref = _make_gantt_workbook(net, scenario, final_prompt)
+    letters = sorted(net["deps"].keys())
+    header_row, grid_start_col = 7, 4
+    filled = []
+    for i, letter in enumerate(letters):
+        row = header_row + 1 + i
+        for t in range(net["est"][letter] + 1, net["eft"][letter] + 1):
+            cell = ws.cell(row=row, column=grid_start_col + t - 1, value="x")
+            cell.fill = _GANTT_ANSWER_FILL
+            cell.alignment = Alignment(horizontal="center")
+            filled.append(cell.coordinate)
+    ws[answer_cell_ref] = correct_answer
+    filled.append(answer_cell_ref)
+
+    answer_row = int(answer_cell_ref[1:])
+    return solution_metadata(
+        wb, ws, {}, filled, min_row=header_row, max_row=answer_row,
+        max_col=grid_start_col + max(net["lft"].values()) - 1,
+        filename="gantt_chart_solution.xlsx",
+    )
+
+
+def _make_gantt_workbook(net, scenario, final_prompt):
     letters = sorted(net["deps"].keys())
     descriptions = scenario["tasks"][:len(letters)]
     max_t = max(net["lft"].values())
@@ -397,10 +430,7 @@ def _build_gantt_workbook(net, scenario, final_prompt):
     ws.cell(row=answer_label_row, column=1, value="Your answer:").font = Font(bold=True)
     answer_cell_ref = f"B{answer_label_row}"
     ws[answer_cell_ref].fill = _GANTT_ANSWER_FILL
-
-    buf = io.BytesIO()
-    wb.save(buf)
-    return buf.getvalue(), answer_cell_ref
+    return wb, ws, answer_cell_ref
 
 
 # ---------------------------------------------------------------------------
@@ -531,6 +561,7 @@ def generate_networks_exam_style():
             "spreadsheet_bytes": spreadsheet_bytes,
             "spreadsheet_filename": "gantt_chart.xlsx",
             "spreadsheet_answer_cell": ("Gantt Chart", answer_cell),
+            **_gantt_solution_metadata(net, scenario, final_prompt, correct_answer),
         },
     )
 

@@ -1,10 +1,14 @@
 import streamlit as st
 
+from core.ui.spreadsheet_solution_ui import render_spreadsheet_solution
+
 
 def render_solution(question):
     st.markdown("**Worked Solution:**")
     for step in question.worked_solution:
         st.markdown(f"- {step}")
+    if question.metadata.get("spreadsheet_solution_bytes"):
+        render_spreadsheet_solution(question)
 
 
 def scored_parts(question):
