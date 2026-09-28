@@ -226,7 +226,7 @@ def generate_loan_schedules_l6():
     i = monthly_rate(a / 100)
     R = round(level_repayment(P, i, n), 2)
     rows = schedule(P, i, R, n)
-    final = rows[-1][1]
+    final = round(rows[-1][1], 2)
     total_interest = round((n - 1) * R + final - P, 2)
     q = (f"{lead.format(name=name, P=P, y=y)} The annual effective rate of interest is {a}%. Level monthly "
          f"repayments are made at the end of each month, with the final repayment adjusted so the loan ends at "
@@ -264,8 +264,8 @@ def generate_loan_schedules_l7():
     a = round(random.uniform(6.9, 19.9), 1)
     i = monthly_rate(a / 100)
     R = round(level_repayment(P, i, n), 2)
-    rows = schedule(P, i, R, n)
-    final = rows[-1][1]
+    final = round(schedule(P, i, R, n)[-1][1], 2)       # the printed final repayment, to the penny
+    rows = schedule(P, i, R, n, final)
     q = (f"{name} buys {what} for £{price:,}. The finance package is:\n"
          f"- {d:.0%} deposit\n- {n - 1} level monthly repayments of £{R:,.2f}\n"
          f"- final monthly repayment £{final:,.2f}\n\n"

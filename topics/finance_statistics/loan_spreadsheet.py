@@ -22,7 +22,7 @@ import io
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, Font, PatternFill
 
-from core.engine.spreadsheet_solution import solution_metadata
+from core.engine.spreadsheet_solution import excel_round, solution_metadata
 
 HEADER_FILL = PatternFill("solid", fgColor="1F3864")
 ANSWER_FILL = PatternFill("solid", fgColor="FFFF00")
@@ -43,16 +43,20 @@ def level_repayment(P, i, n):
 def schedule(P, i, R, n, final=None):
     """Rows (month, repayment, interest, capital, outstanding) with the SQA rounding: interest
     to the penny on the previous outstanding. If `final` is None the last repayment is
-    whatever clears the loan (outstanding + that month's interest)."""
-    bal, rows = round(P, 2), []
+    whatever clears the loan (outstanding + that month's interest).
+
+    Mirrors the sheet's arithmetic exactly — capital (C−D) and outstanding (F−E) are never
+    rounded, so the float drift a pupil's spreadsheet accumulates is reproduced and ROUND()
+    breaks the same way. Values are formatted to the penny only when displayed."""
+    bal, rows = P, []
     for t in range(1, n + 1):
-        interest = round(i * bal + 1e-9, 2)
+        interest = excel_round(i * bal)
         if t == n:
-            pay = round(bal + interest, 2) if final is None else final
+            pay = (bal + interest) if final is None else final
         else:
             pay = R
-        capital = round(pay - interest, 2)
-        bal = round(bal - capital, 2)
+        capital = pay - interest
+        bal = bal - capital
         rows.append((t, pay, interest, capital, bal))
     return rows
 

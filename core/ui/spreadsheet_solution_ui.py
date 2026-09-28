@@ -12,7 +12,7 @@ def _grid_html(view, show_formulas):
     filled = set(view["filled"])
     cell = "border:1px solid #BBB;padding:2px 6px;font-size:0.85em;"
     head = f"{cell}background:{_HEADER_BG};color:#333;text-align:center;font-weight:600;"
-    out = ['<div style="overflow-x:auto"><table style="border-collapse:collapse">',
+    out = ['<div style="overflow:auto;max-height:480px"><table style="border-collapse:collapse">',
            f'<tr><th style="{head}"></th>']
     out += [f'<th style="{head}">{c}</th>' for c in view["columns"]]
     out.append("</tr>")
@@ -43,6 +43,11 @@ def render_spreadsheet_solution(question):
     )
     if not view:
         return
+    for v in view if isinstance(view, list) else [view]:
+        _render_view(v)
+
+
+def _render_view(view):
     st.caption(f"Sheet “{view['sheet']}” — highlighted cells are the ones you had to fill in.")
     if view["formulas"]:
         values_tab, formulas_tab = st.tabs(["Values", "Formulas"])

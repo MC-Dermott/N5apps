@@ -74,11 +74,25 @@ def workbook_bytes(wb):
 
 def solution_metadata(wb, ws, values, filled, min_row, max_row, min_col=1, max_col=None,
                       filename=None):
+    return multi_sheet_solution_metadata(
+        wb, [solution_view(ws, values, filled, min_row, max_row, min_col, max_col)], filename)
+
+
+def multi_sheet_solution_metadata(wb, views, filename=None):
+    """As solution_metadata(), for a workbook whose solution spans several sheets: `views` is
+    a list of solution_view() results, rendered one after another."""
     meta = {
         "spreadsheet_solution_bytes": workbook_bytes(wb),
-        "spreadsheet_solution_view": solution_view(ws, values, filled, min_row, max_row,
-                                                   min_col, max_col),
+        "spreadsheet_solution_view": views[0] if len(views) == 1 else views,
     }
     if filename:
         meta["spreadsheet_solution_filename"] = filename
     return meta
+
+
+def excel_round(x, dp=2):
+    """ROUND() as Excel does it: to 15 significant figures first, then half away from zero.
+    Python's round() is banker's rounding on the raw float, so 0.0023 * 350 (0.80499999...)
+    goes to 0.80 in Python but 0.81 in Excel."""
+    from decimal import Decimal, ROUND_HALF_UP
+    return float(Decimal(f"{x:.15g}").quantize(Decimal(1).scaleb(-dp), rounding=ROUND_HALF_UP))

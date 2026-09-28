@@ -174,6 +174,7 @@ from topics.finance_statistics.credit_cards import (
     generate_credit_cards_l3,
     generate_credit_cards_l4,
     generate_credit_cards_l5,
+    generate_credit_cards_l6,
 )
 from topics.finance_statistics.savings_products import (
     generate_savings_products_question,
@@ -553,6 +554,7 @@ _HIGHER_LEVELS = {
             "Minimum Payment": generate_credit_cards_l3,
             "Comparing Cards": generate_credit_cards_l4,
             "Balance Transfer": generate_credit_cards_l5,
+            "Spreadsheet: Minimum vs Fixed Payments": generate_credit_cards_l6,
         },
         "Loan Schedules": {
             "Schedule by Hand": generate_loan_schedules_l1,
