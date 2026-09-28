@@ -140,7 +140,6 @@ from topics.finance_statistics.national_insurance import (
 )
 from topics.finance_statistics.wages import generate_wages_question, generate_wages_l1, generate_wages_l2
 from topics.finance_statistics.commission import generate_commission_question
-from topics.finance_statistics.loans import generate_loans_question
 from topics.finance_statistics.mortgages import generate_mortgages_question
 from topics.finance_statistics.budgeting import generate_budgeting_question
 from topics.finance_statistics.reverse_percentage import generate_reverse_percentage_question
@@ -328,7 +327,6 @@ _N5_NUMERACY_TOPICS = {
 
 _HIGHER_TOPICS = {
     "Finance": {
-        "Loans": generate_loans_question,
         "Loan Schedules": generate_loan_schedules_question,
         "Mortgages": generate_mortgages_question,
         "Budgeting": generate_budgeting_question,
