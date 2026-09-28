@@ -71,14 +71,25 @@ deposit to find the balance, you're given the **target balance** and need to
 find the **deposit** that would grow to it.
 
 1. Calculate the **growth multiplier** — what £1 would grow to over the
-   period, using the effective interest rate(s) that apply
+   period — by multiplying all of the multipliers together in one go
 2. **Divide** the savings goal by this multiplier
 3. **Round UP** to the nearest penny — rounding down would leave the goal
    just short
 
-**Example:** £1 grows to £1.0532 over the period. Savings goal is £6000.
-- Minimum deposit = £6000 ÷ 1.0532 = £5699.9367...
-- Round UP to the nearest penny = **£5699.94**
+**Example:** The effective interest rates for a savings account are:
+
+| Dates | Interest rate |
+|---|---|
+| 1 January 2024 to 30 April 2024 | 0.3% per **month** |
+| From 1 May 2024 | 4.2% per **year** |
+
+An account is opened on 1 May 2024 with a savings goal of £6000 by
+1 November 2025. Calculate the minimum deposit needed.
+
+- The deposit is held for 18 months (1 year and 6 months) at 4.2% per year
+- Multiplier = 1.042 × (1 + 0.042 × 6/12) = 1.063882
+- Minimum deposit = £6000 ÷ 1.063882 = £5639.7232...
+- Round UP to the nearest penny = **£5639.73**
 """
 
 _NAMES = ["Alex", "Jamie", "Sam", "Jordan", "Casey", "Morgan", "Riley", "Taylor"]
@@ -146,49 +157,6 @@ def _rate_table_md(rows):
     return "\n".join(lines)
 
 
-def _grow_amount_with_steps(amount, start_month, end_month, periods):
-    """Grow `amount`, held from month offset `start_month` to `end_month`,
-    through the given rate periods. Returns (final_balance, worked_lines,
-    running_balance_after_each_applied_step)."""
-    balance = amount
-    lines = []
-    step_answers = []
-    for p_start, p_end, rate, rtype in periods:
-        seg_start = max(start_month, p_start)
-        seg_end = end_month if p_end is None else min(end_month, p_end)
-        n_months = seg_end - seg_start
-        if n_months <= 0:
-            continue
-
-        if rtype == "month":
-            before = balance
-            balance = balance * (1 + rate) ** n_months
-            lines.append(
-                f"£{_fmt_money(before)} × (1 + {_fmt_rate(rate * 100)}%)^{n_months} "
-                f"= £{_fmt_money(balance)}"
-            )
-            step_answers.append(round(balance, 2))
-        else:
-            whole_years, rem_months = divmod(n_months, 12)
-            if whole_years:
-                before = balance
-                balance = balance * (1 + rate) ** whole_years
-                lines.append(
-                    f"£{_fmt_money(before)} × (1 + {_fmt_rate(rate * 100)}%)^{whole_years} "
-                    f"= £{_fmt_money(balance)}"
-                )
-            if rem_months:
-                before = balance
-                balance = balance * (1 + rate * (rem_months / 12))
-                lines.append(
-                    f"£{_fmt_money(before)} × (1 + {_fmt_rate(rate * 100)}% × {rem_months}/12) "
-                    f"= £{_fmt_money(balance)}"
-                )
-            step_answers.append(round(balance, 2))
-
-    return balance, lines, step_answers
-
-
 def _fmt_decimal(x):
     return f"{round(x, 6):g}"
 
@@ -196,7 +164,8 @@ def _fmt_decimal(x):
 def _growth_one_stage(amount, start_month, end_month, periods):
     """Grow `amount`, held from month offset `start_month` to `end_month`,
     with every rate period's multiplier applied in a single calculation.
-    Returns (final_balance, one_line_working, [(months_held, rate_label), ...])."""
+    Returns (final_balance, one_line_working, [(months_held, rate_label), ...],
+    [multiplier_text, ...])."""
     balance = amount
     factors = []
     holds = []
@@ -223,7 +192,7 @@ def _growth_one_stage(amount, start_month, end_month, periods):
                 factors.append(f"(1 + {_fmt_decimal(rate)} × {rem_months}/12)")
 
     line = f"£{_fmt_money(amount)} × " + " × ".join(factors) + f" = £{_fmt_money(balance)}"
-    return balance, line, holds
+    return balance, line, holds, factors
 
 
 def _hold_text(n_months, rate_label):
@@ -271,7 +240,7 @@ def generate_interest_l1():
         f"Calculate {name}'s balance on {target_str}."
     )
 
-    balance, line, holds = _growth_one_stage(deposit, 0, target_offset, periods)
+    balance, line, holds, _ = _growth_one_stage(deposit, 0, target_offset, periods)
     answer = round(balance, 2)
 
     scaffold_steps = [
@@ -361,7 +330,7 @@ def generate_interest_l2():
     worked = []
     grown_amounts = []
     for idx, (off, amt) in enumerate(deposits):
-        grown, line, holds = _growth_one_stage(amt, off, target_offset, periods)
+        grown, line, holds, _ = _growth_one_stage(amt, off, target_offset, periods)
         grown_amounts.append(round(grown, 2))
         if idx == 0:
             scaffold_label = "initial deposit"
@@ -427,7 +396,7 @@ def generate_interest_l3():
 
     goal = random.choice(range(2000, 15001, 500))
 
-    multiplier, lines, _ = _grow_amount_with_steps(1, open_offset, target_offset, periods)
+    multiplier, _, holds, factors = _growth_one_stage(1, open_offset, target_offset, periods)
     exact_deposit = goal / multiplier
     min_deposit = math.ceil(exact_deposit * 100 - 1e-9) / 100
 
@@ -442,7 +411,10 @@ def generate_interest_l3():
 
     scaffold_steps = [
         {
-            "prompt": f"Calculate the growth multiplier for £1 held from {open_str} to {target_str}",
+            "prompt": (
+                f"Calculate the growth multiplier for £1 held from {open_str} to {target_str} "
+                f"— multiply all of the multipliers together in one go"
+            ),
             "answer": round(multiplier, 4),
         },
         {
@@ -451,9 +423,11 @@ def generate_interest_l3():
         },
     ]
 
-    worked = lines + [
-        f"£1 grows to £{_fmt_money(multiplier)} by {target_str}",
-        f"£{goal:,} ÷ {_fmt_money(multiplier)} = £{_fmt_money(exact_deposit)}",
+    worked = [
+        "The deposit is held for "
+        + ", then ".join(_hold_text(n, r) for n, r in holds) + ":",
+        f"Multiplier = {' × '.join(factors)} = {multiplier:.6f}",
+        f"£{goal:,} ÷ {multiplier:.6f} = £{exact_deposit:,.4f}",
         f"Minimum deposit (rounded up to the nearest penny) = £{_fmt_money(min_deposit)}",
     ]
 
