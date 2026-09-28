@@ -180,6 +180,14 @@ from topics.finance_statistics.savings_products import (
     generate_savings_products_l3,
     generate_savings_products_l4,
 )
+from topics.finance_statistics.inflation_insurance import (
+    generate_inflation_insurance_question,
+    generate_inflation_l1,
+    generate_inflation_l2,
+    generate_inflation_l3,
+    generate_insurance_l4,
+    generate_insurance_l5,
+)
 from topics.finance_statistics.effective_rates import (
     generate_effective_rates_question,
     generate_effective_rates_l1,
@@ -368,6 +376,7 @@ _HIGHER_TOPICS = {
         "Savings Products and Pensions": generate_savings_products_question,
         "Income Tax and National Insurance": generate_tax_ni_question,
         "VAT and LBTT": generate_vat_lbtt_question,
+        "Inflation and Insurance": generate_inflation_insurance_question,
     },
     "Statistics": {
         "Standard Deviation": generate_standard_deviation_question,
@@ -583,6 +592,13 @@ _HIGHER_LEVELS = {
             "Income Tax": generate_income_tax,
             "National Insurance": generate_higher_ni,
             "Net Monthly Income": generate_net_monthly_income,
+        },
+        "Inflation and Insurance": {
+            "Adjusting a Price with CPI": generate_inflation_l1,
+            "Keeping Up with Inflation": generate_inflation_l2,
+            "Rate of Inflation": generate_inflation_l3,
+            "Insurance Payout": generate_insurance_l4,
+            "Premium and Excess": generate_insurance_l5,
         },
         "VAT and LBTT": {
             "VAT-Inclusive Price": generate_vat_inclusive_price,
