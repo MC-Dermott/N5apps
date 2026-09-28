@@ -61,7 +61,47 @@ def schedule(P, i, R, n, final=None):
     return rows
 
 
-def _sheet(title, sheet_name, n):
+def clear_schedule(P, i, R, max_months=600):
+    """Pay R a month until the loan is cleared; the last repayment is only what is left
+    (outstanding + that month's interest). Same float-faithful arithmetic as schedule()."""
+    bal, rows = P, []
+    while bal > 1e-9 and len(rows) < max_months:
+        interest = excel_round(i * bal)
+        pay = min(R, bal + interest)
+        capital = pay - interest
+        bal = bal - capital
+        rows.append((len(rows) + 1, pay, interest, capital, bal))
+    return rows
+
+
+def target_repayment(P, i, n, target):
+    """The smallest repayment, to the penny, that leaves no more than `target` outstanding
+    after n months (Goal Seek to the target, then round UP)."""
+    g = (1 + i) ** n
+    R = round(-(-(P * g - target) * i / (g - 1) * 100 // 1)) / 100      # continuous answer, rounded up
+    while schedule(P, i, round(R - 0.01, 2), n, round(R - 0.01, 2))[-1][4] <= target:
+        R = round(R - 0.01, 2)
+    while schedule(P, i, R, n, R)[-1][4] > target:
+        R = round(R + 0.01, 2)
+    return R
+
+
+LOAN_LABELS = {
+    "rows": [(3, "Price (£)"), (4, "Loan amount (£)"), (5, "Annual effective rate"), (6, "Monthly effective rate"),
+             (7, "Level monthly repayment (£)"), (8, "Final repayment (£)"), (9, "Term (months)")],
+    "outstanding": "Loan outstanding (£)",
+}
+MORTGAGE_LABELS = {
+    "rows": [(4, "Mortgage amount (£)"), (5, "Annual effective rate"), (6, "Monthly effective rate"),
+             (7, "Level monthly repayment (£)"), (8, "Final repayment (£)"), (9, "Term (months)"),
+             (10, "Target mortgage outstanding (£)")],
+    "outstanding": "Mortgage outstanding (£)",
+}
+
+
+def schedule_sheet(title, sheet_name, n, labels=LOAN_LABELS):
+    """A blank schedule sheet in the worksheet's layout (see the module docstring), with month
+    numbers 0…n in column B. Returns (wb, ws)."""
     wb = Workbook()
     ws = wb.active
     ws.title = sheet_name
@@ -71,15 +111,14 @@ def _sheet(title, sheet_name, n):
         ws.column_dimensions[col].width = 18
     ws["A1"] = title
     ws["A1"].font = Font(bold=True, size=13)
-    for row, label in [(3, "Price (£)"), (4, "Loan amount (£)"), (5, "Annual effective rate"),
-                       (6, "Monthly effective rate"), (7, "Level monthly repayment (£)"),
-                       (8, "Final repayment (£)"), (9, "Term (months)")]:
+    for row, label in labels["rows"]:
         ws[f"B{row}"] = label
-    for ref, fmt in [("C3", MONEY), ("C4", MONEY), ("C5", RATE), ("C6", RATE), ("C7", MONEY), ("C8", MONEY)]:
+    for ref, fmt in [("C3", MONEY), ("C4", MONEY), ("C5", RATE), ("C6", RATE), ("C7", MONEY), ("C8", MONEY),
+                     ("C10", MONEY)]:
         ws[ref].number_format = fmt
     ws["C9"] = n
     for col, text in zip("BCDEF", ["Time (months)", "Repayment (£)", "Interest content of repayment (£)",
-                                   "Capital content of repayment (£)", "Loan outstanding (£)"]):
+                                   "Capital content of repayment (£)", labels["outstanding"]]):
         cell = ws[f"{col}11"]
         cell.value = text
         cell.fill, cell.font = HEADER_FILL, HEADER_FONT
@@ -112,7 +151,7 @@ def build_loan_spreadsheet(*, title, sheet_name, filename, mode, P, i, n, rows, 
     deal = price is not None
 
     # ---------------- question ----------------
-    wb, ws = _sheet(title, sheet_name, n)
+    wb, ws = schedule_sheet(title, sheet_name, n)
     to_fill = []
     if deal:
         ws["C3"] = price
@@ -139,7 +178,7 @@ def build_loan_spreadsheet(*, title, sheet_name, filename, mode, P, i, n, rows, 
     question_bytes = _bytes(wb)
 
     # ---------------- completed solution ----------------
-    wb, ws = _sheet(title, sheet_name, n)
+    wb, ws = schedule_sheet(title, sheet_name, n)
     ws["A2"] = "Completed solution: the yellow cells show the formulas used."
     ws["A2"].font = Font(italic=True)
     values = {}

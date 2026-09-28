@@ -147,6 +147,9 @@ from topics.finance_statistics.mortgages import (
     generate_mortgages_l3,
     generate_mortgages_l4,
     generate_mortgages_l5,
+    generate_mortgages_l6,
+    generate_mortgages_l7,
+    generate_mortgages_l8,
 )
 from topics.finance_statistics.budgeting import generate_budgeting_question
 from topics.finance_statistics.reverse_percentage import generate_reverse_percentage_question
@@ -547,6 +550,9 @@ _HIGHER_LEVELS = {
             "Affordability": generate_mortgages_l3,
             "Paying the Maximum": generate_mortgages_l4,
             "Total Interest": generate_mortgages_l5,
+            "Spreadsheet: Level Repayment": generate_mortgages_l6,
+            "Spreadsheet: Paying the Maximum": generate_mortgages_l7,
+            "Spreadsheet: Target Balance After a Fixed Rate": generate_mortgages_l8,
         },
         "Credit Cards": {
             "One Month": generate_credit_cards_l1,
