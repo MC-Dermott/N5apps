@@ -533,19 +533,19 @@ _N4_LEVELS = {}
 _HIGHER_LEVELS = {
     "Finance": {
         "Mortgages": {
-            "Calculator Questions": generate_mortgages_calculator,
             "Spreadsheet: Level Repayment": generate_mortgages_l6,
             "Spreadsheet: Paying the Maximum": generate_mortgages_l7,
             "Spreadsheet: Target Balance After a Fixed Rate": generate_mortgages_l8,
+            "Calculator Questions": generate_mortgages_calculator,
         },
         "Credit Cards": {
-            "Calculator Questions": generate_credit_cards_calculator,
             "Spreadsheet: Minimum vs Fixed Payments": generate_credit_cards_l6,
+            "Calculator Questions": generate_credit_cards_calculator,
         },
         "Loan Schedules": {
-            "Calculator Questions": generate_loan_schedules_calculator,
             "Spreadsheet: Level Repayment": generate_loan_schedules_l6,
             "Spreadsheet: Rate of a Finance Deal": generate_loan_schedules_l7,
+            "Calculator Questions": generate_loan_schedules_calculator,
         },
         "Present Value": {
             "Single Amount": generate_present_value_l1,
