@@ -144,6 +144,14 @@ from topics.finance_statistics.loans import generate_loans_question
 from topics.finance_statistics.mortgages import generate_mortgages_question
 from topics.finance_statistics.budgeting import generate_budgeting_question
 from topics.finance_statistics.reverse_percentage import generate_reverse_percentage_question
+from topics.finance_statistics.loan_schedules import (
+    generate_loan_schedules_question,
+    generate_loan_schedules_l1,
+    generate_loan_schedules_l2,
+    generate_loan_schedules_l3,
+    generate_loan_schedules_l4,
+    generate_loan_schedules_l5,
+)
 from topics.finance_statistics.effective_rates import (
     generate_effective_rates_question,
     generate_effective_rates_l1,
@@ -321,6 +329,7 @@ _N5_NUMERACY_TOPICS = {
 _HIGHER_TOPICS = {
     "Finance": {
         "Loans": generate_loans_question,
+        "Loan Schedules": generate_loan_schedules_question,
         "Mortgages": generate_mortgages_question,
         "Budgeting": generate_budgeting_question,
         "Reverse Percentages": generate_reverse_percentage_question,
@@ -490,6 +499,13 @@ _N4_LEVELS = {}
 
 _HIGHER_LEVELS = {
     "Finance": {
+        "Loan Schedules": {
+            "Schedule by Hand": generate_loan_schedules_l1,
+            "Monthly Rate Given": generate_loan_schedules_l2,
+            "Finance Deal with Deposit": generate_loan_schedules_l3,
+            "Total Interest": generate_loan_schedules_l4,
+            "Comparing Two Loans": generate_loan_schedules_l5,
+        },
         "Effective Interest Rates": {
             "Annual to Monthly": generate_effective_rates_l1,
             "Monthly to Annual": generate_effective_rates_l2,
