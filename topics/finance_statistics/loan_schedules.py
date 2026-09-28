@@ -3,13 +3,17 @@
 Mirrors Loan_Schedules_Worksheet.docx (Higher Apps/Worksheets/Finance). SQA convention (2023–2025
 marking instructions): interest = ROUND(monthly rate × previous loan outstanding, 2), capital =
 repayment − interest, loan outstanding = previous − capital; the monthly rate is (1 + annual)^(1/12) − 1.
-The spreadsheet-only skills (Goal Seek for a repayment or rate) stay on the worksheet; the app drills
-the calculator steps and the traps: dividing by 12, the same interest every month, forgetting the
-deposit, and total interest = everything repaid − amount borrowed.
+l1–l5 drill the calculator steps and the traps: dividing by 12, the same interest every month,
+forgetting the deposit, and total interest = everything repaid − amount borrowed. l6/l7 are the
+worksheet's spreadsheet skills (Goal Seek for the repayment, and for the rate of a finance deal) as
+download/fill/upload spreadsheets — see loan_spreadsheet.py.
 """
 import random
 
 from core.models.question_model import Question
+from topics.finance_statistics.loan_spreadsheet import (
+    FIRST_ROW, build_loan_spreadsheet, level_repayment, monthly_rate, schedule,
+)
 
 TOPIC = "Finance"
 QTYPE = "Loan Schedules"
@@ -184,6 +188,110 @@ def generate_loan_schedules_l5():
                     notes=NOTES)
 
 
+SPREADSHEET_NOTES = """
+**Loan schedules in a spreadsheet (Goal Seek)**
+
+The downloadable sheet uses the same layout as the worksheet's spreadsheet questions:
+
+- Monthly rate: **C6 = (1+C5)^(1/12)−1** (brackets round 1/12)
+- Month 1, then fill down: interest **D13 = ROUND($C$6\\*F12,2)**, capital **E13 = C13−D13**,
+  outstanding **F13 = F12−E13**
+- **Finding the repayment:** Goal Seek — set the last 'Loan outstanding' to 0 by changing C7,
+  then round C7 to 2 d.p. The final repayment clears what is left:
+  **C8 = F(last−1)+ROUND($C$6\\*F(last−1),2)**
+- **Finding the rate:** enter any dummy monthly rate in C6, build the schedule with the repayments
+  given, Goal Seek the last 'Loan outstanding' to 0 by changing C6, then **C5 = (1+C6)^12−1**
+- For a finance deal the loan is the price **minus the deposit**.
+
+⚠ Leaving out ROUND lets the pennies drift; giving the monthly rate when the annual rate is asked
+for loses the final mark (2023–2025 marking instructions). Save the file before uploading.
+"""
+
+_TERM_LOANS = [
+    ("The Croft Tractor Loan", "{name} borrows £{P:,} over {y} years to buy a tractor for the croft.", 6000, 15000, 500),
+    ("The Harris Tweed Loom Loan", "A weaver borrows £{P:,} over {y} years to buy a new loom.", 4000, 9000, 200),
+    ("The Van Loan", "{name} borrows £{P:,} over {y} years to buy a van for the business.", 5000, 14000, 500),
+    ("The Home Improvement Loan", "{name} borrows £{P:,} over {y} years for a new kitchen.", 3000, 10000, 250),
+]
+
+
+def generate_loan_schedules_l6():
+    """Spreadsheet: Goal Seek the level repayment and the final repayment (worksheet Section 2)."""
+    name = random.choice(_NAMES)
+    title, lead, lo, hi, st = random.choice(_TERM_LOANS)
+    P = random.randrange(lo, hi + 1, st)
+    y = random.choice([2, 3, 4])
+    n = 12 * y
+    a = round(random.uniform(4.9, 12.9), 1)
+    i = monthly_rate(a / 100)
+    R = round(level_repayment(P, i, n), 2)
+    rows = schedule(P, i, R, n)
+    final = rows[-1][1]
+    total_interest = round((n - 1) * R + final - P, 2)
+    q = (f"{lead.format(name=name, P=P, y=y)} The annual effective rate of interest is {a}%. Level monthly "
+         f"repayments are made at the end of each month, with the final repayment adjusted so the loan ends at "
+         f"exactly £0.00.\n\nDownload the spreadsheet below. Complete the loan schedule to determine the level "
+         f"monthly repayment (cell C7) and the final repayment (cell C8), then save it and upload it here.")
+    meta = build_loan_spreadsheet(
+        title=title, sheet_name="Loan Schedule", filename=f"loan_schedule_{name.lower()}.xlsx",
+        mode="repayment", P=P, i=i, n=n, rows=rows, R=R, final=final, annual=a / 100)
+    return Question(
+        question_text=q, correct_answer=R, topic=TOPIC, question_type=QTYPE,
+        scaffold_steps=[
+            {"prompt": "What is the monthly effective rate of interest, as a percentage (3 d.p.)?", "answer": round(i * 100, 3)},
+            {"prompt": "Interest content of the first repayment (£)", "answer": rows[0][2]},
+            {"prompt": "Level monthly repayment, to 2 d.p. (£)", "answer": R},
+            {"prompt": "Final repayment (£)", "answer": final},
+        ],
+        worked_solution=[
+            f"C6: monthly rate = (1 + {a / 100:g})^(1/12) − 1 = {i * 100:.3f}%",
+            f"D13 = ROUND($C$6*F12,2) = {rows[0][2]:.2f}; fill D, E and F down to month {n}",
+            f"Goal Seek: last 'Loan outstanding' = 0 by changing C7 → level repayment = £{R:,.2f}",
+            f"Final repayment = F{FIRST_ROW + n - 2} + ROUND($C$6*F{FIRST_ROW + n - 2},2) = £{final:,.2f}",
+            f"(Total interest = {n - 1} × {R:,.2f} + {final:,.2f} − {P:,} = £{total_interest:,.2f})",
+        ],
+        notes=SPREADSHEET_NOTES, metadata=meta)
+
+
+def generate_loan_schedules_l7():
+    """Spreadsheet: Goal Seek the effective rate of a finance deal with a deposit (worksheet Section 3)."""
+    name = random.choice(_NAMES)
+    what, lo, hi, st, deps = random.choice(_DEALS)
+    price = random.randrange(lo, hi + 1, st)
+    d = random.choice(deps)
+    P = round(price * (1 - d), 2)
+    n = random.choice([24, 36, 48])
+    a = round(random.uniform(6.9, 19.9), 1)
+    i = monthly_rate(a / 100)
+    R = round(level_repayment(P, i, n), 2)
+    rows = schedule(P, i, R, n)
+    final = rows[-1][1]
+    q = (f"{name} buys {what} for £{price:,}. The finance package is:\n"
+         f"- {d:.0%} deposit\n- {n - 1} level monthly repayments of £{R:,.2f}\n"
+         f"- final monthly repayment £{final:,.2f}\n\n"
+         f"Download the spreadsheet below. Complete the loan schedule to determine the annual effective rate of "
+         f"interest being charged (cell C5), then save it and upload it here.")
+    meta = build_loan_spreadsheet(
+        title=f"Finance Deal — {what[0].upper() + what[1:]}", sheet_name="Loan Schedule",
+        filename=f"finance_deal_{name.lower()}.xlsx", mode="rate", P=P, i=i, n=n, rows=rows, R=R,
+        final=final, annual=a / 100, price=price, deposit=d)
+    return Question(
+        question_text=q, correct_answer=a, topic=TOPIC, question_type=QTYPE,
+        scaffold_steps=[
+            {"prompt": "Amount borrowed (price − deposit) (£)", "answer": P},
+            {"prompt": "Monthly effective rate found by Goal Seek, as a percentage (3 d.p.)", "answer": round(i * 100, 3)},
+            {"prompt": "Annual effective rate of interest (%)", "answer": a},
+        ],
+        worked_solution=[
+            f"C4: loan = {price:,} × (1 − {d:g}) = £{P:,.2f} (the deposit is not borrowed)",
+            f"Build the schedule with repayments of £{R:,.2f} and a final repayment of £{final:,.2f}",
+            f"Goal Seek: last 'Loan outstanding' = 0 by changing C6 → monthly rate = {i * 100:.3f}%",
+            f"C5 = (1 + C6)^12 − 1 = {a:.1f}%",
+        ],
+        notes=SPREADSHEET_NOTES, metadata=meta)
+
+
 def generate_loan_schedules_question():
     return random.choice([generate_loan_schedules_l1, generate_loan_schedules_l2, generate_loan_schedules_l3,
-                          generate_loan_schedules_l4, generate_loan_schedules_l5])()
+                          generate_loan_schedules_l4, generate_loan_schedules_l5, generate_loan_schedules_l6,
+                          generate_loan_schedules_l7])()

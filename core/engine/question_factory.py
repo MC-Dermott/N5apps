@@ -157,6 +157,8 @@ from topics.finance_statistics.loan_schedules import (
     generate_loan_schedules_l3,
     generate_loan_schedules_l4,
     generate_loan_schedules_l5,
+    generate_loan_schedules_l6,
+    generate_loan_schedules_l7,
 )
 from topics.finance_statistics.present_value import (
     generate_present_value_question,
@@ -558,6 +560,8 @@ _HIGHER_LEVELS = {
             "Finance Deal with Deposit": generate_loan_schedules_l3,
             "Total Interest": generate_loan_schedules_l4,
             "Comparing Two Loans": generate_loan_schedules_l5,
+            "Spreadsheet: Level Repayment": generate_loan_schedules_l6,
+            "Spreadsheet: Rate of a Finance Deal": generate_loan_schedules_l7,
         },
         "Present Value": {
             "Single Amount": generate_present_value_l1,

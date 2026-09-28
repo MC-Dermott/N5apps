@@ -70,6 +70,13 @@ def _render_spreadsheet_input(question, suffix):
         )
         return ""
 
+    # A rate cell formatted as a percentage holds a fraction (0.149 for 14.9%); the question's
+    # correct_answer is the percentage. A pupil who typed 14.9 as a plain number is left as-is.
+    if question.metadata.get("spreadsheet_answer_percent") and isinstance(value, (int, float)) and abs(value) < 1:
+        value = round(value * 100, 4)
+        st.info(f"Detected answer from uploaded file: **{value}%**")
+        return str(value)
+
     st.info(f"Detected answer from uploaded file: **{value}**")
     return str(value)
 

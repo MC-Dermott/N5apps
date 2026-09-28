@@ -30,6 +30,9 @@ def _format(value, number_format):
     if isinstance(value, (int, float)) and not isinstance(value, bool):
         fmt = number_format or "General"
         decimals = len(fmt.split(".")[1].rstrip("%")) if "." in fmt else 0
+        if isinstance(value, float):
+            # no "-0.00" from float noise (e.g. a loan's final outstanding of -1e-12)
+            value = round(value, decimals + (2 if fmt.endswith("%") else 0)) + 0.0
         if fmt.endswith("%"):
             return f"{value * 100:.{decimals}f}%"
         if "£" in fmt:
