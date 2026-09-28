@@ -9,17 +9,25 @@ NOTES = """
 A savings account can have **different effective interest rates** over
 different date ranges, and rates may be quoted **per month** or **per year**.
 
-1. Work out how many months a deposit is held for **within each rate period**
-2. If the rate is **per month**, compound it once for every month held:
-   balance × (1 + rate)^(months held)
-3. If the rate is **per year**:
-   - For each **whole year** held, compound once: balance × (1 + rate)^(whole years)
-   - For any **part of a year** left over, apply it once, proportionally:
-     balance × (1 + rate × months/12)
-4. Carry the running balance forward into the next rate period
+1. Work out how many months the deposit is held for **within each rate period**
+2. Write down a **multiplier** for each rate period:
+   - rate **per month**: (1 + rate)^(months held)
+   - rate **per year**: (1 + rate)^(whole years), and (1 + rate × months/12)
+     for any **part of a year** left over
+3. Multiply the deposit by **all of the multipliers in one go**
 
-**Example:** £1000 held for 9 months at 4.7% per year (less than a full year):
-- Balance = £1000 × (1 + 0.047 × 9/12) = **£1035.25**
+**Example:** The effective interest rates for a savings account are:
+
+| Dates | Interest rate |
+|---|---|
+| 1 January 2024 to 30 April 2024 | 0.3% per **month** |
+| From 1 May 2024 | 4.2% per **year** |
+
+£1000 is deposited on 1 January 2024. Calculate the balance on 1 November 2025.
+
+- The deposit is held for 4 months at 0.3% per month, then 18 months (1 year
+  and 6 months) at 4.2% per year
+- Balance = £1000 × 1.003^4 × 1.042 × (1 + 0.042 × 6/12) = **£1076.71**
 """
 
 MULTIPLE_DEPOSITS_NOTES = """
@@ -188,7 +196,7 @@ def _fmt_decimal(x):
 def _growth_one_stage(amount, start_month, end_month, periods):
     """Grow `amount`, held from month offset `start_month` to `end_month`,
     with every rate period's multiplier applied in a single calculation.
-    Returns (final_balance, one_line_working, hold_descriptions)."""
+    Returns (final_balance, one_line_working, [(months_held, rate_label), ...])."""
     balance = amount
     factors = []
     holds = []
@@ -201,7 +209,7 @@ def _growth_one_stage(amount, start_month, end_month, periods):
 
         base = _fmt_decimal(1 + rate)
         rate_label = f"{_fmt_rate(rate * 100)}% per {rtype}"
-        holds.append(f"{n_months} month{'s' if n_months != 1 else ''} at {rate_label}")
+        holds.append((n_months, rate_label))
         if rtype == "month":
             balance *= (1 + rate) ** n_months
             factors.append(base if n_months == 1 else f"{base}^{n_months}")
@@ -216,6 +224,10 @@ def _growth_one_stage(amount, start_month, end_month, periods):
 
     line = f"£{_fmt_money(amount)} × " + " × ".join(factors) + f" = £{_fmt_money(balance)}"
     return balance, line, holds
+
+
+def _hold_text(n_months, rate_label):
+    return f"{n_months} month{'s' if n_months != 1 else ''} at {rate_label}"
 
 
 def _random_start():
@@ -259,18 +271,31 @@ def generate_interest_l1():
         f"Calculate {name}'s balance on {target_str}."
     )
 
-    balance, lines, step_answers = _grow_amount_with_steps(deposit, 0, target_offset, periods)
+    balance, line, holds = _growth_one_stage(deposit, 0, target_offset, periods)
     answer = round(balance, 2)
 
     scaffold_steps = [
         {
-            "prompt": f"Apply the interest for stage {i + 1} of the calculation (carry your balance forward)",
-            "answer": val,
+            "prompt": (
+                f"How many months is the deposit held for in row {i + 1} of the table "
+                f"({rate_label})?"
+            ),
+            "answer": n_months,
         }
-        for i, val in enumerate(step_answers)
+        for i, (n_months, rate_label) in enumerate(holds)
+    ] + [
+        {
+            "prompt": "Multiply the deposit by all of the multipliers in one go to find the balance",
+            "answer": answer,
+        }
     ]
 
-    worked = lines + [f"Balance on {target_str} = £{_fmt_money(answer)}"]
+    worked = [
+        "The deposit is held for "
+        + ", then ".join(_hold_text(n, r) for n, r in holds) + ":",
+        line,
+        f"Balance on {target_str} = £{_fmt_money(answer)}",
+    ]
 
     return Question(
         question_text=question_text,
@@ -353,7 +378,10 @@ def generate_interest_l2():
             ),
             "answer": round(grown, 2),
         })
-        worked.append(f"The {worked_label} is held for " + ", then ".join(holds) + ":")
+        worked.append(
+            f"The {worked_label} is held for "
+            + ", then ".join(_hold_text(n, r) for n, r in holds) + ":"
+        )
         worked.append(f"  {line}")
 
     answer = round(sum(grown_amounts), 2)
