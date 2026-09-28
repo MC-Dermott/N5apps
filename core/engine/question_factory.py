@@ -173,6 +173,13 @@ from topics.finance_statistics.credit_cards import (
     generate_credit_cards_l4,
     generate_credit_cards_l5,
 )
+from topics.finance_statistics.savings_products import (
+    generate_savings_products_question,
+    generate_savings_products_l1,
+    generate_savings_products_l2,
+    generate_savings_products_l3,
+    generate_savings_products_l4,
+)
 from topics.finance_statistics.effective_rates import (
     generate_effective_rates_question,
     generate_effective_rates_l1,
@@ -358,6 +365,7 @@ _HIGHER_TOPICS = {
         "Interest": generate_interest_question,
         "Present Value": generate_present_value_question,
         "Savings Schedule": generate_savings_schedule_question,
+        "Savings Products and Pensions": generate_savings_products_question,
         "Income Tax and National Insurance": generate_tax_ni_question,
         "VAT and LBTT": generate_vat_lbtt_question,
     },
@@ -559,6 +567,12 @@ _HIGHER_LEVELS = {
             "Single Deposit": generate_interest_l1,
             "Multiple Deposits": generate_interest_l2,
             "Minimum Deposit for a Goal": generate_interest_l3,
+        },
+        "Savings Products and Pensions": {
+            "Lifetime ISA": generate_savings_products_l1,
+            "Savings Schedule by Hand": generate_savings_products_l2,
+            "Pension Contributions": generate_savings_products_l3,
+            "Deposit for a Goal": generate_savings_products_l4,
         },
         "Savings Schedule": {
             "Spreadsheet": generate_savings_schedule_spreadsheet,
