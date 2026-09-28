@@ -144,6 +144,14 @@ from topics.finance_statistics.loans import generate_loans_question
 from topics.finance_statistics.mortgages import generate_mortgages_question
 from topics.finance_statistics.budgeting import generate_budgeting_question
 from topics.finance_statistics.reverse_percentage import generate_reverse_percentage_question
+from topics.finance_statistics.effective_rates import (
+    generate_effective_rates_question,
+    generate_effective_rates_l1,
+    generate_effective_rates_l2,
+    generate_effective_rates_l3,
+    generate_effective_rates_l4,
+    generate_effective_rates_l5,
+)
 from topics.finance_statistics.interest import (
     generate_interest_question,
     generate_interest_l1,
@@ -316,6 +324,7 @@ _HIGHER_TOPICS = {
         "Mortgages": generate_mortgages_question,
         "Budgeting": generate_budgeting_question,
         "Reverse Percentages": generate_reverse_percentage_question,
+        "Effective Interest Rates": generate_effective_rates_question,
         "Interest": generate_interest_question,
         "Savings Schedule": generate_savings_schedule_question,
         "Income Tax and National Insurance": generate_tax_ni_question,
@@ -481,6 +490,13 @@ _N4_LEVELS = {}
 
 _HIGHER_LEVELS = {
     "Finance": {
+        "Effective Interest Rates": {
+            "Annual to Monthly": generate_effective_rates_l1,
+            "Monthly to Annual": generate_effective_rates_l2,
+            "Quarterly Rates": generate_effective_rates_l3,
+            "Part-Year Growth": generate_effective_rates_l4,
+            "Loan Before Repayments": generate_effective_rates_l5,
+        },
         "Interest": {
             "Single Deposit": generate_interest_l1,
             "Multiple Deposits": generate_interest_l2,

@@ -12,8 +12,9 @@ different date ranges, and rates may be quoted **per month** or **per year**.
 1. Work out how many months the deposit is held for **within each rate period**
 2. Write down a **multiplier** for each rate period:
    - rate **per month**: (1 + rate)^(months held)
-   - rate **per year**: (1 + rate)^(whole years), and (1 + rate × months/12)
-     for any **part of a year** left over
+   - rate **per year**: (1 + rate)^(months held ÷ 12) — e.g. 18 months at
+     4.2% per year is 1.042^(18/12). Use a **fractional power** for part of a
+     year: SQA only awards the mark if a fractional power is used
 3. Multiply the deposit by **all of the multipliers in one go**
 
 **Example:** The effective interest rates for a savings account are:
@@ -27,7 +28,7 @@ different date ranges, and rates may be quoted **per month** or **per year**.
 
 - The deposit is held for 4 months at 0.3% per month, then 18 months (1 year
   and 6 months) at 4.2% per year
-- Balance = £1000 × 1.003^4 × 1.042 × (1 + 0.042 × 6/12) = **£1076.71**
+- Balance = £1000 × 1.003^4 × 1.042^(18/12) = **£1076.48**
 """
 
 MULTIPLE_DEPOSITS_NOTES = """
@@ -40,8 +41,7 @@ own deposit date to the final date, then **add the grown amounts together**.
    rate period** (a later deposit misses the earlier rate periods)
 2. Write down a **multiplier** for each rate period it is held in:
    - rate **per month**: (1 + rate)^(months held)
-   - rate **per year**: (1 + rate)^(whole years), and (1 + rate × months/12)
-     for any part of a year left over
+   - rate **per year**: (1 + rate)^(months held ÷ 12), e.g. 1.042^(18/12)
 3. Multiply the deposit by **all of its multipliers in one go**
 4. Add the grown deposits together
 
@@ -57,10 +57,10 @@ Calculate the balance on 1 November 2025.
 
 - £1000 is held for 4 months at 0.3% per month, then 18 months (1 year and
   6 months) at 4.2% per year:
-  £1000 × 1.003^4 × 1.042 × (1 + 0.042 × 6/12) = £1076.71
+  £1000 × 1.003^4 × 1.042^(18/12) = £1076.48
 - £500 is held for 2 months at 0.3% per month, then 18 months at 4.2% per year:
-  £500 × 1.003^2 × 1.042 × (1 + 0.042 × 6/12) = £535.14
-- Balance = £1076.71 + £535.14 = **£1611.85**
+  £500 × 1.003^2 × 1.042^(18/12) = £535.02
+- Balance = £1076.48 + £535.02 = **£1611.50**
 """
 
 MIN_DEPOSIT_NOTES = """
@@ -87,9 +87,9 @@ An account is opened on 1 May 2024 with a savings goal of £6000 by
 1 November 2025. Calculate the minimum deposit needed.
 
 - The deposit is held for 18 months (1 year and 6 months) at 4.2% per year
-- Multiplier = 1.042 × (1 + 0.042 × 6/12) = 1.063882
-- Minimum deposit = £6000 ÷ 1.063882 = £5639.7232...
-- Round UP to the nearest penny = **£5639.73**
+- Multiplier = 1.042^(18/12) = 1.063657
+- Minimum deposit = £6000 ÷ 1.063657 = £5640.9165...
+- Round UP to the nearest penny = **£5640.92**
 """
 
 _NAMES = ["Alex", "Jamie", "Sam", "Jordan", "Casey", "Morgan", "Riley", "Taylor"]
@@ -183,13 +183,14 @@ def _growth_one_stage(amount, start_month, end_month, periods):
             balance *= (1 + rate) ** n_months
             factors.append(base if n_months == 1 else f"{base}^{n_months}")
         else:
-            whole_years, rem_months = divmod(n_months, 12)
-            if whole_years:
-                balance *= (1 + rate) ** whole_years
-                factors.append(base if whole_years == 1 else f"{base}^{whole_years}")
-            if rem_months:
-                balance *= 1 + rate * (rem_months / 12)
-                factors.append(f"(1 + {_fmt_decimal(rate)} × {rem_months}/12)")
+            # Part-years use a fractional power (SQA marking instructions: the mark is
+            # only available if a fractional power is used), never simple interest.
+            balance *= (1 + rate) ** (n_months / 12)
+            if n_months % 12 == 0:
+                years = n_months // 12
+                factors.append(base if years == 1 else f"{base}^{years}")
+            else:
+                factors.append(f"{base}^({n_months}/12)")
 
     line = f"£{_fmt_money(amount)} × " + " × ".join(factors) + f" = £{_fmt_money(balance)}"
     return balance, line, holds, factors
