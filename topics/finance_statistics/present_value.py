@@ -63,7 +63,7 @@ def generate_present_value_l2():
     start = random.choice([1, 1, 2, 3]); k = random.randint(3, 4)
     years = list(range(start, start + k))
     pv = sum(P / (1 + r / 100) ** y for y in years)
-    defer = "" if start == 1 else f" (nothing is paid in years 1{'–' + str(start - 1) if start > 2 else ''})"
+    defer = "" if start == 1 else (" (nothing is paid in year 1)" if start == 2 else f" (nothing is paid in years 1–{start - 1})")
     q = (f"A fund must pay £{P:,} at the end of years {', '.join(map(str, years[:-1]))} and {years[-1]}{defer}. The fund earns an "
          f"annual effective rate of {r}%.\n\nCalculate the amount needed in the fund now.")
     return Question(question_text=q, correct_answer=round(pv, 2), topic=TOPIC, question_type=QTYPE,
@@ -100,7 +100,7 @@ def generate_present_value_l4():
         n = random.randint(6, 18); rm = r / 12; a1 = round(a0 * (1 + rm / 100) ** n); per = "month"; unit = f"{n} months"
     rate = ((a1 / a0) ** (1 / n) - 1) * 100
     q = (f"£{a0:,} grew to £{a1:,} in {unit} in an account with a fixed effective rate of interest.\n\n"
-         f"Calculate the {per}ly effective rate of interest, as a percentage to 2 decimal places.")
+         f"Calculate the {'annual' if per == 'year' else 'monthly'} effective rate of interest, as a percentage to 2 decimal places.")
     return Question(question_text=q, correct_answer=round(rate, 2), topic=TOPIC, question_type=QTYPE,
                     scaffold_steps=[{"prompt": "later ÷ earlier (5 d.p.)", "answer": round(a1 / a0, 5)}],
                     worked_solution=[f"(1 + r)^{n} = {a1:,} ÷ {a0:,} = {a1 / a0:.5f}",
