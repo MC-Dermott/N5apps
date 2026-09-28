@@ -142,11 +142,7 @@ from topics.finance_statistics.wages import generate_wages_question, generate_wa
 from topics.finance_statistics.commission import generate_commission_question
 from topics.finance_statistics.mortgages import (
     generate_mortgages_question,
-    generate_mortgages_l1,
-    generate_mortgages_l2,
-    generate_mortgages_l3,
-    generate_mortgages_l4,
-    generate_mortgages_l5,
+    generate_mortgages_calculator,
     generate_mortgages_l6,
     generate_mortgages_l7,
     generate_mortgages_l8,
@@ -155,11 +151,7 @@ from topics.finance_statistics.budgeting import generate_budgeting_question
 from topics.finance_statistics.reverse_percentage import generate_reverse_percentage_question
 from topics.finance_statistics.loan_schedules import (
     generate_loan_schedules_question,
-    generate_loan_schedules_l1,
-    generate_loan_schedules_l2,
-    generate_loan_schedules_l3,
-    generate_loan_schedules_l4,
-    generate_loan_schedules_l5,
+    generate_loan_schedules_calculator,
     generate_loan_schedules_l6,
     generate_loan_schedules_l7,
 )
@@ -172,11 +164,7 @@ from topics.finance_statistics.present_value import (
 )
 from topics.finance_statistics.credit_cards import (
     generate_credit_cards_question,
-    generate_credit_cards_l1,
-    generate_credit_cards_l2,
-    generate_credit_cards_l3,
-    generate_credit_cards_l4,
-    generate_credit_cards_l5,
+    generate_credit_cards_calculator,
     generate_credit_cards_l6,
 )
 from topics.finance_statistics.savings_products import (
@@ -545,29 +533,17 @@ _N4_LEVELS = {}
 _HIGHER_LEVELS = {
     "Finance": {
         "Mortgages": {
-            "Schedule by Hand": generate_mortgages_l1,
-            "Loan-to-Value": generate_mortgages_l2,
-            "Affordability": generate_mortgages_l3,
-            "Paying the Maximum": generate_mortgages_l4,
-            "Total Interest": generate_mortgages_l5,
+            "Calculator Questions": generate_mortgages_calculator,
             "Spreadsheet: Level Repayment": generate_mortgages_l6,
             "Spreadsheet: Paying the Maximum": generate_mortgages_l7,
             "Spreadsheet: Target Balance After a Fixed Rate": generate_mortgages_l8,
         },
         "Credit Cards": {
-            "One Month": generate_credit_cards_l1,
-            "Three Months": generate_credit_cards_l2,
-            "Minimum Payment": generate_credit_cards_l3,
-            "Comparing Cards": generate_credit_cards_l4,
-            "Balance Transfer": generate_credit_cards_l5,
+            "Calculator Questions": generate_credit_cards_calculator,
             "Spreadsheet: Minimum vs Fixed Payments": generate_credit_cards_l6,
         },
         "Loan Schedules": {
-            "Schedule by Hand": generate_loan_schedules_l1,
-            "Monthly Rate Given": generate_loan_schedules_l2,
-            "Finance Deal with Deposit": generate_loan_schedules_l3,
-            "Total Interest": generate_loan_schedules_l4,
-            "Comparing Two Loans": generate_loan_schedules_l5,
+            "Calculator Questions": generate_loan_schedules_calculator,
             "Spreadsheet: Level Repayment": generate_loan_schedules_l6,
             "Spreadsheet: Rate of a Finance Deal": generate_loan_schedules_l7,
         },
@@ -677,6 +653,36 @@ def generate_numeracy_assessment():
     return [gen() for gen in _NUMERACY_ASSESSMENT_GENERATORS]
 
 
+# How often each level comes up when a question type is practised as a whole ("All Question
+# Types", Tests, Unit Assessments), weighted by the marks each kind of question has carried in the
+# 2023–2026 past papers. Levels not listed here are picked evenly.
+_LEVEL_WEIGHTS = {
+    "Higher": {
+        "Finance": {
+            # 2023 Q11 (repayment, 8 marks), 2025 Q8 + 2023 Q11(c) (rate, 7), 2024 Q1 by hand (3)
+            "Loan Schedules": {"Calculator Questions": 3, "Spreadsheet: Level Repayment": 4,
+                               "Spreadsheet: Rate of a Finance Deal": 4},
+            # 2024 Q9 (level 4, maximum 3), 2026 Q8 (target 4, affordability 1)
+            "Mortgages": {"Calculator Questions": 2, "Spreadsheet: Level Repayment": 4,
+                          "Spreadsheet: Paying the Maximum": 3,
+                          "Spreadsheet: Target Balance After a Fixed Rate": 4},
+            # 2025 Q11 is by hand; the spreadsheet comes from the worksheet, not a past paper
+            "Credit Cards": {"Calculator Questions": 4, "Spreadsheet: Minimum vs Fixed Payments": 1},
+        },
+    },
+}
+
+
+def _weighted_level_generator(topic, question_type, qualification):
+    """A generator for this question type drawn by _LEVEL_WEIGHTS, or None if it has none."""
+    weights = _LEVEL_WEIGHTS.get(qualification, {}).get(topic, {}).get(question_type)
+    if not weights:
+        return None
+    levels = get_levels(topic, question_type, qualification)
+    names = list(levels)
+    return levels[random.choices(names, weights=[weights.get(n, 1) for n in names])[0]]
+
+
 def get_levels(topic, question_type, qualification="National 5"):
     return _QUAL_LEVELS.get(qualification, {}).get(topic, {}).get(question_type, {})
 
@@ -686,6 +692,9 @@ def _harder_generators(topic, question_type, qualification):
     level. Drops the first (simplest) level when several are registered in
     _QUAL_LEVELS; falls back to the plain dispatcher for question types with no
     level breakdown (nothing to exclude)."""
+    weighted = _weighted_level_generator(topic, question_type, qualification)
+    if weighted:
+        return [weighted]
     levels = list(get_levels(topic, question_type, qualification).values())
     if len(levels) > 1:
         return levels[1:]
@@ -792,6 +801,9 @@ def generate_question(topic, question_type, level=None, qualification="National 
         levels = get_levels(topic, question_type, qualification)
         if level in levels:
             return _invoke(levels[level], calc_mode)
+    weighted = _weighted_level_generator(topic, question_type, qualification)
+    if weighted:
+        return _invoke(weighted, calc_mode)
     return _invoke(QUAL_REGISTRY[qualification][topic][question_type], calc_mode)
 
 
@@ -801,5 +813,6 @@ def generate_test_question(topic, question_type, qualification="National 5", cal
     one — the plain dispatcher in QUAL_REGISTRY isn't used here since for several
     question types it only ever returns its easiest level."""
     levels = get_levels(topic, question_type, qualification)
-    generator = random.choice(list(levels.values())) if levels else QUAL_REGISTRY[qualification][topic][question_type]
+    generator = (_weighted_level_generator(topic, question_type, qualification)
+                 or (random.choice(list(levels.values())) if levels else QUAL_REGISTRY[qualification][topic][question_type]))
     return _invoke(generator, calc_mode)

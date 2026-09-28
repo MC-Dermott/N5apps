@@ -315,6 +315,21 @@ def generate_credit_cards_l6():
         })
 
 
+# The non-spreadsheet question types, grouped as one "Calculator Questions" entry in the app and
+# weighted toward what the 2023–2026 past papers actually ask (see the comments).
+_CALCULATOR_MIX = [
+    (generate_credit_cards_l1, 5),          # one month: interest, then the minimum payment — 2025 Q11(a)
+    (generate_credit_cards_l2, 2),          # three months of minimum payments
+    (generate_credit_cards_l3, 2),          # the minimum payment's £5 floor
+    (generate_credit_cards_l4, 1),          # comparing a monthly and an annual rate — not yet examined
+    (generate_credit_cards_l5, 1),          # balance transfer — not yet examined
+]
+
+
+def generate_credit_cards_calculator():
+    generator = random.choices([g for g, _ in _CALCULATOR_MIX], weights=[w for _, w in _CALCULATOR_MIX])[0]
+    return generator()
+
+
 def generate_credit_cards_question():
-    return random.choice([generate_credit_cards_l1, generate_credit_cards_l2, generate_credit_cards_l3,
-                          generate_credit_cards_l4, generate_credit_cards_l5, generate_credit_cards_l6])()
+    return random.choice([generate_credit_cards_calculator, generate_credit_cards_l6])()

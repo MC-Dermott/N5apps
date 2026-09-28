@@ -350,7 +350,21 @@ def generate_mortgages_l8():
         metadata=_mortgage_sheet(f"{name}'s Fixed-Rate Mortgage", "target", P, a, i, rows, R, target=target))
 
 
+# The non-spreadsheet question types, grouped as one "Calculator Questions" entry in the app and
+# weighted toward what the 2023–2026 past papers actually ask (see the comments).
+_CALCULATOR_MIX = [
+    (generate_mortgages_l1, 3),             # outstanding after 2 months by hand — as the 2024 Q1 loan
+    (generate_mortgages_l3, 3),             # affordability, 28% of taxable income — 2026 Q8(c)
+    (generate_mortgages_l4, 2),             # saving from paying the maximum — 2024 Q9(c)
+    (generate_mortgages_l5, 2),             # total interest — as 2023 Q11(b)
+    (generate_mortgages_l2, 1),             # loan-to-value — not yet examined
+]
+
+
+def generate_mortgages_calculator():
+    generator = random.choices([g for g, _ in _CALCULATOR_MIX], weights=[w for _, w in _CALCULATOR_MIX])[0]
+    return generator()
+
+
 def generate_mortgages_question():
-    return random.choice([generate_mortgages_l1, generate_mortgages_l2, generate_mortgages_l3,
-                          generate_mortgages_l4, generate_mortgages_l5, generate_mortgages_l6,
-                          generate_mortgages_l7, generate_mortgages_l8])()
+    return random.choice([generate_mortgages_calculator, generate_mortgages_l6, generate_mortgages_l7, generate_mortgages_l8])()

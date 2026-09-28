@@ -291,7 +291,21 @@ def generate_loan_schedules_l7():
         notes=SPREADSHEET_NOTES, metadata=meta)
 
 
+# The non-spreadsheet question types, grouped as one "Calculator Questions" entry in the app and
+# weighted toward what the 2023–2026 past papers actually ask (see the comments).
+_CALCULATOR_MIX = [
+    (generate_loan_schedules_l1, 5),        # schedule by hand to month 2 — 2024 Q1
+    (generate_loan_schedules_l3, 2),        # finance deal: the loan is price − deposit — 2025 Q8
+    (generate_loan_schedules_l4, 2),        # total interest — 2023 Q11(b)
+    (generate_loan_schedules_l5, 2),        # difference in total interest — 2023 Q11(c)
+    (generate_loan_schedules_l2, 1),        # monthly rate given — not yet examined
+]
+
+
+def generate_loan_schedules_calculator():
+    generator = random.choices([g for g, _ in _CALCULATOR_MIX], weights=[w for _, w in _CALCULATOR_MIX])[0]
+    return generator()
+
+
 def generate_loan_schedules_question():
-    return random.choice([generate_loan_schedules_l1, generate_loan_schedules_l2, generate_loan_schedules_l3,
-                          generate_loan_schedules_l4, generate_loan_schedules_l5, generate_loan_schedules_l6,
-                          generate_loan_schedules_l7])()
+    return random.choice([generate_loan_schedules_calculator, generate_loan_schedules_l6, generate_loan_schedules_l7])()
