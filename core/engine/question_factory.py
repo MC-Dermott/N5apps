@@ -158,6 +158,13 @@ from topics.finance_statistics.loan_schedules import (
     generate_loan_schedules_l4,
     generate_loan_schedules_l5,
 )
+from topics.finance_statistics.present_value import (
+    generate_present_value_question,
+    generate_present_value_l1,
+    generate_present_value_l2,
+    generate_present_value_l3,
+    generate_present_value_l4,
+)
 from topics.finance_statistics.effective_rates import (
     generate_effective_rates_question,
     generate_effective_rates_l1,
@@ -340,6 +347,7 @@ _HIGHER_TOPICS = {
         "Reverse Percentages": generate_reverse_percentage_question,
         "Effective Interest Rates": generate_effective_rates_question,
         "Interest": generate_interest_question,
+        "Present Value": generate_present_value_question,
         "Savings Schedule": generate_savings_schedule_question,
         "Income Tax and National Insurance": generate_tax_ni_question,
         "VAT and LBTT": generate_vat_lbtt_question,
@@ -517,6 +525,12 @@ _HIGHER_LEVELS = {
             "Finance Deal with Deposit": generate_loan_schedules_l3,
             "Total Interest": generate_loan_schedules_l4,
             "Comparing Two Loans": generate_loan_schedules_l5,
+        },
+        "Present Value": {
+            "Single Amount": generate_present_value_l1,
+            "Series of Payments": generate_present_value_l2,
+            "Growing Payments": generate_present_value_l3,
+            "Finding the Rate": generate_present_value_l4,
         },
         "Effective Interest Rates": {
             "Annual to Monthly": generate_effective_rates_l1,
