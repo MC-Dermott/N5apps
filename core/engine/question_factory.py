@@ -150,7 +150,11 @@ from topics.finance_statistics.interest import (
     generate_interest_l2,
     generate_interest_l3,
 )
-from topics.finance_statistics.savings_schedule import generate_savings_schedule_question
+from topics.finance_statistics.savings_schedule import (
+    generate_savings_schedule_question,
+    generate_savings_schedule_spreadsheet,
+    generate_savings_schedule_calculator,
+)
 from topics.finance_statistics.income_tax_ni import (
     generate_tax_ni_question,
     generate_gross_annual_pay,
@@ -481,6 +485,10 @@ _HIGHER_LEVELS = {
             "Single Deposit": generate_interest_l1,
             "Multiple Deposits": generate_interest_l2,
             "Minimum Deposit for a Goal": generate_interest_l3,
+        },
+        "Savings Schedule": {
+            "Spreadsheet": generate_savings_schedule_spreadsheet,
+            "Calculator": generate_savings_schedule_calculator,
         },
         "Income Tax and National Insurance": {
             "Gross Annual Pay": generate_gross_annual_pay,

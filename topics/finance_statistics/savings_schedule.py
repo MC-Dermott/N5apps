@@ -8,7 +8,7 @@ from openpyxl import Workbook
 from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
 
-from core.models.question_model import Question
+from core.models.question_model import Question, make_part, multipart_worked_solution
 
 NOTES = """
 **Savings Schedule (spreadsheet):**
@@ -30,6 +30,39 @@ quoted **per year**.
 Download the spreadsheet below, fill in the yellow cells (working month by
 month down the table), save it, then upload it here to check your answer.
 """
+
+CALCULATOR_NOTES = """
+**Savings Schedule (calculator):**
+
+When an **annual** effective rate is given but interest is paid **monthly**,
+first find the equivalent **monthly** effective rate:
+
+- monthly rate = (1 + annual rate)^(1/12) − 1
+
+Then build the schedule one month at a time:
+
+1. Interest earned = previous balance × monthly rate (round to the nearest penny)
+2. New balance = previous balance + interest earned + deposit
+3. Carry the new balance forward to the next row
+
+**Example:** The annual effective rate of interest is 1.5%, paid at the end of
+each month. £1000 is deposited, then £150 on the first day of every month after.
+
+(a) Monthly rate = (1 + 0.015)^(1/12) − 1 = 0.0012414... = **0.1241%**
+
+(b) Balance immediately after the second monthly deposit:
+
+| Time (months) | Interest earned (£) | Deposit (£) | Balance (£) |
+|---|---|---|---|
+| 0 | | | 1000.00 |
+| 1 | 1000 × 0.0012414... = 1.24 | 150 | 1151.24 |
+| 2 | 1151.24 × 0.0012414... = 1.43 | 150 | **1302.67** |
+"""
+
+_ORDINALS = {1: "first", 2: "second", 3: "third", 4: "fourth"}
+_CALC_ANNUAL_RATES = [1.2, 1.5, 1.8, 2.1, 2.4, 2.7, 3.0, 3.3, 3.6, 4.2, 4.5]
+_CALC_INITIAL_DEPOSITS = list(range(500, 3001, 100))
+_CALC_MONTHLY_DEPOSITS = list(range(50, 301, 25))
 
 _NAMES = [
     "Anna", "Iain", "Ceitidh", "Fraser", "Niamh", "Callum",
@@ -270,7 +303,7 @@ def _generate_scenario():
     }
 
 
-def generate_savings_schedule_question():
+def generate_savings_schedule_spreadsheet():
     gen = _generate_scenario()
     spreadsheet_bytes, target_cell = _build_workbook(gen["scenario"])
 
@@ -288,3 +321,95 @@ def generate_savings_schedule_question():
             "spreadsheet_answer_cell": ("Savings", target_cell),
         },
     )
+
+
+def generate_savings_schedule_calculator():
+    name = random.choice(_NAMES)
+    annual_rate = random.choice(_CALC_ANNUAL_RATES)
+    initial = random.choice(_CALC_INITIAL_DEPOSITS)
+    monthly = random.choice(_CALC_MONTHLY_DEPOSITS)
+    start_month = calendar.month_name[random.randint(1, 12)]
+    n_months = random.choice([2, 2, 3])
+
+    monthly_rate = (1 + annual_rate / 100) ** (1 / 12) - 1
+    rate_pct = round(monthly_rate * 100, 4)
+    rate_disp = f"{monthly_rate:.10f}"[:9] + "..."
+
+    question_text = (
+        f"{name} opens a savings account.\n\n"
+        f"The **annual** effective rate of interest for this savings account is {annual_rate:g}%.\n\n"
+        f"Interest is paid at the end of each month."
+    )
+
+    part_a = make_part(
+        "(a)",
+        "Calculate the monthly effective rate of interest (as a percentage, to 4 decimal places).",
+        rate_pct,
+        scaffold_steps=[
+            {"prompt": f"Write the annual rate as a multiplier: 1 + {annual_rate:g}% = ?",
+             "answer": round(1 + annual_rate / 100, 4)},
+            {"prompt": "Find the 12th root of this multiplier, (multiplier)^(1/12), to 7 decimal places",
+             "answer": round(1 + monthly_rate, 7)},
+            {"prompt": "Subtract 1 and write the result as a percentage (4 decimal places)",
+             "answer": rate_pct},
+        ],
+        worked_solution=[
+            f"Monthly rate = (1 + {annual_rate / 100:g})^(1/12) − 1 = {rate_disp}",
+            f"= {rate_pct:.4f}%",
+        ],
+    )
+
+    balance = float(initial)
+    rows = []
+    scaffold_b = []
+    worked_b = [f"Monthly rate = {rate_disp} (use the unrounded value)"]
+    for k in range(1, n_months + 1):
+        interest = _excel_round(balance * monthly_rate, 2)
+        new_balance = _excel_round(balance + interest + monthly, 2)
+        rows.append((k, interest, new_balance))
+        scaffold_b.append({
+            "prompt": f"Month {k}: interest earned = £{_fmt_money(balance)} × monthly rate = ?",
+            "answer": interest,
+        })
+        scaffold_b.append({
+            "prompt": f"Month {k}: balance = £{_fmt_money(balance)} + interest + £{monthly} deposit = ?",
+            "answer": new_balance,
+        })
+        worked_b.append(
+            f"Month {k}: interest = £{_fmt_money(balance)} × {rate_disp} = £{_fmt_money(interest)}; "
+            f"balance = £{_fmt_money(balance)} + £{_fmt_money(interest)} + £{monthly} = £{_fmt_money(new_balance)}"
+        )
+        balance = new_balance
+    answer = balance
+
+    blank_rows = "\n".join(f"| {k} | | | |" for k in range(1, n_months + 1))
+    part_b_text = (
+        f"{name} will make an initial deposit of £{initial:,} into this savings account on the "
+        f"first day of {start_month}.\n\n"
+        f"One month later, and every month after that, {name} will deposit £{monthly} on the "
+        f"first day of each month.\n\n"
+        f"Complete the savings schedule to calculate {name}'s savings account balance immediately "
+        f"after making the {_ORDINALS[n_months]} monthly deposit.\n\n"
+        f"| Time (months) | Interest earned (£) | Deposit (£) | Balance (£) |\n"
+        f"|---|---|---|---|\n"
+        f"| 0 | | | {initial:,} |\n"
+        f"{blank_rows}"
+    )
+    worked_b.append(f"Balance after the {_ORDINALS[n_months]} monthly deposit = £{_fmt_money(answer)}")
+
+    part_b = make_part("(b)", part_b_text, answer, scaffold_steps=scaffold_b, worked_solution=worked_b)
+    parts = [part_a, part_b]
+
+    return Question(
+        question_text=question_text,
+        correct_answer=answer,
+        topic="Finance",
+        question_type="Savings Schedule",
+        parts=parts,
+        worked_solution=multipart_worked_solution(parts),
+        notes=CALCULATOR_NOTES,
+    )
+
+
+def generate_savings_schedule_question():
+    return random.choice([generate_savings_schedule_spreadsheet, generate_savings_schedule_calculator])()
