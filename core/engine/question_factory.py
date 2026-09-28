@@ -140,7 +140,14 @@ from topics.finance_statistics.national_insurance import (
 )
 from topics.finance_statistics.wages import generate_wages_question, generate_wages_l1, generate_wages_l2
 from topics.finance_statistics.commission import generate_commission_question
-from topics.finance_statistics.mortgages import generate_mortgages_question
+from topics.finance_statistics.mortgages import (
+    generate_mortgages_question,
+    generate_mortgages_l1,
+    generate_mortgages_l2,
+    generate_mortgages_l3,
+    generate_mortgages_l4,
+    generate_mortgages_l5,
+)
 from topics.finance_statistics.budgeting import generate_budgeting_question
 from topics.finance_statistics.reverse_percentage import generate_reverse_percentage_question
 from topics.finance_statistics.loan_schedules import (
@@ -497,6 +504,13 @@ _N4_LEVELS = {}
 
 _HIGHER_LEVELS = {
     "Finance": {
+        "Mortgages": {
+            "Schedule by Hand": generate_mortgages_l1,
+            "Loan-to-Value": generate_mortgages_l2,
+            "Affordability": generate_mortgages_l3,
+            "Paying the Maximum": generate_mortgages_l4,
+            "Total Interest": generate_mortgages_l5,
+        },
         "Loan Schedules": {
             "Schedule by Hand": generate_loan_schedules_l1,
             "Monthly Rate Given": generate_loan_schedules_l2,
