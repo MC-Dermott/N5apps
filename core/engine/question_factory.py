@@ -158,6 +158,10 @@ from topics.finance_statistics.loan_schedules import (
     generate_loan_schedules_calculator,
     generate_loan_schedules_l6,
     generate_loan_schedules_l7,
+    generate_loan_schedules_l8,
+    generate_loan_schedules_l9,
+    generate_loan_schedules_l10,
+    generate_loan_schedules_l11,
 )
 from topics.finance_statistics.present_value import (
     generate_present_value_question,
@@ -170,6 +174,10 @@ from topics.finance_statistics.credit_cards import (
     generate_credit_cards_question,
     generate_credit_cards_calculator,
     generate_credit_cards_l6,
+    generate_credit_cards_l7,
+    generate_credit_cards_l8,
+    generate_credit_cards_l9,
+    generate_credit_cards_l10,
 )
 from topics.finance_statistics.savings_products import (
     generate_savings_products_question,
@@ -548,11 +556,19 @@ _HIGHER_LEVELS = {
         },
         "Credit Cards": {
             "Spreadsheet: Minimum vs Fixed Payments": generate_credit_cards_l6,
+            "Spreadsheet: Payment Goes Up": generate_credit_cards_l7,
+            "Spreadsheet: Payment Holiday": generate_credit_cards_l8,
+            "Spreadsheet: Introductory Rate Ends": generate_credit_cards_l9,
+            "Exam Style (Multipart)": generate_credit_cards_l10,
             "Calculator Questions": generate_credit_cards_calculator,
         },
         "Loan Schedules": {
             "Spreadsheet: Level Repayment": generate_loan_schedules_l6,
             "Spreadsheet: Rate of a Finance Deal": generate_loan_schedules_l7,
+            "Spreadsheet: Increased Repayment": generate_loan_schedules_l8,
+            "Spreadsheet: Payment Holiday": generate_loan_schedules_l9,
+            "Spreadsheet: Change of Interest Rate": generate_loan_schedules_l10,
+            "Exam Style (Multipart)": generate_loan_schedules_l11,
             "Calculator Questions": generate_loan_schedules_calculator,
         },
         "Present Value": {
@@ -669,7 +685,12 @@ _LEVEL_WEIGHTS = {
         "Finance": {
             # 2023 Q11 (repayment, 8 marks), 2025 Q8 + 2023 Q11(c) (rate, 7), 2024 Q1 by hand (3)
             "Loan Schedules": {"Calculator Questions": 3, "Spreadsheet: Level Repayment": 4,
-                               "Spreadsheet: Rate of a Finance Deal": 4},
+                               "Spreadsheet: Rate of a Finance Deal": 4,
+                               # not yet examined as spreadsheets
+                               "Spreadsheet: Increased Repayment": 2, "Spreadsheet: Payment Holiday": 2,
+                               "Spreadsheet: Change of Interest Rate": 2,
+                               # 2023 Q11 as a whole: spreadsheet, total interest, change to the plan
+                               "Exam Style (Multipart)": 3},
             # 2024 Q9 (level 4, maximum 3), 2026 Q8 (target 4, affordability 1)
             "Mortgages": {"Calculator Questions": 2, "Spreadsheet: Level Repayment": 4,
                           "Spreadsheet: Paying the Maximum": 3,
@@ -680,7 +701,11 @@ _LEVEL_WEIGHTS = {
                           # 2024 Q9 / 2026 Q8 as a whole: spreadsheet, affordability, change to the plan
                           "Exam Style (Multipart)": 3},
             # 2025 Q11 is by hand; the spreadsheet comes from the worksheet, not a past paper
-            "Credit Cards": {"Calculator Questions": 4, "Spreadsheet: Minimum vs Fixed Payments": 1},
+            "Credit Cards": {"Calculator Questions": 4, "Spreadsheet: Minimum vs Fixed Payments": 1,
+                             "Spreadsheet: Payment Goes Up": 1, "Spreadsheet: Payment Holiday": 1,
+                             "Spreadsheet: Introductory Rate Ends": 1,
+                             # 2025 Q11 in parts, with a spreadsheet follow-on
+                             "Exam Style (Multipart)": 2},
         },
     },
 }

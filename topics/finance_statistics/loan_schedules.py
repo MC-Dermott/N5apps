@@ -10,9 +10,10 @@ download/fill/upload spreadsheets — see loan_spreadsheet.py.
 """
 import random
 
-from core.models.question_model import Question
+from core.models.question_model import Question, make_part, multipart_worked_solution
 from topics.finance_statistics.loan_spreadsheet import (
-    FIRST_ROW, build_loan_spreadsheet, level_repayment, monthly_rate, schedule,
+    CHANGE_NOTES, FIRST_ROW, LOAN_SHEET, build_loan_spreadsheet, holiday_case, increase_case, level_plan,
+    level_repayment, monthly_rate, rate_change_case, schedule,
 )
 
 TOPIC = "Finance"
@@ -202,14 +203,14 @@ The downloadable sheet uses the same layout as the worksheet's spreadsheet quest
 - **Finding the rate:** enter any dummy monthly rate in C6, build the schedule with the repayments
   given, Goal Seek the last 'Loan outstanding' to 0 by changing C6, then **C5 = (1+C6)^12−1**
 - For a finance deal the loan is the price **minus the deposit**.
-
+""" + CHANGE_NOTES + """
 ⚠ Leaving out ROUND lets the pennies drift; giving the monthly rate when the annual rate is asked
 for loses the final mark (2023–2025 marking instructions). Save the file before uploading.
 """
 
 _TERM_LOANS = [
     ("The Croft Tractor Loan", "{name} borrows £{P:,} over {y} years to buy a tractor for the croft.", 6000, 15000, 500),
-    ("The Harris Tweed Loom Loan", "A weaver borrows £{P:,} over {y} years to buy a new loom.", 4000, 9000, 200),
+    ("The Harris Tweed Loom Loan", "{name}, a weaver, borrows £{P:,} over {y} years to buy a new loom.", 4000, 9000, 200),
     ("The Van Loan", "{name} borrows £{P:,} over {y} years to buy a van for the business.", 5000, 14000, 500),
     ("The Home Improvement Loan", "{name} borrows £{P:,} over {y} years for a new kitchen.", 3000, 10000, 250),
 ]
@@ -291,6 +292,94 @@ def generate_loan_schedules_l7():
         notes=SPREADSHEET_NOTES, metadata=meta)
 
 
+# ---------------------------------------------------------------------------
+# Spreadsheet questions on a change to the plan part-way through (an increased repayment, a payment
+# holiday, a change of interest rate) — built by loan_spreadsheet.py's *_case() helpers.
+# ---------------------------------------------------------------------------
+
+def _term_plan():
+    name = random.choice(_NAMES)
+    title, lead, lo, hi, st = random.choice(_TERM_LOANS)
+    P = random.randrange(lo, hi + 1, st)
+    y = random.choice([2, 3, 4])
+    a = round(random.uniform(4.9, 12.9), 1)
+    return level_plan(name, P, a, 12 * y, LOAN_SHEET, title, lead=lead.format(name=name, P=P, y=y))
+
+
+def _plan_intro(p):
+    return (f"{p['lead']} The annual effective rate of interest is {p['a']}%, with {p['n'] - 1} level monthly "
+            f"repayments of £{p['R']:,.2f} and a final repayment of £{p['F']:,.2f}.")
+
+
+def _rate_change_intro(p):
+    return (f"{p['lead']} The loan has a fixed annual effective rate of {p['a']}% to begin with, and level monthly "
+            f"repayments of £{p['R']:,.2f}.")
+
+
+def _single(case, intro):
+    p = _term_plan()
+    c = case(p)
+    return Question(question_text=f"{intro(p)} {c['text']}", correct_answer=c["answer"], topic=TOPIC,
+                    question_type=QTYPE, scaffold_steps=c["steps"], worked_solution=c["worked"],
+                    notes=SPREADSHEET_NOTES, metadata=c["meta"])
+
+
+def generate_loan_schedules_l8():
+    """Spreadsheet: increase the repayment part-way through — saving over the term."""
+    return _single(increase_case, _plan_intro)
+
+
+def generate_loan_schedules_l9():
+    """Spreadsheet: a payment holiday part-way through — extra cost."""
+    return _single(holiday_case, _plan_intro)
+
+
+def generate_loan_schedules_l10():
+    """Spreadsheet: the rate rises after a fixed period — Goal Seek the new level repayment."""
+    return _single(rate_change_case, _rate_change_intro)
+
+
+def generate_loan_schedules_l11():
+    """Exam style, in parts as 2023 Q11: (a) spreadsheet level repayment, (b) total interest, (c) a
+    spreadsheet change to the plan — an increased repayment, a payment holiday or a rate rise."""
+    p = _term_plan()
+    name, P, a, i, n, R, F = p["name"], p["P"], p["a"], p["i"], p["n"], p["R"], p["F"]
+    case = random.choice([increase_case, holiday_case, rate_change_case])
+    rate_note = " (fixed for the first part of the term — see part (c))" if case is rate_change_case else ""
+    context = (f"{p['lead']} The annual effective rate of interest is {a}%{rate_note}. Level monthly repayments "
+               f"are made at the end of each month, with the final repayment adjusted so the loan ends at exactly "
+               f"£0.00.")
+
+    rows = schedule(P, i, R, n)
+    part_a = make_part(
+        "(a)", "Download the spreadsheet below. Complete the loan schedule to determine the level monthly "
+               "repayment (cell C7) and the final repayment (cell C8), then save it and upload it here.", R,
+        scaffold_steps=[{"prompt": "Monthly effective rate, as a percentage (3 d.p.)", "answer": round(i * 100, 3)},
+                        {"prompt": "Interest content of the first repayment (£)", "answer": rows[0][2]},
+                        {"prompt": "Level monthly repayment, to 2 d.p. (£)", "answer": R}],
+        worked_solution=[f"C6 = (1 + {a / 100:g})^(1/12) − 1 = {i * 100:.3f}%",
+                         f"Goal Seek: last 'Loan outstanding' = 0 by changing C7 → £{R:,.2f}",
+                         f"Final repayment = what is left in month {n} = £{F:,.2f}"])
+    part_a.metadata.update(build_loan_spreadsheet(
+        title=p["title"], sheet_name="Loan Schedule", filename=f"loan_schedule_{name.lower()}.xlsx",
+        mode="repayment", P=P, i=i, n=n, rows=rows, R=R, final=F, annual=a / 100))
+
+    interest = round(p["orig"] - P, 2)
+    part_b = make_part(
+        "(b)", "Calculate the total interest paid on the loan.", interest,
+        scaffold_steps=[{"prompt": "Total of all the repayments (£)", "answer": p["orig"]}],
+        worked_solution=[f"Total repaid = {n - 1} × {R:,.2f} + {F:,.2f} = £{p['orig']:,.2f}",
+                         f"Total interest = {p['orig']:,.2f} − {P:,} = £{interest:,.2f}"])
+
+    c = case(p)
+    part_c = make_part("(c)", c["text"], c["answer"], scaffold_steps=c["steps"], worked_solution=c["worked"])
+    part_c.metadata.update(c["meta"])
+
+    parts = [part_a, part_b, part_c]
+    return Question(question_text=context, correct_answer=c["answer"], topic=TOPIC, question_type=QTYPE,
+                    parts=parts, worked_solution=multipart_worked_solution(parts), notes=SPREADSHEET_NOTES)
+
+
 # The non-spreadsheet question types, grouped as one "Calculator Questions" entry in the app and
 # weighted toward what the 2023–2026 past papers actually ask (see the comments).
 _CALCULATOR_MIX = [
@@ -308,4 +397,6 @@ def generate_loan_schedules_calculator():
 
 
 def generate_loan_schedules_question():
-    return random.choice([generate_loan_schedules_calculator, generate_loan_schedules_l6, generate_loan_schedules_l7])()
+    return random.choice([generate_loan_schedules_calculator, generate_loan_schedules_l6, generate_loan_schedules_l7,
+                          generate_loan_schedules_l8, generate_loan_schedules_l9, generate_loan_schedules_l10,
+                          generate_loan_schedules_l11])()
