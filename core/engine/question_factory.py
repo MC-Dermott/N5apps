@@ -271,29 +271,27 @@ from topics.numeracy_assessment.stem_and_leaf import generate_stem_and_leaf
 from topics.numeracy_assessment.reading_bar_charts import generate_reading_bar_charts
 from topics.numeracy_assessment.pie_charts import generate_pie_charts
 
+# Combined N5 Numeracy topics: each draws evenly from every level listed for it in _N5_LEVELS.
+
+def generate_numeracy_fractions_question():
+    return random.choice(list(_N5_LEVELS["Numeracy"]["Fractions"].values()))()
+
+
 def generate_ratio_and_proportion_question(calc_mode=False):
-    return random.choice([
-        generate_numeracy_ratio_l1,
-        generate_numeracy_ratio_l2,
-        generate_direct_proportion_l1,
-        generate_direct_proportion_l2,
-        generate_direct_proportion_l3,
-    ])(calc_mode=calc_mode)
+    return random.choice(list(_N5_LEVELS["Numeracy"]["Ratio and Proportion"].values()))(calc_mode=calc_mode)
+
+
+def generate_numeracy_sdt_question(calc_mode=False):
+    return random.choice(list(_N5_LEVELS["Numeracy"]["Speed, Distance and Time"].values()))(calc_mode=calc_mode)
 
 
 _N5_TOPICS = {
     "Numeracy": {
-        "Fractions": generate_fraction_question,
-        "Fractions (Exam Style)": generate_fraction_exam_style,
-        "3 Fractions": generate_fraction_three,
+        "Fractions": generate_numeracy_fractions_question,
         "Percentages": generate_percentage_question,
         "Probability": generate_numeracy_probability_question,
-        "Ratio and Direct Proportion": generate_ratio_and_proportion_question,
-        "Indirect Proportion": generate_indirect_proportion_question,
-        "Minutes to Hours": generate_minutes_to_hours_question,
-        "Hours to Hours and Minutes": generate_hours_to_minutes_question,
-        "Indirect Proportion (Hours and Minutes)": generate_indirect_proportion_hm_question,
-        "Speed, Distance and Time": generate_sdt_question,
+        "Ratio and Proportion": generate_ratio_and_proportion_question,
+        "Speed, Distance and Time": generate_numeracy_sdt_question,
         "Currency Exchange": generate_currency_question,
         "Pie Charts": generate_numeracy_pie_charts_question,
         "Division": generate_division_question,
@@ -407,15 +405,15 @@ TOPIC_REGISTRY = _N5_TOPICS
 _N5_LEVELS = {
     "Numeracy": {
         "Fractions": {
+            "Fraction of an Amount": generate_fraction_question,
             "Add Fractions": generate_fraction_addition,
             "Subtract Fractions": generate_fraction_subtraction,
+            "Add or Subtract 3 Fractions": generate_fraction_three,
             "Improper Fractions": generate_improper_fraction_conversion,
             "Simplify Fractions": generate_fraction_simplification,
-        },
-        "Fractions (Exam Style)": {
-            "Two Fractions, Subtract from 1": generate_fraction_exam_l1,
-            "Two Fractions, Subtract from Several Items": generate_fraction_exam_l2,
-            "Three Fractions, Subtract from a Whole": generate_fraction_exam_l3,
+            "Exam Style: Two Fractions, Subtract from 1": generate_fraction_exam_l1,
+            "Exam Style: Two Fractions, Subtract from Several Items": generate_fraction_exam_l2,
+            "Exam Style: Three Fractions, Subtract from a Whole": generate_fraction_exam_l3,
         },
         "Percentages": {
             "Percentage of an Amount": generate_percentage_l1,
@@ -430,30 +428,22 @@ _N5_LEVELS = {
             "Single Event": generate_numeracy_probability_l1,
             "Combined Events": generate_numeracy_probability_l2,
         },
-        "Ratio and Direct Proportion": {
+        "Ratio and Proportion": {
             "Ratio: Find a Share": generate_numeracy_ratio_l1,
             "Ratio: Find the Total": generate_numeracy_ratio_l2,
             "Direct Proportion: Scaling": generate_direct_proportion_l1,
             "Direct Proportion: Best Value": generate_direct_proportion_l2,
             "Direct Proportion: Unit Conversion": generate_direct_proportion_l3,
-        },
-        "Indirect Proportion": {
-            "People and Time": generate_indirect_proportion_l1,
-            "Other Contexts": generate_indirect_proportion_l2,
-        },
-        "Minutes to Hours": {
-            "Under 60 Minutes": generate_minutes_to_hours_l1,
-            "60 Minutes or More": generate_minutes_to_hours_l2,
-        },
-        "Hours to Hours and Minutes": {
-            "Under 1 Hour": generate_hours_to_minutes_l1,
-            "1 Hour or More": generate_hours_to_minutes_l2,
-        },
-        "Indirect Proportion (Hours and Minutes)": {
-            "People and Work Rate": generate_indirect_proportion_hm_l1,
-            "Speed, Distance and Time": generate_indirect_proportion_hm_l2,
+            "Indirect Proportion: People and Time": generate_indirect_proportion_l1,
+            "Indirect Proportion: Other Contexts": generate_indirect_proportion_l2,
+            "Indirect Proportion: People and Work Rate (Hours and Minutes)": generate_indirect_proportion_hm_l1,
+            "Indirect Proportion: Speed and Time (Hours and Minutes)": generate_indirect_proportion_hm_l2,
         },
         "Speed, Distance and Time": {
+            "Minutes to Hours: Under 60 Minutes": generate_minutes_to_hours_l1,
+            "Minutes to Hours: 60 Minutes or More": generate_minutes_to_hours_l2,
+            "Hours to Hours and Minutes: Under 1 Hour": generate_hours_to_minutes_l1,
+            "Hours to Hours and Minutes: 1 Hour or More": generate_hours_to_minutes_l2,
             "Choosing the Correct Formula": generate_sdt_l1,
             "Hours and Minutes": generate_sdt_l2,
             "Departure and Arrival Times": generate_sdt_l3,
@@ -777,7 +767,7 @@ def generate_unit_assessment(topic, qualification="National 5", num_questions=10
 
 _CALC_MODE_AWARE = {
     generate_ni_question, generate_ni_l1, generate_ni_l2, generate_ni_l3,
-    generate_ratio_and_proportion_question,
+    generate_ratio_and_proportion_question, generate_numeracy_sdt_question,
     generate_numeracy_ratio_l1, generate_numeracy_ratio_l2,
     generate_direct_proportion_l1, generate_direct_proportion_l2, generate_direct_proportion_l3,
     generate_indirect_proportion_question, generate_indirect_proportion_l1, generate_indirect_proportion_l2,
@@ -794,7 +784,7 @@ _CALC_MODE_AWARE = {
 }
 
 _ALWAYS_CALC_SAFE = {
-    generate_fraction_question, generate_fraction_question_n4,
+    generate_fraction_question, generate_fraction_question_n4, generate_numeracy_fractions_question,
     generate_fraction_exam_style, generate_fraction_exam_l1, generate_fraction_exam_l2, generate_fraction_exam_l3,
     generate_fraction_addition, generate_fraction_subtraction, generate_fraction_three,
     generate_improper_fraction_conversion, generate_fraction_simplification,
