@@ -146,6 +146,10 @@ from topics.finance_statistics.mortgages import (
     generate_mortgages_l6,
     generate_mortgages_l7,
     generate_mortgages_l8,
+    generate_mortgages_l9,
+    generate_mortgages_l10,
+    generate_mortgages_l11,
+    generate_mortgages_l12,
 )
 from topics.finance_statistics.budgeting import generate_budgeting_question
 from topics.finance_statistics.reverse_percentage import generate_reverse_percentage_question
@@ -536,6 +540,10 @@ _HIGHER_LEVELS = {
             "Spreadsheet: Level Repayment": generate_mortgages_l6,
             "Spreadsheet: Paying the Maximum": generate_mortgages_l7,
             "Spreadsheet: Target Balance After a Fixed Rate": generate_mortgages_l8,
+            "Spreadsheet: Increased Repayment": generate_mortgages_l9,
+            "Spreadsheet: Payment Holiday": generate_mortgages_l10,
+            "Spreadsheet: Change of Interest Rate": generate_mortgages_l11,
+            "Exam Style (Multipart)": generate_mortgages_l12,
             "Calculator Questions": generate_mortgages_calculator,
         },
         "Credit Cards": {
@@ -665,7 +673,12 @@ _LEVEL_WEIGHTS = {
             # 2024 Q9 (level 4, maximum 3), 2026 Q8 (target 4, affordability 1)
             "Mortgages": {"Calculator Questions": 2, "Spreadsheet: Level Repayment": 4,
                           "Spreadsheet: Paying the Maximum": 3,
-                          "Spreadsheet: Target Balance After a Fixed Rate": 4},
+                          "Spreadsheet: Target Balance After a Fixed Rate": 4,
+                          # not yet examined as spreadsheets
+                          "Spreadsheet: Increased Repayment": 2, "Spreadsheet: Payment Holiday": 2,
+                          "Spreadsheet: Change of Interest Rate": 2,
+                          # 2024 Q9 / 2026 Q8 as a whole: spreadsheet, affordability, change to the plan
+                          "Exam Style (Multipart)": 3},
             # 2025 Q11 is by hand; the spreadsheet comes from the worksheet, not a past paper
             "Credit Cards": {"Calculator Questions": 4, "Spreadsheet: Minimum vs Fixed Payments": 1},
         },
