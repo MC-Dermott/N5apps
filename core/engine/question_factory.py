@@ -431,7 +431,7 @@ _N5_LEVELS = {
         "Ratio and Proportion": {
             "Ratio: Find a Share": generate_numeracy_ratio_l1,
             "Ratio: Find the Total": generate_numeracy_ratio_l2,
-            "Direct Proportion: Scaling": generate_direct_proportion_l1,
+            "Direct Proportion: Table": generate_direct_proportion_l1,
             "Direct Proportion: Best Value": generate_direct_proportion_l2,
             "Direct Proportion: Unit Conversion": generate_direct_proportion_l3,
             "Indirect Proportion: People and Time": generate_indirect_proportion_l1,
