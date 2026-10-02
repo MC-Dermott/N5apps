@@ -27,6 +27,22 @@ NOTES_L2 = """
 - Total = 8 × 15 = 120
 """
 
+NOTES_L3 = """
+**Using the Difference Between Two Parts of a Ratio:**
+
+When you are told how many **more** of one thing there are than another, that number matches
+the **difference** between their ratio numbers — not one part, and not the total.
+
+1. Subtract the ratio numbers to find the difference in shares.
+2. Divide the difference you are given by this to find the value of **one share**.
+3. Multiply the value of one share by the number of shares you need.
+
+**Example:** Sheep and cows are in the ratio 5:3. There are 48 more sheep than cows.
+- Difference in shares = 5 − 3 = 2
+- One share = 48 ÷ 2 = 24
+- Total animals = (5 + 3) × 24 = 8 × 24 = 192
+"""
+
 _CONTEXTS = [
     {"subject": "Pepe", "verb": "sold", "item_plural": "fire extinguishers",
      "categories": ["water", "foam", "powder"]},
@@ -160,8 +176,72 @@ def generate_ratio_l2(calc_mode=False):
 
 
 # ---------------------------------------------------------------------------
+# Level 3 — use the difference between two parts (2025 Paper 1 Q9 style)
+# ---------------------------------------------------------------------------
+
+# (larger, smaller) pairs in their simplest form. Non-calculator pairs keep both the difference
+# and the total number of shares small enough to divide and multiply by in your head.
+_DIFF_RATIOS = [(3, 1), (3, 2), (4, 1), (4, 3), (5, 1), (5, 2), (5, 3), (5, 4), (7, 2), (7, 3),
+                (7, 4), (7, 5), (8, 3), (8, 5), (9, 2), (9, 4), (9, 5), (9, 7)]
+_CALC_SAFE_DIFF_RATIOS = [(3, 1), (3, 2), (4, 1), (4, 3), (5, 2), (5, 3), (7, 3), (7, 4), (7, 5)]
+
+
+def generate_ratio_l3(calc_mode=False):
+    ctx = random.choice(_CONTEXTS)
+    month = random.choice(_MONTHS)
+    big, small = random.choice(_CALC_SAFE_DIFF_RATIOS if calc_mode else _DIFF_RATIOS)
+    share_value = random.choice(range(4, 21, 2) if calc_mode else range(4, 41, 2))
+    diff_shares = big - small
+    difference = diff_shares * share_value
+    cat_big, cat_small = random.sample(ctx["categories"], 2)
+    items = ctx["item_plural"]
+
+    ask = random.choice(["total", "total", "big", "small"])
+    if ask == "total":
+        target_shares, target_label = big + small, f"{cat_big} and {cat_small} {items} altogether"
+        target_working = f"Total = ({big} + {small}) × {share_value} = {big + small} × {share_value}"
+        ask_text = f"Calculate the **total** number of {cat_big} and {cat_small} {items} {ctx['verb']} in {month}."
+    else:
+        cat = cat_big if ask == "big" else cat_small
+        target_shares = big if ask == "big" else small
+        target_label = f"{cat} {items}"
+        target_working = f"{cat.capitalize()} = {target_shares} × {share_value}"
+        ask_text = f"Calculate the number of **{cat}** {items} {ctx['verb']} in {month}."
+    answer = target_shares * share_value
+
+    question_text = (
+        f"In {month} {ctx['subject']} {ctx['verb']} {cat_big} and {cat_small} {items} "
+        f"in the ratio {big}:{small}.\n\n"
+        f"{ctx['subject']} {ctx['verb']} {difference:,} more {cat_big} {items} than {cat_small} {items}.\n\n"
+        f"{ask_text}"
+    )
+
+    scaffold_steps = [
+        {"prompt": "Difference in ratio shares (larger ratio number − smaller ratio number)", "answer": diff_shares},
+        {"prompt": "Value of one share (difference given ÷ difference in shares)", "answer": share_value},
+        {"prompt": f"Number of {target_label} (shares needed × value of one share)", "answer": answer},
+    ]
+
+    worked = [
+        f"Difference in shares = {big} − {small} = {diff_shares}",
+        f"One share = {difference:,} ÷ {diff_shares} = {share_value}",
+        f"{target_working} = {answer:,}",
+    ]
+
+    return Question(
+        question_text=question_text,
+        correct_answer=answer,
+        topic="Numeracy",
+        question_type="Ratio",
+        scaffold_steps=scaffold_steps,
+        worked_solution=worked,
+        notes=NOTES_L3,
+    )
+
+
+# ---------------------------------------------------------------------------
 # Default dispatcher
 # ---------------------------------------------------------------------------
 
 def generate_ratio_question(calc_mode=False):
-    return random.choice([generate_ratio_l1, generate_ratio_l2])(calc_mode=calc_mode)
+    return random.choice([generate_ratio_l1, generate_ratio_l2, generate_ratio_l3])(calc_mode=calc_mode)

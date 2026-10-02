@@ -32,6 +32,7 @@ from topics.numeracy.probability import (
 from topics.numeracy.ratio import (
     generate_ratio_l1 as generate_numeracy_ratio_l1,
     generate_ratio_l2 as generate_numeracy_ratio_l2,
+    generate_ratio_l3 as generate_numeracy_ratio_l3,
 )
 from topics.numeracy.direct_proportion import (
     generate_direct_proportion_l1,
@@ -431,6 +432,7 @@ _N5_LEVELS = {
         "Ratio and Proportion": {
             "Ratio: Find a Share": generate_numeracy_ratio_l1,
             "Ratio: Find the Total": generate_numeracy_ratio_l2,
+            "Ratio: Using the Difference": generate_numeracy_ratio_l3,
             "Direct Proportion: Table": generate_direct_proportion_l1,
             "Direct Proportion: Best Value": generate_direct_proportion_l2,
             "Direct Proportion: Unit Conversion": generate_direct_proportion_l3,
@@ -768,7 +770,7 @@ def generate_unit_assessment(topic, qualification="National 5", num_questions=10
 _CALC_MODE_AWARE = {
     generate_ni_question, generate_ni_l1, generate_ni_l2, generate_ni_l3,
     generate_ratio_and_proportion_question, generate_numeracy_sdt_question,
-    generate_numeracy_ratio_l1, generate_numeracy_ratio_l2,
+    generate_numeracy_ratio_l1, generate_numeracy_ratio_l2, generate_numeracy_ratio_l3,
     generate_direct_proportion_l1, generate_direct_proportion_l2, generate_direct_proportion_l3,
     generate_indirect_proportion_question, generate_indirect_proportion_l1, generate_indirect_proportion_l2,
     generate_indirect_proportion_hm_question, generate_indirect_proportion_hm_l1, generate_indirect_proportion_hm_l2,
