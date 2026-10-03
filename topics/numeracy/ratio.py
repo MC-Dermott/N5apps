@@ -1,5 +1,6 @@
 import random
 from core.models.question_model import Question
+from core.models.distractors import distractors
 
 NOTES = """
 **Sharing an Amount in a Given Ratio:**
@@ -61,6 +62,20 @@ _CONTEXTS = [
     {"subject": "Summit Outdoor Store", "verb": "sold", "item_plural": "tents",
      "categories": ["2-person", "4-person", "6-person"]},
 ]
+
+NOTES += """
+⚠ **Common error:** dividing the total by just one number in the ratio instead of the total
+number of shares. Check: the shares must add back up to the total.
+"""
+NOTES_L2 += """
+⚠ **Common error:** dividing the amount you're given by the **total** number of shares. The amount
+you're given is only that category's shares — divide by its own ratio number. This was the most
+common mistake in 2018, 2019 and 2026 (marking instructions).
+"""
+NOTES_L3 += """
+⚠ **Common error:** dividing the difference by one of the ratio numbers. The difference is
+(larger − smaller) shares — most candidates got no marks for this in 2025 (course report).
+"""
 
 _MONTHS = [
     "January", "February", "March", "April", "May", "June",
@@ -124,6 +139,12 @@ def generate_ratio_l1(calc_mode=False):
         scaffold_steps=scaffold_steps,
         worked_solution=worked,
         notes=NOTES,
+        distractors=distractors(ask_amount, [
+            (round(total / parts[ask_idx], 2), f"you divided the total by {parts[ask_idx]} — divide by the "
+                                               f"total number of shares ({total_shares}) first."),
+            (share_value, f"that's one share — multiply it by {parts[ask_idx]} for the {ask_category} "
+                          f"{ctx['item_plural']}."),
+        ]),
     )
 
 
@@ -172,6 +193,20 @@ def generate_ratio_l2(calc_mode=False):
         scaffold_steps=scaffold_steps,
         worked_solution=worked,
         notes=NOTES_L2,
+        distractors=distractors(total, [
+            (round(given_amount + given_amount / total_shares * (total_shares - parts[given_idx]), 2),
+             f"you divided {given_amount:,} by the total number of shares — {given_amount:,} is the "
+             f"{given_category} {ctx['item_plural']}' {parts[given_idx]} shares, so divide by "
+             f"{parts[given_idx]} (2018, 2019 and 2026 marking instructions)."),
+            (round(given_amount / total_shares, 2),
+             f"you divided by the total number of shares — divide {given_amount:,} by "
+             f"{parts[given_idx]}, its own ratio number."),
+        ] + [
+            (round(given_amount / parts[j] * total_shares, 2),
+             f"you divided by the wrong ratio number — the {given_category} {ctx['item_plural']} "
+             f"are {parts[given_idx]} shares (2023 marking instructions).")
+            for j in range(3) if parts[j] != parts[given_idx]
+        ][:1]),
     )
 
 
@@ -236,6 +271,16 @@ def generate_ratio_l3(calc_mode=False):
         scaffold_steps=scaffold_steps,
         worked_solution=worked,
         notes=NOTES_L3,
+        distractors=distractors(answer, [
+            (round(difference / small * target_shares, 2),
+             f"you divided the difference by {small} — the difference is {big} − {small} = "
+             f"{diff_shares} shares (2025 course report)."),
+            (round(difference / big * target_shares, 2),
+             f"you divided the difference by {big} — the difference is {big} − {small} = "
+             f"{diff_shares} shares (2025 course report)."),
+            (round(difference / (big + small) * target_shares, 2),
+             f"you divided the difference by the total shares — the difference is {diff_shares} shares."),
+        ]),
     )
 
 

@@ -1,5 +1,6 @@
 import random
 from core.models.question_model import Question
+from core.models.distractors import distractors
 
 NOTES_L1 = """
 **Direct Proportion:**
@@ -45,6 +46,22 @@ Before comparing or scaling quantities, make sure they are in the **same units**
 Calculate the conditioner required for 14 litres of tap water.
 - Convert: 14 litres = 14,000 ml
 - Conditioner = (5 × 14,000) ÷ 20,000 = 70,000 ÷ 20,000 = **3.5 ml**
+"""
+
+NOTES_L1 += """
+⚠ **Common error:** scaling by a factor that doesn't fit (e.g. 450 g costs £4.32, so "1 kg costs
+£43.20"). Most candidates had no valid strategy for this in 2026 (course report) — find the
+value of 1 (or of a convenient amount) first.
+"""
+NOTES_L2 += """
+⚠ **Common error:** comparing prices for different amounts — e.g. picking the cheaper pack, or
+comparing the price per can when the cans are different sizes (2023 and 2025 course reports).
+Always compare the price of the **same** amount, and show the working: a conclusion with no
+working gets no marks.
+"""
+NOTES_L3 += """
+⚠ **Common error:** not making the units consistent first (2022 marking instructions: 20 litres
+written as 2 litres, giving an answer 10 times too small).
 """
 
 # ---------------------------------------------------------------------------
@@ -105,6 +122,12 @@ def generate_direct_proportion_l1(calc_mode=False):
         scaffold_steps=scaffold_steps,
         worked_solution=worked,
         notes=NOTES_L1,
+        distractors=distractors(amount2, [
+            (round(amount1 * quantity1 / quantity2, 2),
+             "you scaled the wrong way — more " + ctx['unit_plural'] + " should need more "
+             + ctx['item_plural'] + " (divide by " + str(quantity1) + ", multiply by " + str(quantity2) + ")."),
+            (amount1 * quantity2, f"you multiplied by {quantity2} but didn't divide by {quantity1}."),
+        ]),
     )
 
 
@@ -148,6 +171,7 @@ def _l2_count_question(calc_mode=False):
 
     price1, price2 = price1_p / 100, price2_p / 100
     better = "Option 1" if unit1 < unit2 else "Option 2"
+    cheaper_total = "Option 1" if price1_p < price2_p else "Option 2"
 
     question_text = (
         f"{ctx['subject']} wants to {ctx['verb']} {ctx['item_plural']} in bulk.\n\n"
@@ -178,6 +202,10 @@ def _l2_count_question(calc_mode=False):
         scaffold_steps=scaffold_steps,
         worked_solution=worked,
         notes=NOTES_L2,
+        distractors=distractors(better, [
+            (cheaper_total, "that's the cheaper pack, but it has fewer items — compare the price of "
+                            "the same number of items (2023 course report)."),
+        ]),
     )
 
 
@@ -199,6 +227,7 @@ def _l2_weight_question(calc_mode=False):
 
     price1, price2 = price1_p / 100, price2_p / 100
     better = "Option 1" if unit1 < unit2 else "Option 2"
+    cheaper_total = "Option 1" if price1_p < price2_p else "Option 2"
 
     question_text = (
         f"{ctx['subject']} sells {ctx['item']} in two sizes:\n\n"
@@ -228,6 +257,10 @@ def _l2_weight_question(calc_mode=False):
         scaffold_steps=scaffold_steps,
         worked_solution=worked,
         notes=NOTES_L2,
+        distractors=distractors(better, [
+            (cheaper_total, "that's the cheaper pack, but it's a different weight — compare the "
+                            "price of the same weight (e.g. per kg) for both."),
+        ]),
     )
 
 
@@ -295,6 +328,14 @@ def _l3_conversion_scaling(calc_mode=False):
         scaffold_steps=scaffold_steps,
         worked_solution=worked,
         notes=NOTES_L3,
+        distractors=distractors(answer, [
+            (round(answer / 1000, 4), "you didn't change the litres into ml — make the units "
+                                      "consistent first."),
+            (round(answer / 10, 2), "check your litres-to-ml conversion: 1 litre = 1000 ml "
+                                    "(2022 marking instructions)."),
+            (round(answer * 10, 2), "check your litres-to-ml conversion: 1 litre = 1000 ml "
+                                    "(2022 marking instructions)."),
+        ]),
     )
 
 
@@ -314,6 +355,8 @@ def _l3_conversion_value():
     price1, price2 = price1_p / 100, price2_p / 100
     w2_g = w2_kg * 1000
     better = "Option 1" if unit1 < unit2 else "Option 2"
+    # comparing £ per gram with £ per kilogram without converting
+    naive = "Option 1" if price1_p / w1_g < price2_p / w2_kg else "Option 2"
 
     question_text = (
         f"{ctx['subject']} sells {ctx['item']} in two sizes:\n\n"
@@ -345,6 +388,10 @@ def _l3_conversion_value():
         scaffold_steps=scaffold_steps,
         worked_solution=worked,
         notes=NOTES_L3,
+        distractors=distractors(better, [
+            (naive, "you compared a price per gram with a price per kilogram — convert to the "
+                    "same units first."),
+        ]),
     )
 
 
