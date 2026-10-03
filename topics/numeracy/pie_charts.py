@@ -2,6 +2,7 @@ import math
 import random
 
 from core.models.question_model import Question, make_part, multipart_worked_solution
+from core.models.distractors import distractors
 
 _HEADLINE = "### **The fraction of a pie chart covered by a segment = the fraction of the total**"
 
@@ -106,6 +107,32 @@ shows 40 out of 100 pupils travel by bus.
 - Pie chart: 90 ÷ 360 × 100 = 25%
 - Table: 40 ÷ 100 × 100 = 40%
 - 40% > 25%, so the proportion has increased.
+"""
+
+NOTES_L1 += """
+⚠ **Common error:** giving a number (or a ratio) when a fraction or probability is asked for
+(2019 course report).
+"""
+NOTES_L2 += """
+⚠ **Check:** the angles must add up to 360° — a pie chart whose angles don't loses the drawing
+mark (2019, 2023 and 2025 marking instructions).
+"""
+NOTES_L3 += """
+⚠ **Common error:** rounding the fraction too early (105 ÷ 360 → 0.29). Keep the fraction, or at
+least 3 significant figures (2018 marking instructions).
+"""
+NOTES_L4 += """
+⚠ **Common error:** finding the value per degree upside down (angle ÷ value). Divide the value by
+its angle.
+"""
+NOTES_L5 += """
+⚠ **Common error:** working out percentages instead of angles — multiply by 360, not 100
+(2025 course report).
+"""
+NOTES_L6 += """
+⚠ **Common error:** comparing the raw numbers (or a number with an angle) when the totals are
+different. In 2024 and 2026 many candidates had no valid strategy, and an answer with no working
+scores 0 (course reports and marking instructions).
 """
 
 _PALETTE = ["#5b9bd5", "#ed7d31", "#70ad47", "#ffc000", "#7030a0", "#c00000", "#4472c4", "#548235"]
@@ -359,6 +386,12 @@ def generate_pie_charts_l3():
         scaffold_steps=scaffold_steps,
         worked_solution=worked,
         notes=NOTES_L3,
+        distractors=distractors(amount, [
+            (round(round(angle / 360, 1) * total, 2),
+             f"you rounded {angle} ÷ 360 to {round(angle / 360, 1)} too early — keep the fraction "
+             f"{fraction_str} (2018 marking instructions)."),
+            (round(angle / 100 * total, 2), "you used the angle as a percentage — divide by 360, not 100."),
+        ]),
         metadata={
             "diagram": "pie_chart",
             "diagram_params": {
@@ -443,6 +476,10 @@ def generate_pie_charts_l4():
                 f"Value per degree = {known_value} ÷ {sc['known_angle']} = {k}",
                 f"{sc['target']} = {sc['target_angle']} × {k} = {target_value} {unit}",
             ],
+            distractors=distractors(target_value, [
+                (round(sc["target_angle"] * sc["known_angle"] / known_value, 2),
+                 "you found the value per degree upside down — divide the value by its angle."),
+            ]),
         ),
         make_part(
             "(b)", "Find the total represented by the whole pie chart.", total,
@@ -535,6 +572,11 @@ def generate_pie_charts_l5():
         scaffold_steps=scaffold_steps,
         worked_solution=worked,
         notes=NOTES_L5,
+        distractors=distractors(target_angle, [
+            (round(frequencies[target_idx] / total * 100, 2),
+             "that's a percentage — a pie chart needs an angle: multiply by 360, not 100 "
+             "(2025 course report)."),
+        ]),
         metadata={
             "table": _freq_table_md(categories, frequencies),
             "diagram": "frequency_table_angles",
@@ -659,6 +701,11 @@ def generate_pie_charts_l6():
         scaffold_steps=scaffold_steps,
         worked_solution=worked,
         notes=NOTES_L6,
+        distractors=distractors(direction, [
+            ("Increased" if target_freq > target_angle else "Decreased",
+             f"it looks like you compared {target_freq} {sc['unit']} with the {target_angle}° angle. "
+             f"The totals are different, so compare percentages of each total."),
+        ]),
         metadata={
             "diagram": "pie_chart",
             "diagram_params": {
