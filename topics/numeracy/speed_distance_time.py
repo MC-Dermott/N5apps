@@ -754,9 +754,21 @@ def generate_sdt_l6(calc_mode=False):
                  f"**The average speed is {speed} {route['unit']}.**"]
         answer, mode = speed, "interval"
 
+    # 2026 P2 Q4(b) / 2025 P2 Q10(a): the decimal hours read as minutes, or minutes written as a decimal
+    whole_h, frac = f"{round(hours, 2):.2f}".rstrip("0").rstrip(".").partition(".")[::2]
+    misread = int(whole_h) * 60 + int(frac) if frac and int(frac) <= 59 else None
+    if variant == "arrive":
+        wrong = [(_clock(start + misread) if misread else None, _MISREAD)]
+    elif variant == "latest":
+        wrong = [(_clock(end - misread) if misread else None, _MISREAD)]
+    else:
+        w, mm = divmod(total, 60)
+        wrong = [(round(distance / (w + mm / 100), 2), _AS_DECIMAL)]
+
     return Question(
         question_text=q, correct_answer=answer, topic="Numeracy",
         question_type="Speed, Distance and Time", scaffold_steps=steps, worked_solution=lines,
+        distractors=distractors(answer, wrong),
         notes=NOTES_SDT_INTERVALS, metadata=_bar_meta(start, end, mode, *labels, ask_total=True),
     )
 
