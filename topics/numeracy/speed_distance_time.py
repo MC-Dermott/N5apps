@@ -1,7 +1,8 @@
 import random
 from core.models.question_model import Question
 from core.models.time_bar import time_bar_segments, time_bar_steps
-from topics.numeracy.time_conversion import _hm_string
+from topics.numeracy.time_conversion import _hm_string, _misread_hours, _MISREAD, _AS_DECIMAL
+from core.models.distractors import distractors
 
 
 def _fmt(x):
@@ -99,6 +100,12 @@ it travel?
 - 45 minutes = 45 ÷ 60 = 0.75 hours, so T = 2.75 hours
 - D = S × T = 48 × 2.75 = 132
 - **The bus travels 132 km.**
+"""
+
+NOTES_HOURS_MINUTES += """
+⚠ **Common errors:** 33 minutes is **not** 0.33 hours (2025 marking instructions), 1 hour 45 minutes
+is **not** 1.45 hours (2022 course report), and 2.8 hours is 2 hours **48** minutes (2026 course
+report).
 """
 
 NOTES_CLOCK = """
@@ -277,6 +284,7 @@ def generate_sdt_l2(calc_mode=False):
             question_type="Speed, Distance and Time", scaffold_steps=scaffold_steps,
             worked_solution=worked, notes=NOTES_HOURS_MINUTES,
             metadata={"answer_type": "duration"},
+            distractors=distractors(hm, [(_misread_hours(hours), _MISREAD)]),
         )
 
     mins_dec = round(mins / 60, 4)
@@ -291,6 +299,7 @@ def generate_sdt_l2(calc_mode=False):
         q = (f"{ctx['who']} {ctx['verb']} at an average speed of {speed} km/h for {hm}.\n\n"
              f"How far does {ctx['ref']} travel, in km?")
         answer, unit = distance, "km"
+        wrong = [(round(speed * (whole + mins / 100), 2), _AS_DECIMAL)]
         convert_steps.append({"prompt": "Use D = S × T to find the distance", "answer": distance})
         convert_lines += [f"D = S × T = {speed} × {_fmt(hours)} = {_fmt(distance)}",
                           f"**{ctx['ref'].capitalize()} travels {_fmt(distance)} km.**"]
@@ -298,6 +307,7 @@ def generate_sdt_l2(calc_mode=False):
         q = (f"{ctx['who']} {ctx['verb']} {_fmt(distance)} km in {hm}.\n\n"
              f"Calculate the average speed of {ctx['ref']} in km/h.")
         answer, unit = speed, "km/h"
+        wrong = [(round(distance / (whole + mins / 100), 2), _AS_DECIMAL)]
         convert_steps.append({"prompt": "Use S = D ÷ T to find the speed", "answer": speed})
         convert_lines += [f"S = D ÷ T = {_fmt(distance)} ÷ {_fmt(hours)} = {speed}",
                           f"**The average speed is {speed} km/h.**"]
@@ -306,6 +316,7 @@ def generate_sdt_l2(calc_mode=False):
         question_text=q, correct_answer=answer, topic="Numeracy",
         question_type="Speed, Distance and Time", scaffold_steps=convert_steps,
         worked_solution=convert_lines, notes=NOTES_HOURS_MINUTES,
+        distractors=distractors(answer, wrong),
     )
 
 
@@ -440,6 +451,9 @@ def generate_sdt_l4(calc_mode=False):
             f"**{ctx['ref'].capitalize()} travels {_fmt(d_o)} {ou}.**",
         ]
         answer = d_o
+        wrong = [(d_s, f"you left the distance in {su} — the question asks for {ou}."),
+                 (_num(d_s * ctx["mult"]), f"you converted {su} to {ou} the wrong way — check whether "
+                                           f"to multiply or divide.")]
     elif variant == "find_time":
         q = (f"{ctx['who']} {ctx['verb']} at an average speed of {sp}.\n\n"
              f"How long does it take {ctx['ref']} to travel {_fmt(d_o)} {ou}? Give your answer in seconds.")
@@ -453,6 +467,9 @@ def generate_sdt_l4(calc_mode=False):
             f"**It takes {ctx['ref']} {time} seconds.**",
         ]
         answer = time
+        wrong = [(_num(d_o / speed), f"you didn't change {ou} into {su} to match the speed (2026 course "
+                                    f"report: units must match before using the formula)."),
+                 (_num(d_o / ctx["mult"] / speed), f"you converted {ou} to {su} the wrong way.")]
     else:
         q = (f"{ctx['who']} {ctx['verb']} {_fmt(d_o)} {ou} in {time} seconds.\n\n"
              f"Calculate the average speed of {ctx['ref']} in {su}/s.")
@@ -466,11 +483,15 @@ def generate_sdt_l4(calc_mode=False):
             f"**The average speed is {sp}.**",
         ]
         answer = speed
+        wrong = [(_num(d_o / time), f"you didn't change {ou} into {su} — the speed is asked for in "
+                                   f"{su}/s."),
+                 (_num(d_o / ctx["mult"] / time), f"you converted {ou} to {su} the wrong way.")]
 
     return Question(
         question_text=q, correct_answer=answer, topic="Numeracy",
         question_type="Speed, Distance and Time", scaffold_steps=scaffold_steps,
         worked_solution=worked, notes=NOTES_UNITS,
+        distractors=distractors(answer, wrong),
     )
 
 

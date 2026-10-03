@@ -1,5 +1,6 @@
 import random
 from core.models.question_model import Question
+from core.models.distractors import distractors
 
 
 def _hm_string(total_minutes):
@@ -71,6 +72,27 @@ _MIN_CONTEXTS = [
 ]
 
 
+def _misread_hours(hours):
+    """The reported error of reading the digits after the point as minutes (2.8 h → '2 hours 8
+    minutes'), as a duration string — None if those digits couldn't be minutes."""
+    whole, _, frac = f"{round(hours, 2):.2f}".rstrip("0").rstrip(".").partition(".")
+    if not frac or int(frac) > 59:
+        return None
+    return _hm_string(int(whole) * 60 + int(frac))
+
+
+_MISREAD = ("you read the decimal part as minutes — multiply it by 60 (2026 course report: 2.8 hours "
+            "is 2 hours 48 minutes).")
+_AS_DECIMAL = ("you wrote the minutes after the decimal point — divide the minutes by 60 (2025 marking "
+               "instructions: 33 minutes is 0.55 hours, not 0.33).")
+
+NOTES_COMMON_TC = """
+⚠ **Common errors:** writing the minutes after the decimal point (33 minutes is **not** 0.33
+hours; 1 hour 45 minutes is **not** 1.45 hours) and reading the decimal part as minutes (2.8 hours
+is 2 hours **48** minutes) — 2022, 2025 and 2026 course reports and marking instructions.
+"""
+
+
 def _minutes_multiple_of_three(lo, hi):
     choices = [n for n in range(lo, hi + 1) if n % 3 == 0]
     return random.choice(choices)
@@ -101,7 +123,8 @@ def generate_minutes_to_hours_l1(calc_mode=False):
         question_type="Minutes to Hours",
         scaffold_steps=scaffold_steps,
         worked_solution=worked,
-        notes=NOTES_MIN_TO_HOURS,
+        notes=NOTES_MIN_TO_HOURS + NOTES_COMMON_TC,
+        distractors=distractors(decimal, [(minutes / 100, _AS_DECIMAL)]),
     )
 
 
@@ -131,7 +154,11 @@ def generate_minutes_to_hours_l2(calc_mode=False):
         question_type="Minutes to Hours",
         scaffold_steps=scaffold_steps,
         worked_solution=worked,
-        notes=NOTES_MIN_TO_HOURS,
+        notes=NOTES_MIN_TO_HOURS + NOTES_COMMON_TC,
+        distractors=distractors(decimal, [
+            (minutes // 60 + (minutes % 60) / 100, _AS_DECIMAL) if minutes % 60 else (None, ""),
+            (minutes / 100, "divide by 60, not 100 — there are 60 minutes in an hour."),
+        ]),
     )
 
 
@@ -180,8 +207,9 @@ def generate_hours_to_minutes_l1(calc_mode=False):
         question_type="Hours to Hours and Minutes",
         scaffold_steps=scaffold_steps,
         worked_solution=worked,
-        notes=NOTES_HOURS_TO_MIN,
+        notes=NOTES_HOURS_TO_MIN + NOTES_COMMON_TC,
         metadata={"answer_type": "duration"},
+        distractors=distractors(answer, [(_misread_hours(part), _MISREAD)]),
     )
 
 
@@ -214,8 +242,9 @@ def generate_hours_to_minutes_l2(calc_mode=False):
         question_type="Hours to Hours and Minutes",
         scaffold_steps=scaffold_steps,
         worked_solution=worked,
-        notes=NOTES_HOURS_TO_MIN,
+        notes=NOTES_HOURS_TO_MIN + NOTES_COMMON_TC,
         metadata={"answer_type": "duration"},
+        distractors=distractors(answer, [(_misread_hours(decimal_hours), _MISREAD)]),
     )
 
 
@@ -264,6 +293,18 @@ def _find_inverse_hm(hi, time_hi):
     return None
 
 
+def _hm_distractors(answer, hours, direct_hours):
+    direct_mins = direct_hours * 60
+    return distractors(answer, [
+        (_misread_hours(hours), _MISREAD),
+        (_hm_string(round(hours) * 60), "don't round — change the decimal part of the hours into minutes "
+                                        "(2025 marking instructions)."),
+        (_hm_string(round(direct_mins)) if abs(direct_mins - round(direct_mins)) < 1e-9 else None,
+         "that's direct proportion — the time should go the other way (2023, 2024 and 2026 course "
+         "reports)."),
+    ])
+
+
 def generate_indirect_proportion_hm_l1(calc_mode=False):
     """People/work-rate contexts."""
     ctx = random.choice(_WORKRATE_CONTEXTS)
@@ -299,8 +340,9 @@ def generate_indirect_proportion_hm_l1(calc_mode=False):
         question_type="Indirect Proportion (Hours and Minutes)",
         scaffold_steps=scaffold_steps,
         worked_solution=worked,
-        notes=NOTES_INDIRECT_HM,
+        notes=NOTES_INDIRECT_HM + NOTES_COMMON_TC,
         metadata={"answer_type": "duration"},
+        distractors=_hm_distractors(answer, value_of_one / q2, a1 * q2 / q1),
     )
 
 
@@ -340,8 +382,9 @@ def generate_indirect_proportion_hm_l2(calc_mode=False):
         question_type="Indirect Proportion (Hours and Minutes)",
         scaffold_steps=scaffold_steps,
         worked_solution=worked,
-        notes=NOTES_INDIRECT_HM,
+        notes=NOTES_INDIRECT_HM + NOTES_COMMON_TC,
         metadata={"answer_type": "duration"},
+        distractors=_hm_distractors(answer, distance / speed2, time1 * speed2 / speed1),
     )
 
 

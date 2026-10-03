@@ -15,5 +15,7 @@ def distractors(answer, candidates):
     for value, mistake in candidates:
         if value is None or same(value, answer) or any(same(value, d["value"]) for d in out):
             continue
+        if isinstance(value, (int, float)) and abs(value) < 0.001:
+            continue                       # nobody types 0.000014 — not worth matching
         out.append({"value": value, "mistake": mistake})
     return out
