@@ -36,6 +36,11 @@ def common_mistake(question, user):
     text, ignoring case."""
     u = _number(user)
     for d in getattr(question, "distractors", None) or []:
+        clock = clock_answers_match(user, d["value"])
+        if clock is not None:
+            if clock:
+                return d["mistake"]
+            continue
         v = _number(d["value"])
         if u is not None and v is not None:
             if abs(u - v) < 0.01:
