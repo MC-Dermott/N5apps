@@ -7,7 +7,7 @@ import streamlit.components.v1 as components
 from core.engine.question_factory import generate_test_question
 from core.engine.session_manager import reset_test
 from core.ui.question_ui import render_question
-from core.ui.solution_ui import render_solution, answer_display, correct_answer_display
+from core.ui.solution_ui import render_solution, render_common_mistake, answer_display, correct_answer_display
 from core.ui.multipart_ui import render_multipart_assessment
 from core.db.tracker import save_test_result
 from core.models.answers import clock_answers_match
@@ -153,6 +153,7 @@ def _render_summary(test):
                     f"Your answer: **{answer_display(question, answer)}** ❌  \n"
                     f"Correct answer: **{correct_answer_display(question)}**"
                 )
+                render_common_mistake(question, answer)
                 render_solution(question)
 
     st.markdown("---")

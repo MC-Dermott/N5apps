@@ -4,7 +4,7 @@ import streamlit as st
 
 from core.ui.question_ui import render_question_header, render_answer_input
 from core.ui.scaffold_ui import render_scaffold
-from core.ui.solution_ui import render_solution, scored_parts
+from core.ui.solution_ui import render_solution, render_common_mistake, scored_parts
 
 
 def _is_explain(part):
@@ -44,11 +44,12 @@ def render_multipart_practice(question, check):
             if _is_explain(part):
                 st.info(f"**Expected answer:** {part.correct_answer}")
             else:
-                _, correct = st.session_state[key]
+                answer, correct = st.session_state[key]
                 if correct:
                     st.success("✅ Correct!")
                 else:
                     st.error(f"❌ Incorrect. Correct answer: {part.correct_answer}")
+                    render_common_mistake(part, answer)
                 render_solution(part)
 
         if i < len(question.parts) - 1:

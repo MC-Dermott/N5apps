@@ -12,7 +12,7 @@ from core.ui.question_ui import render_question, render_question_header
 from core.ui.multipart_ui import render_multipart_practice
 from core.ui.scaffold_ui import render_scaffold, render_simulation
 from core.ui.notes_ui import render_notes, render_examples, split_notes_and_example
-from core.ui.solution_ui import render_solution
+from core.ui.solution_ui import render_solution, render_common_mistake
 from core.ui.test_ui import render_test
 from core.ui.numeracy_assessment_ui import render_numeracy_assessment
 from core.ui.unit_assessment_ui import render_unit_assessment
@@ -365,5 +365,6 @@ else:
                 st.success("✅ Correct!")
             else:
                 st.error(f"❌ Incorrect. Correct answer: {question.correct_answer}")
+                render_common_mistake(question, user_answer)
 
             render_solution(question)

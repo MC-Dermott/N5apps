@@ -63,6 +63,16 @@ class Question:
 - Clock-time answers: use a zero-padded 24-hour string (`"08:18"`). Every answer checker runs
   `core/models/answers.py`'s `clock_answers_match()` first, so "8:18", "0818" and "08.18" are
   accepted too.
+- `distractors`: recognised wrong answers, `[{"value": ..., "mistake": "..."}]` (also a
+  `distractors=` argument to `make_part`). When a pupil's wrong answer matches one (numbers to
+  within 0.01, otherwise text ignoring case), the feedback adds "Common mistake: <mistake>" in
+  Practice and in the Test / Unit / Numeracy assessment reviews (`core/models/answers.py`'s
+  `common_mistake()`, shown by `render_common_mistake()` in `core/ui/solution_ui.py`) — the same
+  idea as the N5 Physics app's distractors. Take them from the SQA course reports and marking
+  instructions — the summaries are `N5 Apps/References/COMMON-ERRORS.md` and
+  `Higher Apps/References/COMMON-ERRORS.md` in the worksheet library — and compute each value
+  from the question's own numbers. Drop any distractor within 0.01 of the correct answer or of
+  another distractor (it would never be shown correctly), and stress-test that.
 - `worked_solution`: full worked-solution lines shown after submission (complete equations, not
   just the final answer).
 - `metadata["diagram"]` / `metadata["diagram_params"]`: only for questions needing a custom

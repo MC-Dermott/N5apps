@@ -1,6 +1,21 @@
 import streamlit as st
 
+from core.models.answers import common_mistake
 from core.ui.spreadsheet_solution_ui import render_spreadsheet_solution
+
+
+def render_common_mistake(question, answer):
+    """If a wrong answer is one of the question's recognised common errors, say what went wrong.
+    For a multipart question `answer` is the list of scored-part answers."""
+    if question.parts:
+        for part, a in zip(scored_parts(question), answer or []):
+            msg = common_mistake(part, a)
+            if msg:
+                st.warning(f"Part {part.metadata['label']} — common mistake: {msg}")
+        return
+    msg = common_mistake(question, answer)
+    if msg:
+        st.warning(f"Common mistake: {msg}")
 
 
 def render_solution(question):
