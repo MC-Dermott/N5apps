@@ -60,6 +60,7 @@ def generate_appreciation_question_n4():
         prev = start if y == 0 else year_values[y - 1]
         worked.append(f"After year {y + 1}: £{prev:,.2f} × {multiplier} = £{year_values[y]:,.2f}")
 
+    from topics.numeracy.percentages import _compound_distractors
     return Question(
         question_text=question_text,
         correct_answer=answer,
@@ -68,6 +69,7 @@ def generate_appreciation_question_n4():
         scaffold_steps=scaffold_steps,
         worked_solution=worked,
         notes=NOTES,
+        distractors=_compound_distractors(answer, start, rate, years, kind == "appreciation"),
     )
 
 
@@ -118,6 +120,7 @@ def generate_appreciation_question():
         prev = start if y == 0 else year_values[y - 1]
         worked.append(f"After year {y + 1}: £{prev:,.2f} × {multiplier} = £{year_values[y]:,.2f}")
 
+    from topics.numeracy.percentages import _compound_distractors
     return Question(
         question_text=question_text,
         correct_answer=answer,
@@ -126,4 +129,5 @@ def generate_appreciation_question():
         scaffold_steps=scaffold_steps,
         worked_solution=worked,
         notes=NOTES,
+        distractors=_compound_distractors(answer, start, rate, years, kind == "appreciation"),
     )

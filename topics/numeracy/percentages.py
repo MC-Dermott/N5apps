@@ -1,5 +1,6 @@
 import random
 from core.models.question_model import Question
+from core.models.distractors import distractors
 
 NOTES = """
 **Percentage of an Amount — Multiplier Method:**
@@ -185,6 +186,48 @@ _PL_ITEMS = [
 ]
 
 
+NOTES_MULTIPLIER += """
+⚠ **Common errors:** using the percentage itself (1.7 or 0.017 instead of 1.017), or the wrong
+direction (1.028 for a 2.8% decrease) — 2023, 2024 and 2025 marking instructions.
+"""
+NOTES_APPRECIATION += """
+⚠ **Common errors:** simple-interest working (adding the same increase every year), the wrong
+multiplier, and not rounding to the accuracy asked (2019–2026 course reports and marking
+instructions). Use original × multiplier^years — it's quicker than year by year.
+"""
+NOTES_DEPRECIATION += """
+⚠ **Common errors:** using 1.08 instead of 0.92, or dividing by the multiplier (2023 and 2024
+marking instructions). Depreciation means the value goes **down**.
+"""
+NOTES_MIXED_CHANGES += """
+⚠ **Common errors:** using the wrong multiplier for one of the changes (2019 marking instructions),
+or adding the percentages together — a 12% rise then a 12% fall doesn't get you back to the start.
+"""
+NOTES_L2 += """
+⚠ **Common error (profit and loss):** dividing by the selling price — the percentage profit or loss
+is out of what was **paid** (2022 and 2026 course reports). And 129% means a 29% profit
+(2023 marking instructions).
+"""
+
+
+def _compound_distractors(answer, initial, rate, years, increase):
+    r = rate / 100
+    m = 1 + r if increase else 1 - r
+    wrong_m = 1 - r if increase else 1 + r
+    return distractors(answer, [
+        (round(initial * (1 + (r if increase else -r) * years), 2),
+         "that's simple-interest working — each year's change is worked out on the NEW value "
+         "(2023–2025 marking instructions)."),
+        (round(initial * wrong_m ** years, 2),
+         f"you used {wrong_m:g} — for {'an increase' if increase else 'a decrease'} of {rate}% the "
+         f"multiplier is {m:g} (2023 and 2024 marking instructions)."),
+        (round(initial / m ** years, 2), "you divided by the multiplier — multiply (2023 and 2024 "
+                                         "marking instructions)."),
+        (round(initial * m, 2) if years > 1 else None, f"that's after 1 year — apply the multiplier "
+                                                       f"{years} times (multiplier^{years})."),
+    ])
+
+
 def _profit_loss_question():
     name = random.choice(_NAMES)
     item = random.choice(_PL_ITEMS)
@@ -238,6 +281,12 @@ def _profit_loss_question():
         scaffold_steps=scaffold_steps,
         worked_solution=worked,
         notes=NOTES_L2,
+        distractors=distractors(answer, [
+            (round(change / sale * 100, 1), "you divided by the selling price — divide by the cost price "
+                                            "(2022 and 2026 course reports)."),
+            (round(sale / cost * 100, 1), f"that's the selling price as a percentage of the cost — the "
+                                          f"{verb} is the difference from 100% (2023 marking instructions)."),
+        ]),
     )
 
 
@@ -549,6 +598,14 @@ def generate_percentage_multiplier(calc_mode=False):
         scaffold_steps=scaffold_steps,
         worked_solution=worked,
         notes=NOTES_MULTIPLIER,
+        distractors=distractors(multiplier, [
+            (decimal, f"that's {rate}% as a decimal — {'add it to' if is_increase else 'take it from'} 1 "
+                      f"for the multiplier."),
+            (round(1 - decimal, 2) if is_increase else round(1 + decimal, 2),
+             f"wrong direction — {'an increase needs a multiplier more than 1' if is_increase else 'a decrease needs a multiplier less than 1'}."),
+            (round(rate / 10, 2), "you used the percentage itself — e.g. 1.7% is 1.017, not 1.7 "
+                                  "(2025 marking instructions)."),
+        ]),
     )
 
 
@@ -604,6 +661,13 @@ def generate_percentage_single_change(calc_mode=False):
         scaffold_steps=scaffold_steps,
         worked_solution=worked,
         notes=NOTES_SINGLE_CHANGE,
+        distractors=distractors(answer, [
+            (round(amount * decimal, 2), f"that's the {'increase' if is_increase else 'decrease'} — "
+                                         f"{'add it to' if is_increase else 'take it off'} the original "
+                                         f"(or use the multiplier {multiplier})."),
+            (round(amount * (1 - decimal if is_increase else 1 + decimal), 2),
+             "wrong direction — check whether the value should go up or down."),
+        ]),
     )
 
 
@@ -660,6 +724,7 @@ def generate_percentage_appreciation(calc_mode=False):
         scaffold_steps=scaffold_steps,
         worked_solution=worked,
         notes=NOTES_APPRECIATION,
+        distractors=_compound_distractors(answer, initial, rate, years, True),
     )
 
 
@@ -715,6 +780,7 @@ def generate_percentage_depreciation(calc_mode=False):
         scaffold_steps=scaffold_steps,
         worked_solution=worked,
         notes=NOTES_DEPRECIATION,
+        distractors=_compound_distractors(answer, initial, rate, years, False),
     )
 
 
@@ -783,6 +849,14 @@ def generate_percentage_mixed_changes(calc_mode=False):
         scaffold_steps=scaffold_steps,
         worked_solution=worked,
         notes=NOTES_MIXED_CHANGES,
+        distractors=distractors(final, [
+            (round(initial * (1 + ((rate1 if is_increase_1 else -rate1) + (rate2 if is_increase_2 else -rate2)) / 100), 2),
+             "you added the percentages together — apply each change in turn to the new amount."),
+            (round(initial * (2 - m1) * m2, 2), "wrong multiplier for the first change — check whether it "
+                                                "goes up or down (2019 marking instructions)."),
+            (round(initial * m1 * (2 - m2), 2), "wrong multiplier for the second change — check whether it "
+                                                "goes up or down (2019 marking instructions)."),
+        ]),
     )
 
 
