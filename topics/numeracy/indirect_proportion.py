@@ -1,5 +1,6 @@
 import random
 from core.models.question_model import Question
+from core.models.distractors import distractors
 
 NOTES_L1 = """
 **Indirect Proportion (Inverse Proportion):**
@@ -35,6 +36,36 @@ hens?
 - Value for 1 = 6 × 8 = 48
 - Answer = 48 ÷ 4 = **12 days**
 """
+
+
+NOTES_L1 += """
+⚠ **Common errors:** using direct proportion — more people should take **less** time
+(2023, 2024 and 2026 course reports and marking instructions; direct proportion scored 0 in
+2026). And dividing by just the **extra** people instead of the new total (2018 and 2019 marking
+instructions). Check your answer makes sense.
+"""
+NOTES_L2 += """
+⚠ **Common error:** bringing in a quantity that doesn't change the answer — in 2018 many
+candidates used the weight of feed as well as the number of sheep and days (course report). Only
+the two quantities that change matter.
+"""
+
+
+def _inverse_distractors(q1, q2, a1, a2, people, unit):
+    """The reported wrong answers for an inverse-proportion question (q1 take a1; q2 take a2)."""
+    wrong = [
+        (round(a1 * q2 / q1, 2),
+         f"that's direct proportion — with {'more' if q2 > q1 else 'fewer'} {people} it should take "
+         f"{'less' if q2 > q1 else 'more'} time (2023, 2024 and 2026 course reports)."),
+    ]
+    if q2 > q1:
+        wrong.append((round(q1 * a1 / (q2 - q1), 2),
+                      f"you divided by the {q2 - q1} extra {people} — divide by the new total, {q2} "
+                      f"(2018 and 2019 marking instructions)."))
+        if a1 - (q2 - q1) > 0:
+            wrong.append((a1 - (q2 - q1), f"you subtracted — {q2 - q1} more {people} doesn't mean "
+                                          f"{q2 - q1} fewer {unit}. Find the value for 1 first."))
+    return distractors(a2, wrong)
 
 
 def _find_inverse_triple(hi, time_hi):
@@ -99,6 +130,7 @@ def generate_indirect_proportion_l1(calc_mode=False):
         scaffold_steps=scaffold_steps,
         worked_solution=worked,
         notes=NOTES_L1,
+        distractors=_inverse_distractors(q1, q2, a1, a2, ctx['plural'], ctx['unit']),
     )
 
 
@@ -146,6 +178,7 @@ def _l2_animal_question(calc_mode=False):
         scaffold_steps=scaffold_steps,
         worked_solution=worked,
         notes=NOTES_L2,
+        distractors=_inverse_distractors(q1, q2, a1, a2, ctx['plural'], ctx['unit']),
     )
 
 
@@ -189,6 +222,11 @@ def _l2_speed_question(calc_mode=False):
         scaffold_steps=scaffold_steps,
         worked_solution=worked,
         notes=NOTES_L2,
+        distractors=distractors(time2, [
+            (round(time1 * speed2 / speed1, 2),
+             f"that's direct proportion — a {'faster' if speed2 > speed1 else 'slower'} speed should "
+             f"take {'less' if speed2 > speed1 else 'more'} time."),
+        ]),
     )
 
 
@@ -232,6 +270,7 @@ def _l2_workrate_question(calc_mode=False):
         scaffold_steps=scaffold_steps,
         worked_solution=worked,
         notes=NOTES_L2,
+        distractors=_inverse_distractors(q1, q2, a1, a2, ctx['plural'], ctx['unit']),
     )
 
 
