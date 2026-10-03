@@ -138,6 +138,7 @@ from topics.finance_statistics.national_insurance import (
     generate_ni_l1,
     generate_ni_l2,
     generate_ni_l3,
+    generate_ni_l4,
 )
 from topics.finance_statistics.wages import generate_wages_question, generate_wages_l1, generate_wages_l2
 from topics.finance_statistics.commission import generate_commission_question
@@ -512,6 +513,7 @@ _N5_LEVELS = {
             "Single Band": generate_ni_l1,
             "Two Bands": generate_ni_l2,
             "Net Pay": generate_ni_l3,
+            "Income Tax": generate_ni_l4,
         },
         "Wages": {
             "Gross Pay with Overtime": generate_wages_l1,

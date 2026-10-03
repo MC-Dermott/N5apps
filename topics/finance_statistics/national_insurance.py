@@ -1,5 +1,6 @@
 import random
 from core.models.question_model import Question
+from core.models.distractors import distractors
 
 # Thresholds are in the income's own period. All values are multiples of £100
 # so that NI = rate * (income - PT) / 100 is always a whole number for any
@@ -57,6 +58,10 @@ def _make_table_md(pt, uel, rate_mid, rate_top, period):
 
 
 def _make_notes(pt, uel, rate_mid, rate_top, period):
+    return _make_notes_core(pt, uel, rate_mid, rate_top, period) + "\n" + WORKSHEET_EXAMPLES
+
+
+def _make_notes_core(pt, uel, rate_mid, rate_top, period):
     ni_m = _ni_mid(pt, uel, rate_mid)
     pw   = _PERIOD_WORD[period]
     return (
@@ -82,6 +87,37 @@ def _make_notes(pt, uel, rate_mid, rate_top, period):
             "- Total NI = £300 + £20 = **£320**\n"
         )
     )
+
+
+# The worked examples on Income_Tax_and_National_Insurance_Worksheet.docx (N5 Apps/Worksheets/
+# Finance and Statistics), word for word, with the course-report common errors under each.
+WORKSHEET_EXAMPLES = """
+**Worked examples (from the worksheet)** — rates: 0% up to £12,584; 8% from £12,584 to £50,284;
+2% over £50,284.
+
+**Example:** Isla earns £38,500 per year. Calculate her annual National Insurance.
+- Pay above £12,584 = 38,500 − 12,584 = 25,916
+- NI = 8% × 25,916 = **£2,073.28**
+
+⚠ Don't ignore the 0% band — 8% of the whole pay lost marks in 2024, 2025 and 2026.
+
+**Example:** Donald earns £56,400 per year. Calculate his annual National Insurance.
+- 8% band: 50,284 − 12,584 = 37,700;  8% × 37,700 = £3,016.00
+- 2% band: 56,400 − 50,284 = 6,116;  2% × 6,116 = £122.32
+- Total NI = £3,016.00 + £122.32 = **£3,138.32**
+
+⚠ Pay that goes over the upper limit caused problems in 2023 — split it into bands first.
+
+**Example:** Akira earns £33,800 per year. She pays 6.5% of her gross salary into her pension. Her
+annual income tax is £4,246.00. She is paid weekly. Calculate her weekly net pay.
+- NI = 8% × (33,800 − 12,584) = 8% × 21,216 = £1,697.28
+- Pension = 6.5% × 33,800 = £2,197.00
+- Net pay = 33,800 − £1,697.28 − £2,197.00 − £4,246.00 = £25,659.72
+- Weekly net pay = £25,659.72 ÷ 52 = **£493.46**
+
+⚠ The pension is a percentage of the **gross** pay — working it out after taking off the NI cost
+marks in 2023, 2024, 2025 and 2026 (course reports).
+"""
 
 
 def _diagram_params(income, pt, uel, rate_mid, rate_top):
@@ -166,6 +202,10 @@ def generate_ni_l1(calc_mode=False):
             "table": _make_table_md(pt, uel, rate_mid, rate_top, period),
             **_diagram_params(income, pt, uel, rate_mid, rate_top),
         },
+        distractors=distractors(float(ni), [
+            (round(rate_mid * income / 100, 2), f"you ignored the 0% band — only the pay above £{pt:,} is "
+                                                f"charged (2024, 2025 and 2026 course reports)."),
+        ]),
     )
 
 
@@ -220,6 +260,13 @@ def generate_ni_l2(calc_mode=False):
             "table": _make_table_md(pt, uel, rate_mid, rate_top, period),
             **_diagram_params(income, pt, uel, rate_mid, rate_top),
         },
+        distractors=distractors(float(ni), [
+            (round(rate_mid * (income - pt) / 100, 2),
+             f"you charged {rate_mid}% on everything above £{pt:,} — the pay above £{uel:,} is charged at "
+             f"{rate_top}% (2023 course report)."),
+            (float(ni_m), f"that's only the {rate_mid}% band — add the {rate_top}% on the pay above £{uel:,}."),
+            (round(rate_mid * income / 100, 2), f"you ignored the 0% band and the upper band."),
+        ]),
     )
 
 
@@ -379,7 +426,20 @@ def generate_ni_l3(calc_mode=False):
             f"{result_per.capitalize()} net pay = £{net_units:,} ÷ {divisor} = £{result:,}"
         )
 
+    wrong = []
+    pen_after = round(pension_pct / 100 * (income - ni))
+    net_after = income - ni - pen_after - tax
+    wrong.append((round(net_after / divisor, 2),
+                  "you worked out the pension AFTER taking off the National Insurance — it's a percentage "
+                  "of the gross pay (2023–2026 course reports)."))
+    if divisor > 1:
+        other = 52 if divisor == 12 else 12
+        wrong.append((round(net_units / other, 2), f"you divided by {other} — {result_per} pay means "
+                                                   f"÷ {divisor}."))
+        wrong.append((float(net_units), f"that's the annual net pay — divide by {divisor} for {result_per} "
+                                        f"pay."))
     return Question(
+        distractors=distractors(float(result), wrong),
         question_text=question_text,
         correct_answer=float(result),
         topic="Finance and Statistics",
@@ -398,5 +458,84 @@ def generate_ni_l3(calc_mode=False):
 # Default dispatcher
 # ===========================================================================
 
+# ===========================================================================
+# Level 4 — income tax from given bands (worksheet Section 3)
+# ===========================================================================
+
+_TAX_PA, _TAX_TOP, _TAX_BASIC, _TAX_HIGHER = 12_570, 50_270, 20, 40
+
+
+def _tax_table_md():
+    return (
+        "| Annual taxable income | Income tax rate |\n|:---|:---|\n"
+        f"| Up to £{_TAX_PA:,} (personal allowance) | 0% |\n"
+        f"| £{_TAX_PA + 1:,} to £{_TAX_TOP:,} | {_TAX_BASIC}% |\n"
+        f"| Over £{_TAX_TOP:,} | {_TAX_HIGHER}% |\n"
+    )
+
+
+TAX_NOTES = """
+**Income tax from given bands:** take off the personal allowance (taxed at 0%), then charge each band.
+
+**Example (from the worksheet):** Mairi earns £34,200 per year. Use the income tax bands to calculate
+her annual income tax.
+- Taxable income = 34,200 − 12,570 = 21,630
+- Income tax = 20% × 21,630 = **£4,326.00**
+
+⚠ Don't tax the whole salary — the personal allowance is tax-free (the same slip as ignoring the 0%
+band for National Insurance).
+"""
+
+
+def generate_ni_l4(calc_mode=False):
+    name = random.choice(_NAMES)
+    two_bands = random.random() < 0.35
+    if calc_mode:
+        salary = random.choice(range(22_570, 48_571, 1_000))     # taxable = whole thousands
+        two_bands = False
+    elif two_bands:
+        salary = random.choice(range(52_000, 90_001, 100))
+    else:
+        salary = random.choice(range(16_000, 50_001, 10))
+    if salary <= _TAX_TOP:
+        taxable = salary - _TAX_PA
+        tax = round(taxable * _TAX_BASIC / 100, 2)
+        worked = [f"Taxable income = £{salary:,} − £{_TAX_PA:,} = £{taxable:,}",
+                  f"Income tax = {_TAX_BASIC}% × £{taxable:,} = £{tax:,.2f}"]
+        steps = [{"prompt": "Taxable income (salary − personal allowance)", "answer": float(taxable)},
+                 {"prompt": f"Income tax ({_TAX_BASIC}% of the taxable income)", "answer": tax}]
+        wrong = [(round(salary * _TAX_BASIC / 100, 2), "you taxed the whole salary — the personal allowance "
+                                                       "is tax-free.")]
+    else:
+        basic = _TAX_TOP - _TAX_PA
+        t1 = round(basic * _TAX_BASIC / 100, 2)
+        higher = salary - _TAX_TOP
+        t2 = round(higher * _TAX_HIGHER / 100, 2)
+        tax = round(t1 + t2, 2)
+        worked = [f"{_TAX_BASIC}% band: £{_TAX_TOP:,} − £{_TAX_PA:,} = £{basic:,};  {_TAX_BASIC}% × £{basic:,} = £{t1:,.2f}",
+                  f"{_TAX_HIGHER}% band: £{salary:,} − £{_TAX_TOP:,} = £{higher:,};  {_TAX_HIGHER}% × £{higher:,} = £{t2:,.2f}",
+                  f"Income tax = £{t1:,.2f} + £{t2:,.2f} = £{tax:,.2f}"]
+        steps = [{"prompt": f"Tax in the {_TAX_BASIC}% band", "answer": t1},
+                 {"prompt": f"Tax in the {_TAX_HIGHER}% band", "answer": t2},
+                 {"prompt": "Total income tax", "answer": tax}]
+        wrong = [(round((salary - _TAX_PA) * _TAX_BASIC / 100, 2),
+                  f"you charged {_TAX_BASIC}% on everything — the pay over £{_TAX_TOP:,} is taxed at {_TAX_HIGHER}%."),
+                 (round((salary - _TAX_PA) * _TAX_HIGHER / 100, 2),
+                  f"you charged {_TAX_HIGHER}% on everything — only the pay over £{_TAX_TOP:,} is taxed at "
+                  f"{_TAX_HIGHER}%.")]
+    return Question(
+        question_text=f"{name} earns £{salary:,} per year. Use the income tax bands above to calculate "
+                      f"{name}'s annual income tax.",
+        correct_answer=tax,
+        topic="Finance and Statistics",
+        question_type="National Insurance",
+        scaffold_steps=steps,
+        worked_solution=worked,
+        notes=TAX_NOTES,
+        metadata={"table": _tax_table_md()},
+        distractors=distractors(tax, wrong),
+    )
+
+
 def generate_ni_question(calc_mode=False):
-    return generate_ni_l1(calc_mode=calc_mode)
+    return random.choice([generate_ni_l1, generate_ni_l2, generate_ni_l3, generate_ni_l4])(calc_mode=calc_mode)
