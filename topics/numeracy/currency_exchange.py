@@ -47,6 +47,17 @@ def _pick_two_currencies():
     return random.sample(_CURRENCIES, 2)
 
 
+def _distractors(answer, candidates):
+    """Recognised wrong answers (value, mistake) — the errors in the SQA course reports and
+    marking instructions — minus any within 0.01 of the answer or of an earlier one."""
+    out = []
+    for value, mistake in candidates:
+        if value is None or abs(value - answer) < 0.01 or any(abs(value - d["value"]) < 0.01 for d in out):
+            continue
+        out.append({"value": value, "mistake": mistake})
+    return out
+
+
 def _rate_table_md(rateA, nameA, dpA, rateB, nameB, dpB):
     return (
         "| Pounds Sterling (£) | Other Currencies |\n"
@@ -69,6 +80,10 @@ An exchange rate tells you how many units of a foreign currency you get for £1.
 
 **Example:** £1 = €1.15. Convert €69 into pounds.
 - £amount = €69 ÷ 1.15 = **£60.00**
+
+⚠ **Common error:** dividing when you should multiply (or the other way round). £1 buys more than
+one euro, so you should end up with more euros than pounds. In 2023 many candidates worked out
+640 ÷ 4.94 instead of 640 × 4.94 and scored 0/3 (2023 marking instructions).
 """
 
 NOTES_L2 = """
@@ -77,6 +92,9 @@ NOTES_L2 = """
 1. Convert the starting pounds into the foreign currency (× rate).
 2. Subtract however much was spent.
 3. Convert what's left back into pounds (÷ rate).
+
+⚠ **Common error:** taking the spending off the pounds — it's in the foreign currency, so take it
+off the foreign currency (2025 marking instructions).
 """
 
 NOTES_L3 = """
@@ -90,6 +108,9 @@ any smaller leftover amount can't be exchanged.
 3. Round **down** to the nearest whole multiple the exchange accepts — the amount lost this way
    is the amount "left over".
 4. Convert the roundable amount back into pounds (÷ rate).
+
+⚠ **Common error:** rounding to the *nearest* note. You can only change notes you actually have,
+so always round **down**.
 """
 
 NOTES_L4 = """
@@ -110,6 +131,10 @@ what's left into euros at £1 = €1.15.
 - Remaining = 3161.60 − 1360 = 1801.60 zł
 - Back to pounds: 1801.60 ÷ 4.94 = £364.70
 - To euros: £364.70 × 1.15 = **€419.40**
+
+⚠ **Common errors:** going straight from one foreign currency to the other (e.g. 1801.60 × 1.15) —
+this lost marks in 2022, 2023 and 2026; and taking off only one day's spending
+(2023 marking instructions).
 """
 
 NOTES_L5 = """
@@ -121,6 +146,9 @@ equivalent to £1.
 
 **Example:** £50 converts to €57.50. Calculate the exchange rate.
 - Rate = €57.50 ÷ £50 = **£1 = €1.15**
+
+⚠ **Common error:** dividing the wrong way round (£50 ÷ 57.50). Divide the foreign amount by the
+pounds (2025 course report).
 """
 
 
@@ -143,6 +171,8 @@ def generate_currency_l1():
         scaffold_steps = [{"prompt": "Pounds × exchange rate", "answer": foreign}]
         worked = [f"£{gbp} × {_fmt(rate, dp)} = {symbol}{_fmt(foreign, dp)}"]
         answer = foreign
+        wrong = [(round(gbp / rate, 2), "you divided by the rate — pounds into a foreign currency "
+                                         "is × the rate (2023 marking instructions).")]
     else:
         foreign = random.choice(range(50, 1500, 10))
         gbp = round(foreign / rate, 2)
@@ -153,6 +183,8 @@ def generate_currency_l1():
         scaffold_steps = [{"prompt": "Foreign currency amount ÷ exchange rate", "answer": gbp}]
         worked = [f"{symbol}{_fmt(foreign, dp)} ÷ {_fmt(rate, dp)} = £{gbp:.2f}"]
         answer = gbp
+        wrong = [(round(foreign * rate, 2), "you multiplied by the rate — changing a foreign "
+                                             "currency back into pounds is ÷ the rate (2019 course report).")]
 
     return Question(
         question_text=question_text,
@@ -162,6 +194,7 @@ def generate_currency_l1():
         scaffold_steps=scaffold_steps,
         worked_solution=worked,
         notes=NOTES_L1,
+        distractors=_distractors(answer, wrong),
     )
 
 
@@ -208,6 +241,15 @@ def generate_currency_l2():
         scaffold_steps=scaffold_steps,
         worked_solution=worked,
         notes=NOTES_L2,
+        distractors=_distractors(back, [
+            (round((gbp - spent) / rate, 2) if gbp > spent else None,
+             "you took the foreign-currency spending off the pounds — take it off the foreign "
+             "currency (2025 marking instructions)."),
+            (round(remaining * rate, 2), "you multiplied by the rate to change back — foreign "
+                                          "currency into pounds is ÷ the rate."),
+            (round(remaining, 2), "that's the foreign currency left — it still has to be changed back into "
+                        "pounds."),
+        ]),
     )
 
 
@@ -262,6 +304,13 @@ def generate_currency_l3():
         worked_solution=worked,
         notes=NOTES_L3,
         metadata={"leftover": leftover, "leftover_symbol": symbol},
+        distractors=_distractors(back, [
+            (round(-(-remaining // note) * note / rate, 2),
+             f"you rounded UP to whole {symbol}{note} notes — you can only change the notes you "
+             f"actually have, so round down."),
+            (round(remaining / rate, 2), f"you changed all of it — only whole {symbol}{note} notes "
+                                          f"can be changed back."),
+        ]),
     )
 
 
@@ -323,6 +372,15 @@ def generate_currency_l4():
         worked_solution=worked,
         notes=NOTES_L4,
         metadata={"table": _rate_table_md(rateA, nameA, dpA, rateB, nameB, dpB)},
+        distractors=_distractors(foreignB, [
+            (round(remainingA * rateB, 2 if dpB else None),
+             f"you changed {nameA} straight into {nameB} — change back into pounds first "
+             f"(÷ {_fmt(rateA, dpA)}), then into {nameB} (2022, 2023 and 2026 marking instructions)."),
+            (round((foreignA - daily) / rateA * rateB, 2 if dpB else None) if days > 1 else None,
+             f"you only took off one day's spending — they spent {symbolA}{_fmt(daily, dpA)} on each "
+             f"of {days} days (2023 marking instructions)."),
+            (round(gbp * rateB, 2 if dpB else None), f"you didn't take off what was spent in {place}."),
+        ]),
     )
 
 
@@ -364,6 +422,10 @@ def generate_currency_l5():
         scaffold_steps=scaffold_steps,
         worked_solution=worked,
         notes=NOTES_L5,
+        distractors=_distractors(rate, [
+            (round(gbp / foreign, 2), "you divided the wrong way round — divide the foreign amount "
+                                       "by the pounds."),
+        ]),
     )
 
 
