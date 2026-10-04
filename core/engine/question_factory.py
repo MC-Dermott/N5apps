@@ -141,6 +141,13 @@ from topics.finance_statistics.national_insurance import (
     generate_ni_l4,
 )
 from topics.finance_statistics.wages import generate_wages_question, generate_wages_l1, generate_wages_l2
+from topics.finance_statistics.comparing_data import (
+    generate_comparing_question,
+    generate_comparing_l1,
+    generate_comparing_l2,
+    generate_comparing_l3,
+    generate_comparing_l4,
+)
 from topics.finance_statistics.commission import generate_commission_question
 from topics.finance_statistics.mortgages import (
     generate_mortgages_question,
@@ -313,6 +320,7 @@ _N5_TOPICS = {
         "National Insurance": generate_ni_question,
         "Wages": generate_wages_question,
         "Commission": generate_commission_question,
+        "Comparing Data Sets": generate_comparing_question,
     },
     "Geometry and Measure": {
         "Pythagoras Theorem": generate_pythagoras_question,
@@ -518,6 +526,12 @@ _N5_LEVELS = {
         "Wages": {
             "Gross Pay with Overtime": generate_wages_l1,
             "Net Pay after Deductions": generate_wages_l2,
+        },
+        "Comparing Data Sets": {
+            "Median and Quartiles": generate_comparing_l1,
+            "Interquartile Range and Consistency": generate_comparing_l2,
+            "Mean and Standard Deviation": generate_comparing_l3,
+            "Comparing Mean and Standard Deviation": generate_comparing_l4,
         },
     },
     "Geometry and Measure": {
