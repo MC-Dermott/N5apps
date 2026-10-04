@@ -145,6 +145,17 @@ def render_question_header(question):
         render_pert_diagram_widget(qid=question.qid, **question.metadata["diagram_params"])
     elif question.metadata.get("diagram") == "gantt_chart":
         _render_gantt_chart(question.metadata["diagram_params"])
+    elif question.metadata.get("diagram") == "composite_shape":
+        _render_composite_shape(question.metadata["diagram_params"])
+
+
+def _render_composite_shape(p):
+    """A composite shape (rectangle + semi-circle, quarter circle garden, door with a window …)
+    drawn by core/ui/composite_shapes.py from p = {"kind": <function name>, "args": [...]}."""
+    from core.ui import composite_shapes
+    buf = io.BytesIO()
+    getattr(composite_shapes, p["kind"])(*p["args"], buf)
+    st.image(buf.getvalue(), width=p.get("width", 420))
 
 
 def _render_two_triangle_diagram(p, unit):

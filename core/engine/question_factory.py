@@ -240,6 +240,10 @@ from topics.geometry_measure.pythagoras import generate_pythagoras_question, gen
 from topics.geometry_measure.circle_area import generate_circle_area_question, generate_circle_area_question_n4
 from topics.geometry_measure.gradient import generate_gradient_question, generate_gradient_question_n4
 from topics.geometry_measure.volume import generate_volume_question, generate_volume_question_n4
+from topics.geometry_measure.perimeter_area import (
+    generate_perimeter_area_question, generate_perimeter_area_l1, generate_perimeter_area_l2,
+    generate_perimeter_area_l3, generate_perimeter_area_l4, generate_perimeter_area_l5,
+)
 from topics.geometry_measure.time_zones import (
     generate_time_zone_question,
     generate_time_zone_question_n4,
@@ -325,6 +329,7 @@ _N5_TOPICS = {
     "Geometry and Measure": {
         "Pythagoras Theorem": generate_pythagoras_question,
         "Area of a Circle": generate_circle_area_question,
+        "Perimeter and Area": generate_perimeter_area_question,
         "Gradient": generate_gradient_question,
         "Volume": generate_volume_question,
         "Time Zones": generate_time_zone_question,
@@ -535,6 +540,13 @@ _N5_LEVELS = {
         },
     },
     "Geometry and Measure": {
+        "Perimeter and Area": {
+            "Arc Length of Semi-circles and Quarter Circles": generate_perimeter_area_l1,
+            "Perimeter of Composite Shapes": generate_perimeter_area_l2,
+            "Area of Semi-circles and Quarter Circles": generate_perimeter_area_l3,
+            "Area of Composite Shapes": generate_perimeter_area_l4,
+            "How Many Do I Need?": generate_perimeter_area_l5,
+        },
         "Time Zones": {
             "Time Zone Conversion": generate_time_zone_l1,
             "Journey Times Across Zones": generate_time_zone_l2,
