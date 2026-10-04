@@ -151,10 +151,12 @@ def render_question_header(question):
 
 def _render_composite_shape(p):
     """A composite shape (rectangle + semi-circle, quarter circle garden, door with a window …)
-    drawn by core/ui/composite_shapes.py from p = {"kind": <function name>, "args": [...]}."""
-    from core.ui import composite_shapes
+    drawn by core/ui/composite_shapes.py from p = {"kind": <function name>, "args": [...]}, or a
+    3D solid (prism, bottle, silo …) from core/ui/composite_solids.py when p["module"] == "solids"."""
+    from core.ui import composite_shapes, composite_solids
+    module = composite_solids if p.get("module") == "solids" else composite_shapes
     buf = io.BytesIO()
-    getattr(composite_shapes, p["kind"])(*p["args"], buf)
+    getattr(module, p["kind"])(*p["args"], buf)
     st.image(buf.getvalue(), width=p.get("width", 420))
 
 

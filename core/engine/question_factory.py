@@ -239,7 +239,10 @@ from topics.finance_statistics.vat_lbtt import (
 from topics.geometry_measure.pythagoras import generate_pythagoras_question, generate_pythagoras_question_n4
 from topics.geometry_measure.circle_area import generate_circle_area_question, generate_circle_area_question_n4
 from topics.geometry_measure.gradient import generate_gradient_question, generate_gradient_question_n4
-from topics.geometry_measure.volume import generate_volume_question, generate_volume_question_n4
+from topics.geometry_measure.volume import (
+    generate_volume_question, generate_volume_question_n4, generate_volume_prism, generate_cylinder_question,
+    generate_sphere_question, generate_cone_question, generate_volume_composite, generate_volume_litres,
+)
 from topics.geometry_measure.perimeter_area import (
     generate_perimeter_area_question, generate_perimeter_area_l1, generate_perimeter_area_l2,
     generate_perimeter_area_l3, generate_perimeter_area_l4, generate_perimeter_area_l5,
@@ -540,6 +543,14 @@ _N5_LEVELS = {
         },
     },
     "Geometry and Measure": {
+        "Volume": {
+            "Prisms and Litres": generate_volume_prism,
+            "Cylinders": generate_cylinder_question,
+            "Spheres": generate_sphere_question,
+            "Cones": generate_cone_question,
+            "Composite Solids": generate_volume_composite,
+            "Litres and Filling": generate_volume_litres,
+        },
         "Perimeter and Area": {
             "Arc Length of Semi-circles and Quarter Circles": generate_perimeter_area_l1,
             "Perimeter of Composite Shapes": generate_perimeter_area_l2,
