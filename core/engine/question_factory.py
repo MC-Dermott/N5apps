@@ -236,9 +236,19 @@ from topics.finance_statistics.vat_lbtt import (
     generate_vat_percentage_of_shop,
     generate_lbtt,
 )
-from topics.geometry_measure.pythagoras import generate_pythagoras_question, generate_pythagoras_question_n4
+from topics.geometry_measure.pythagoras import (generate_pythagoras_question, generate_pythagoras_question_n4,
+    generate_pythagoras_l1, generate_pythagoras_l2, generate_pythagoras_l3, generate_pythagoras_l4, generate_pythagoras_l5)
 from topics.geometry_measure.circle_area import generate_circle_area_question, generate_circle_area_question_n4
-from topics.geometry_measure.gradient import generate_gradient_question, generate_gradient_question_n4
+from topics.geometry_measure.gradient import (generate_gradient_question, generate_gradient_question_n4,
+    generate_gradient_l1, generate_gradient_l2, generate_gradient_l3, generate_gradient_l4, generate_gradient_l5)
+from topics.geometry_measure.container_packing import (
+    generate_container_packing_question, generate_container_packing_l1, generate_container_packing_l2,
+    generate_container_packing_l3, generate_container_packing_l4, generate_container_packing_l5,
+)
+from topics.finance_statistics.probability_expected import (
+    generate_probability_expected_question, generate_probability_expected_l1, generate_probability_expected_l2,
+    generate_probability_expected_l3, generate_probability_expected_l4, generate_probability_expected_l5,
+)
 from topics.geometry_measure.volume import (
     generate_volume_question, generate_volume_question_n4, generate_volume_prism, generate_cylinder_question,
     generate_sphere_question, generate_cone_question, generate_volume_composite, generate_volume_litres,
@@ -328,11 +338,13 @@ _N5_TOPICS = {
         "Wages": generate_wages_question,
         "Commission": generate_commission_question,
         "Comparing Data Sets": generate_comparing_question,
+        "Probability and Expected Frequency": generate_probability_expected_question,
     },
     "Geometry and Measure": {
         "Pythagoras Theorem": generate_pythagoras_question,
         "Area of a Circle": generate_circle_area_question,
         "Perimeter and Area": generate_perimeter_area_question,
+        "Container Packing": generate_container_packing_question,
         "Gradient": generate_gradient_question,
         "Volume": generate_volume_question,
         "Time Zones": generate_time_zone_question,
@@ -535,6 +547,13 @@ _N5_LEVELS = {
             "Gross Pay with Overtime": generate_wages_l1,
             "Net Pay after Deductions": generate_wages_l2,
         },
+        "Probability and Expected Frequency": {
+            "Probability as a Fraction, Decimal or Percentage": generate_probability_expected_l1,
+            "Probability from Tables and Charts": generate_probability_expected_l2,
+            "Combined Events": generate_probability_expected_l3,
+            "Expected Frequency": generate_probability_expected_l4,
+            "More or Less than Expected": generate_probability_expected_l5,
+        },
         "Comparing Data Sets": {
             "Median and Quartiles": generate_comparing_l1,
             "Interquartile Range and Consistency": generate_comparing_l2,
@@ -543,6 +562,27 @@ _N5_LEVELS = {
         },
     },
     "Geometry and Measure": {
+        "Pythagoras Theorem": {
+            "Finding the Hypotenuse": generate_pythagoras_l1,
+            "Finding a Shorter Side": generate_pythagoras_l2,
+            "Isosceles Triangles: Height and Area": generate_pythagoras_l3,
+            "Pythagoras in a Problem": generate_pythagoras_l4,
+            "Two Right-angled Triangles": generate_pythagoras_l5,
+        },
+        "Gradient": {
+            "Gradient as a Fraction": generate_gradient_l1,
+            "Changing to the Same Units": generate_gradient_l2,
+            "Heights Above Sea Level and Coordinates": generate_gradient_l3,
+            "Comparing Gradients and Regulations": generate_gradient_l4,
+            "Pythagoras and Gradient": generate_gradient_l5,
+        },
+        "Container Packing": {
+            "Packing Boxes One Way Round": generate_container_packing_l1,
+            "Trying Both Ways Round": generate_container_packing_l2,
+            "Changing Units and Choosing a Container": generate_container_packing_l3,
+            "Tins and Flat Packing": generate_container_packing_l4,
+            "How Many Containers? (Rounding Up)": generate_container_packing_l5,
+        },
         "Volume": {
             "Prisms and Litres": generate_volume_prism,
             "Cylinders": generate_cylinder_question,
