@@ -1,4 +1,5 @@
 import io
+import re
 
 import streamlit as st
 import matplotlib.pyplot as plt
@@ -21,16 +22,17 @@ def _build_duration_str(h, m):
 
 
 def _render_duration_input(qid, suffix):
+    h_key, m_key = f"dur_h_{qid}_{suffix}", f"dur_m_{qid}_{suffix}"
     col_h, col_hlbl, col_m, col_mlbl = st.columns([1.2, 0.5, 1.2, 0.5])
     with col_h:
-        h = st.number_input("Hours", min_value=0, value=0, step=1,
-                             label_visibility="collapsed", key=f"dur_h_{qid}_{suffix}")
+        h = st.number_input("Hours", min_value=0, step=1,
+                             label_visibility="collapsed", key=h_key)
     with col_hlbl:
         st.write("")
         st.markdown("hrs")
     with col_m:
-        m = st.number_input("Minutes", min_value=0, max_value=59, value=0, step=1,
-                             label_visibility="collapsed", key=f"dur_m_{qid}_{suffix}")
+        m = st.number_input("Minutes", min_value=0, max_value=59, step=1,
+                             label_visibility="collapsed", key=m_key)
     with col_mlbl:
         st.write("")
         st.markdown("mins")
@@ -95,6 +97,32 @@ def render_answer_input(question, suffix="default"):
     if question.metadata.get("spreadsheet_bytes"):
         return _render_spreadsheet_input(question, suffix)
     return st.text_input("Your answer", key=f"ans_{question.qid}_{suffix}")
+
+
+def prefill_answer_input(question, suffix, answer):
+    """Put a pupil's saved answer back into render_answer_input's widget before it is drawn —
+    used when they go back to a test question to change it. Returns False when the input can't
+    be refilled (a spreadsheet upload), so the caller keeps the saved answer if nothing new is
+    given."""
+    if question.metadata.get("spreadsheet_bytes"):
+        return False
+    if answer in (None, ""):
+        return True
+    if question.metadata.get("answer_type") == "duration":
+        h_key, m_key = f"dur_h_{question.qid}_{suffix}", f"dur_m_{question.qid}_{suffix}"
+        if h_key not in st.session_state:
+            h = re.search(r"(\d+)\s*hour", str(answer))
+            m = re.search(r"(\d+)\s*minute", str(answer))
+            st.session_state[h_key] = int(h.group(1)) if h else 0
+            st.session_state[m_key] = min(59, int(m.group(1))) if m else 0
+        return True
+    key = f"ans_{question.qid}_{suffix}"
+    if key not in st.session_state:
+        options = question.metadata.get("options")
+        if options and answer not in options:
+            return False
+        st.session_state[key] = answer
+    return True
 
 
 def render_question_header(question):

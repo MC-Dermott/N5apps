@@ -6,9 +6,8 @@ import streamlit.components.v1 as components
 
 from core.engine.question_factory import generate_test_question
 from core.engine.session_manager import reset_test
-from core.ui.question_ui import render_question
 from core.ui.solution_ui import render_solution, render_common_mistake, answer_display, correct_answer_display
-from core.ui.multipart_ui import render_multipart_assessment
+from core.ui.assessment_nav import render_current_question
 from core.db.tracker import save_test_result
 from core.models.answers import clock_answers_match
 
@@ -69,27 +68,10 @@ def render_test(topic, question_type, qualification="National 5", user_id=None, 
         return
 
     idx = test["index"]
-    question = test["questions"][idx]
 
     st.progress((idx + 1) / _NUM_QUESTIONS, text=f"Question {idx + 1} of {_NUM_QUESTIONS}")
 
-    if question.parts:
-        result = render_multipart_assessment(question, f"test_{question.qid}", _is_correct)
-        if result is None:
-            return
-        user_answer, correct = result
-    else:
-        user_answer = render_question(question, suffix="test")
-        if not st.button("Submit", key=f"test_submit_{idx}", type="primary"):
-            return
-        correct = _is_correct(user_answer, question.correct_answer)
-
-    test["answers"].append(user_answer)
-    test["results"].append(correct)
-    test["index"] += 1
-    if test["index"] >= _NUM_QUESTIONS:
-        test["complete"] = True
-    st.rerun()
+    render_current_question(test, "test", _is_correct)
 
 
 def _render_summary(test):

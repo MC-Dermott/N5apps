@@ -107,7 +107,11 @@ class Question:
   stays on the parent. `core/ui/multipart_ui.py` then renders it like the N5 Physics app's
   scenarios: in Practice each part unlocks after the previous one, with its own scaffold,
   Submit button and feedback; in Test/Unit/Numeracy assessments the scored parts are answered
-  one at a time and the question only counts as correct if every part is. `options` gives a
+  one at a time and the question only counts as correct if every part is. In all three of those test modes
+  `core/ui/assessment_nav.py` gives every question a ← Previous button: pupils can go back (part
+  by part through a multipart question) and change any answer right up until they submit the
+  last question; `prefill_answer_input()` in `question_ui.py` refills the saved answer, so a new
+  answer-input type needs a branch there. `options` gives a
   radio choice (e.g. "which control measure?"); `explain=True` marks an unmarked written part
   (reveal-the-expected-answer in Practice, skipped in tests). Examples:
   `statistics/expected_value.py` (level 3), `numeracy/pie_charts.py` (levels 2 and 4).
