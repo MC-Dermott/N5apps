@@ -1,5 +1,6 @@
 import random
 from core.models.question_model import Question
+from core.models.distractors import distractors
 
 # Scottish income tax bands, 2025/26 (annual). Fixed real-world values — unlike National
 # Insurance below (and N5's own National Insurance topic), this isn't randomised per question,
@@ -252,6 +253,10 @@ def generate_income_tax(level="Higher"):
     scaffold_steps.append({"prompt": "Total tax = sum of all bands above", "answer": tax})
     worked.append("Total tax = " + " + ".join(f"£{b[5]:,.2f}" for b in breakdown) + f" = £{tax:,.2f}")
 
+    # 2022 course report: "using incorrect values when calculating the tax bands"
+    whole_starter = None
+    if salary > 15_397:
+        whole_starter = _r2(tax - breakdown[1][5] + 15_397 * 0.19)
     return Question(
         question_text=question_text,
         correct_answer=tax,
@@ -260,6 +265,11 @@ def generate_income_tax(level="Higher"):
         scaffold_steps=scaffold_steps,
         worked_solution=worked,
         notes=_NOTES_INCOME_TAX,
+        distractors=distractors(tax, [
+            (whole_starter, "the whole £15,397 was taxed at 19% — only the £2,827 between £12,570 and £15,397 is "
+                            "in the starter band (2022 course report: incorrect values in the tax bands)."),
+            (_r2(tax / 12), "that's the tax for one month — the question asks for the year."),
+        ]),
         metadata={**_bands_metadata(_TAX_BANDS_ANNUAL, _TAX_MAX_INCOME, salary), "reference_sheet": _REFERENCE_SHEET},
     )
 
@@ -295,6 +305,13 @@ def generate_higher_ni(level="Higher"):
         scaffold_steps=scaffold_steps,
         worked_solution=worked,
         notes=_NOTES_NI,
+        distractors=distractors(ni, [
+            (_r2((salary - 1_048) * 0.08) if salary > 4_189 else None,
+             "8% was charged on everything above £1,048 — earnings above £4,189 are charged at 2% "
+             "(2024 Q7(a) marking instructions: no 2% band, mark lost)."),
+            (_r2(salary * 0.08), "8% was charged on the whole salary — the first £1,048 a month is free of National "
+                                 "Insurance."),
+        ]),
         metadata={**_bands_metadata(_NI_BANDS_MONTHLY, _NI_MAX_INCOME, salary), "reference_sheet": _REFERENCE_SHEET},
     )
 
@@ -364,9 +381,27 @@ def generate_net_monthly_income(level="Higher"):
         f"− £{ni:,.2f} = £{net_monthly:,.2f}"
     )
 
+    def _net(taxable, deduct_pension=True):
+        t = _r2(_banded_calc(taxable, _TAX_BANDS_ANNUAL)[0] / 12)
+        return _r2(monthly_gross - (monthly_pension if deduct_pension else 0) - t - ni)
+
+    wrong = [
+        (_net(annual_salary), "the tax was worked out on the gross salary — take the pension off first "
+                              "(2023 Q4 course report; 2025 Q3 and 2026 Q8 marking instructions, Candidate A)."),
+        (_r2((taxable_income - ni - _banded_calc(_r2(taxable_income - ni), _TAX_BANDS_ANNUAL)[0]) / 12),
+         "a month's National Insurance was taken off the annual salary before the tax — National Insurance is not "
+         "deducted before tax (2025 Q3 and 2026 Q8 marking instructions, Candidate B)."),
+        (_net(_r2(taxable_income - 12 * ni)),
+         "the year's National Insurance was taken off before working out the tax (2025 Q3 marking "
+         "instructions, Candidate D)."),
+        (_net(taxable_income, deduct_pension=False),
+         "the pension reduced the taxable income but wasn't subtracted from the pay — the pension, the tax and "
+         "the National Insurance all come off (2023, 2025 and 2026 marking instructions)."),
+    ]
     return Question(
         question_text=question_text,
         correct_answer=net_monthly,
+        distractors=distractors(net_monthly, wrong),
         topic="Finance",
         question_type="Income Tax and National Insurance",
         scaffold_steps=scaffold_steps,
@@ -376,9 +411,59 @@ def generate_net_monthly_income(level="Higher"):
     )
 
 
+# ── Net Annual Salary, Tax Given (2024 Q7(a)) ──────────────────────────────────
+
+def generate_net_annual_tax_given(level="Higher"):
+    """The tax is given; the National Insurance has to be worked out and deducted (2024 Q7(a))."""
+    name = random.choice(_NAMES)
+    monthly = random.choice(range(2_400, 6_000, 50))
+    annual = monthly * 12
+    annual_tax = _banded_calc(annual, _TAX_BANDS_ANNUAL)[0]
+    ni, breakdown = _banded_calc(monthly, _NI_BANDS_MONTHLY)
+    annual_ni = _r2(ni * 12)
+    net = _r2(annual - annual_tax - annual_ni)
+
+    question_text = (
+        f"{name} is paid a gross salary of £{monthly:,} per month for 12 months.\n\n"
+        f"{name}'s annual income tax deduction is £{annual_tax:,.2f}. {name} has opted out of paying any pension "
+        f"contributions.\n\nCalculate {name}'s net annual salary, after all deductions including National Insurance."
+    )
+    scaffold_steps = [
+        {"prompt": "National Insurance for one month (8% band, plus 2% above £4,189)", "answer": ni},
+        {"prompt": "National Insurance for the year = monthly National Insurance × 12", "answer": annual_ni},
+        {"prompt": "Net annual salary = annual salary − income tax − National Insurance", "answer": net},
+    ]
+    worked = [f"Annual salary = £{monthly:,} × 12 = £{annual:,}"]
+    for label, lower, upper, taxable, rate, amt in breakdown:
+        if rate:
+            worked.append(f"{rate}% band: £{upper:,.2f} − £{lower:,.2f} = £{taxable:,.2f} at {rate}% = £{amt:,.2f}")
+    worked += [f"National Insurance = £{ni:,.2f} a month = £{annual_ni:,.2f} a year",
+               f"Net annual salary = £{annual:,} − £{annual_tax:,.2f} − £{annual_ni:,.2f} = £{net:,.2f}",
+               "The tax is given — don't work it out again (2024 course report)."]
+    return Question(
+        question_text=question_text,
+        correct_answer=net,
+        topic="Finance",
+        question_type="Income Tax and National Insurance",
+        scaffold_steps=scaffold_steps,
+        worked_solution=worked,
+        notes=_NOTES_NI,
+        distractors=distractors(net, [
+            (_r2(annual - annual_tax), "the National Insurance was left out (2024 Q7(a) course report)."),
+            (_r2(annual - annual_tax - ni), "only one month's National Insurance was taken off — multiply by 12."),
+            (_r2(net / 12), "that's the net salary for one month — the question asks for the year."),
+            (_r2(annual - annual_tax - 12 * (monthly - 1_048) * 0.08) if monthly > 4_189 else None,
+             "8% was charged above £4,189 too — earnings above £4,189 are charged at 2% (2024 Q7(a) marking "
+             "instructions)."),
+        ]),
+        metadata={**_bands_metadata(_NI_BANDS_MONTHLY, _NI_MAX_INCOME, monthly), "reference_sheet": _REFERENCE_SHEET},
+    )
+
+
 # ── Default dispatcher ────────────────────────────────────────────────────────
 
 def generate_tax_ni_question(level="Higher"):
     return random.choice([
         generate_gross_annual_pay, generate_income_tax, generate_higher_ni, generate_net_monthly_income,
+        generate_net_annual_tax_given,
     ])(level=level)

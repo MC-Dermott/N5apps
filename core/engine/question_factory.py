@@ -228,6 +228,7 @@ from topics.finance_statistics.income_tax_ni import (
     generate_income_tax,
     generate_higher_ni,
     generate_net_monthly_income,
+    generate_net_annual_tax_given,
 )
 from topics.finance_statistics.vat_lbtt import (
     generate_vat_lbtt_question,
@@ -703,6 +704,7 @@ _HIGHER_LEVELS = {
             "Income Tax": generate_income_tax,
             "National Insurance": generate_higher_ni,
             "Net Monthly Income": generate_net_monthly_income,
+            "Net Annual Salary, Tax Given": generate_net_annual_tax_given,
         },
         "Inflation and Insurance": {
             "Adjusting a Price with CPI": generate_inflation_l1,
