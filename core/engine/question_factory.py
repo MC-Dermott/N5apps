@@ -245,6 +245,10 @@ from topics.geometry_measure.container_packing import (
     generate_container_packing_question, generate_container_packing_l1, generate_container_packing_l2,
     generate_container_packing_l3, generate_container_packing_l4, generate_container_packing_l5,
 )
+from topics.modelling.mathematical_modelling import (
+    generate_modelling_question, generate_modelling_calculator, generate_modelling_spreadsheet_recurrence,
+    generate_modelling_spreadsheet_profit,
+)
 from topics.finance_statistics.probability_expected import (
     generate_probability_expected_question, generate_probability_expected_l1, generate_probability_expected_l2,
     generate_probability_expected_l3, generate_probability_expected_l4, generate_probability_expected_l5,
@@ -419,6 +423,9 @@ _HIGHER_TOPICS = {
     "Planning": {
         "Networks": generate_networks_question,
         "Risk and Expected Value": generate_expected_value_question,
+    },
+    "Modelling": {
+        "Mathematical Modelling": generate_modelling_question,
     },
 }
 
@@ -702,6 +709,13 @@ _HIGHER_LEVELS = {
             "Comparing Control Measures": generate_expected_value_l3,
         },
     },
+    "Modelling": {
+        "Mathematical Modelling": {
+            "Calculator Questions": generate_modelling_calculator,
+            "Spreadsheet: Recurrence Relation Model": generate_modelling_spreadsheet_recurrence,
+            "Spreadsheet: Profit Function": generate_modelling_spreadsheet_profit,
+        },
+    },
 }
 
 _N5_NUMERACY_LEVELS = {
@@ -777,6 +791,12 @@ _LEVEL_WEIGHTS = {
                              "Spreadsheet: Introductory Rate Ends": 1,
                              # 2025 Q11 in parts, with a spreadsheet follow-on
                              "Exam Style (Multipart)": 2},
+        },
+        "Modelling": {
+            # by hand: 2022 Q10(a), 2023 Q10, 2024 Q10(a)(b), 2025 Q10, 2026 Q5(b)(c) ≈ 26 marks;
+            # recurrence spreadsheets 2023 Q8 + 2024 Q4 = 15; profit function 2026 Q5(a) = 5
+            "Mathematical Modelling": {"Calculator Questions": 5, "Spreadsheet: Recurrence Relation Model": 3,
+                                       "Spreadsheet: Profit Function": 1},
         },
     },
 }
