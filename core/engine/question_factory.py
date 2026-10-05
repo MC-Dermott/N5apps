@@ -275,7 +275,25 @@ from topics.geometry_measure.tolerance import (
     generate_tolerance_l3,
 )
 from topics.statistics.standard_deviation import generate_standard_deviation_question
-from topics.statistics.probability import generate_probability_question
+from topics.statistics.probability import (
+    generate_probability_question, generate_probability_l1, generate_probability_l2, generate_probability_l3,
+    generate_probability_l4, generate_probability_l5, generate_probability_l6,
+)
+from topics.statistics.data_distributions import (
+    generate_data_distributions_question, generate_data_distributions_calculator,
+    generate_data_distributions_spreadsheet,
+)
+from topics.statistics.correlation_regression import (
+    generate_correlation_regression_question, generate_correlation_regression_l1,
+    generate_correlation_regression_l2, generate_correlation_regression_l3,
+    generate_correlation_regression_l4, generate_correlation_regression_l5,
+    generate_correlation_regression_l6,
+)
+from topics.statistics.hypothesis_testing import (
+    generate_hypothesis_testing_question, generate_hypothesis_testing_l1, generate_hypothesis_testing_l2,
+    generate_hypothesis_testing_l3, generate_hypothesis_testing_l4, generate_hypothesis_testing_l5,
+    generate_hypothesis_testing_l6,
+)
 from topics.statistics.expected_value import (
     generate_expected_value_question,
     generate_expected_value_l1,
@@ -417,7 +435,10 @@ _HIGHER_TOPICS = {
         "Inflation and Insurance": generate_inflation_insurance_question,
     },
     "Statistics": {
+        "Data and Distributions": generate_data_distributions_question,
         "Standard Deviation": generate_standard_deviation_question,
+        "Correlation and Regression": generate_correlation_regression_question,
+        "Hypothesis Testing": generate_hypothesis_testing_question,
         "Probability": generate_probability_question,
     },
     "Planning": {
@@ -709,6 +730,36 @@ _HIGHER_LEVELS = {
             "Comparing Control Measures": generate_expected_value_l3,
         },
     },
+    "Statistics": {
+        "Data and Distributions": {
+            "Calculator Questions": generate_data_distributions_calculator,
+            "Spreadsheet: Frequency Table": generate_data_distributions_spreadsheet,
+        },
+        "Correlation and Regression": {
+            "Scatter Plots and Describing Correlation": generate_correlation_regression_l1,
+            "The Correlation Coefficient": generate_correlation_regression_l2,
+            "Calculating r and the Regression Line from Data": generate_correlation_regression_l3,
+            "Interpreting Slope and Intercept": generate_correlation_regression_l4,
+            "Making Predictions": generate_correlation_regression_l5,
+            "Trends and Seasonality": generate_correlation_regression_l6,
+        },
+        "Hypothesis Testing": {
+            "Research Questions and Choosing a Test": generate_hypothesis_testing_l1,
+            "Writing Hypotheses": generate_hypothesis_testing_l2,
+            "Interpreting p-values and Conclusions": generate_hypothesis_testing_l3,
+            "Confidence Intervals": generate_hypothesis_testing_l4,
+            "Calculating a Test from Data": generate_hypothesis_testing_l5,
+            "Errors and Confounding": generate_hypothesis_testing_l6,
+        },
+        "Probability": {
+            "Two-Set Venn Diagrams": generate_probability_l1,
+            "Three-Set Venn Diagrams": generate_probability_l2,
+            "Combining Events from a Venn Diagram": generate_probability_l3,
+            "Two-Way Tables": generate_probability_l4,
+            "Tree Diagrams: Independent Events": generate_probability_l5,
+            "Tree Diagrams: Without Replacement and Conditional": generate_probability_l6,
+        },
+    },
     "Modelling": {
         "Mathematical Modelling": {
             "Calculator Questions": generate_modelling_calculator,
@@ -791,6 +842,28 @@ _LEVEL_WEIGHTS = {
                              "Spreadsheet: Introductory Rate Ends": 1,
                              # 2025 Q11 in parts, with a spreadsheet follow-on
                              "Exam Style (Multipart)": 2},
+        },
+        "Statistics": {
+            # by hand ≈ 20 marks (2022 Q3, 2023 Q3, 2024 Q6(a), 2025 Q5, Q9(a), 2026 Q11);
+            # frequency-table spreadsheet 2025 Q12 = 7
+            "Data and Distributions": {"Calculator Questions": 3, "Spreadsheet: Frequency Table": 1},
+            # 2022 Q7 (10), 2023 Q5 (12), 2026 Q3 (7); trends/seasonality not yet examined
+            "Correlation and Regression": {"Scatter Plots and Describing Correlation": 3,
+                                           "The Correlation Coefficient": 3,
+                                           "Calculating r and the Regression Line from Data": 2,
+                                           "Interpreting Slope and Intercept": 4, "Making Predictions": 3,
+                                           "Trends and Seasonality": 1},
+            # test choice 2022 Q3(c)(d), 2024 Q6(c)(i), 2025 Q9(b)(i), 2026 Q7(a)(i) ≈ 5; hypotheses ≈ 3;
+            # p-values 2024/25/26 = 6; performing the test 2024 Q6(c)(ii) = 2; confounding 2022 Q3(e) = 1;
+            # confidence intervals not yet examined
+            "Hypothesis Testing": {"Research Questions and Choosing a Test": 5, "Writing Hypotheses": 3,
+                                   "Interpreting p-values and Conclusions": 6, "Confidence Intervals": 1,
+                                   "Calculating a Test from Data": 2, "Errors and Confounding": 1},
+            # Venn 2024 Q2 (5), 2025 Q2 (5), 2026 Q4 (3); trees 2026 Q9(a) (4)
+            "Probability": {"Two-Set Venn Diagrams": 2, "Three-Set Venn Diagrams": 4,
+                            "Combining Events from a Venn Diagram": 2, "Two-Way Tables": 1,
+                            "Tree Diagrams: Independent Events": 3,
+                            "Tree Diagrams: Without Replacement and Conditional": 1},
         },
         "Modelling": {
             # by hand: 2022 Q10(a), 2023 Q10, 2024 Q10(a)(b), 2025 Q10, 2026 Q5(b)(c) ≈ 26 marks;

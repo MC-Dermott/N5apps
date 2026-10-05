@@ -1,5 +1,6 @@
 import random
 import math
+from core.models.distractors import distractors
 from core.models.question_model import Question
 
 NOTES = """
@@ -23,6 +24,9 @@ $$s = \\sqrt{\\frac{\\Sigma(x - \\bar{x})^2}{n - 1}}$$
 - Deviations: −4, −2, 0, 2, 4
 - Squared: 16, 4, 0, 4, 16 → Sum = 40
 - s = √(40 ÷ 4) = √10 ≈ **3.16**
+
+With statistical software, `sd(X)` in R gives s directly (data booklet). Use the mean and standard
+deviation for approximately normal data — see Data and Distributions for when to use the median and IQR.
 """
 
 
@@ -71,4 +75,9 @@ def generate_standard_deviation_question():
         scaffold_steps=scaffold_steps,
         worked_solution=worked,
         notes=NOTES,
+        distractors=distractors(sd, [
+            (round(math.sqrt(sum(sq_devs) / n), 2), "you divided by n — the sample standard deviation divides by n − 1."),
+            (round(variance, 2), "you forgot to take the square root."),
+            (mean_rounded, "that's the mean, not the standard deviation."),
+        ]),
     )
