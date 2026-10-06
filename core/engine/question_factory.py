@@ -95,6 +95,25 @@ from topics.numeracy.subtraction import (
     generate_subtraction_l1,
     generate_subtraction_l2,
 )
+from topics.numeracy.decimal_addition_subtraction import (
+    generate_decimal_addition_subtraction_question,
+    generate_decimal_addition_subtraction_l1,
+    generate_decimal_addition_subtraction_l2,
+    generate_decimal_addition_subtraction_l3,
+)
+from topics.numeracy.decimal_multiplication_division import (
+    generate_decimal_multiplication_division_question,
+    generate_decimal_multiplication_division_l1,
+    generate_decimal_multiplication_division_l2,
+    generate_decimal_multiplication_division_l3,
+    generate_decimal_multiplication_division_l4,
+)
+from topics.numeracy.estimation import (
+    generate_estimation_question,
+    generate_estimation_l1,
+    generate_estimation_l2,
+    generate_estimation_l3,
+)
 from topics.numeracy.core_skills_rounding import (
     generate_core_skills_rounding_question,
     generate_core_skills_rounding_l1,
@@ -352,6 +371,9 @@ _N5_TOPICS = {
         "Subtraction": generate_subtraction_question,
         "Rounding": generate_core_skills_rounding_question,
         "Simplifying Fractions": generate_simplifying_fractions_question,
+        "Decimal Addition and Subtraction": generate_decimal_addition_subtraction_question,
+        "Decimal Multiplication and Division": generate_decimal_multiplication_division_question,
+        "Estimation": generate_estimation_question,
     },
     "Finance and Statistics": {
         "Simple Interest": generate_simple_interest_question,
@@ -559,6 +581,22 @@ _N5_LEVELS = {
         "Simplifying Fractions": {
             "Small Factor": generate_simplifying_fractions_l1,
             "Larger Factor": generate_simplifying_fractions_l2,
+        },
+        "Decimal Addition and Subtraction": {
+            "Same Decimal Places": generate_decimal_addition_subtraction_l1,
+            "Different Decimal Places": generate_decimal_addition_subtraction_l2,
+            "Worded Problems": generate_decimal_addition_subtraction_l3,
+        },
+        "Decimal Multiplication and Division": {
+            "Single-Digit Whole Number": generate_decimal_multiplication_division_l1,
+            "Powers of 10": generate_decimal_multiplication_division_l2,
+            "Decimal x Decimal": generate_decimal_multiplication_division_l3,
+            "Dividing by a Decimal": generate_decimal_multiplication_division_l4,
+        },
+        "Estimation": {
+            "Nearest 10": generate_estimation_l1,
+            "Nearest 100": generate_estimation_l2,
+            "1 Significant Figure": generate_estimation_l3,
         },
     },
     "Finance and Statistics": {

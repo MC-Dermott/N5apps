@@ -7,6 +7,11 @@ from core.ui.lattice_multiplication_widget import render_lattice_multiplication_
 from core.ui.rounding_number_line_widget import render_rounding_number_line_widget
 from core.ui.fraction_simplifier_widget import render_fraction_simplifier_widget
 from core.ui.time_bar_widget import render_time_bar_widget
+from core.ui.numeracy_scaffold_embed import (
+    render_decimal_column_widget,
+    render_decimal_mul_div_widget,
+    render_estimation_widget,
+)
 from core.models.answers import clock_answers_match
 
 
@@ -134,3 +139,12 @@ def render_simulation(question):
     elif question.metadata.get("diagram") == "time_bar":
         with st.expander("🎮 Interactive Time Bar"):
             render_time_bar_widget(**question.metadata["diagram_params"])
+    elif question.metadata.get("diagram") == "decimal_column":
+        with st.expander("🎮 Interactive Scaffold"):
+            render_decimal_column_widget(**question.metadata["diagram_params"])
+    elif question.metadata.get("diagram") == "decimal_mul_div":
+        with st.expander("🎮 Interactive Scaffold"):
+            render_decimal_mul_div_widget(**question.metadata["diagram_params"])
+    elif question.metadata.get("diagram") == "estimation":
+        with st.expander("🎮 Interactive Scaffold"):
+            render_estimation_widget(**question.metadata["diagram_params"])
