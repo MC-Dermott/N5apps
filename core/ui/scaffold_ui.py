@@ -10,7 +10,7 @@ from core.ui.time_bar_widget import render_time_bar_widget
 from core.ui.numeracy_scaffold_embed import (
     render_decimal_column_widget,
     render_decimal_mul_div_widget,
-    render_estimation_widget,
+    render_scale_stepper_widget,
 )
 from core.models.answers import clock_answers_match
 
@@ -145,6 +145,6 @@ def render_simulation(question):
     elif question.metadata.get("diagram") == "decimal_mul_div":
         with st.expander("🎮 Interactive Scaffold"):
             render_decimal_mul_div_widget(**question.metadata["diagram_params"])
-    elif question.metadata.get("diagram") == "estimation":
+    elif question.metadata.get("simulation") == "scale_stepper":
         with st.expander("🎮 Interactive Scaffold"):
-            render_estimation_widget(**question.metadata["diagram_params"])
+            render_scale_stepper_widget(**question.metadata["simulation_params"])

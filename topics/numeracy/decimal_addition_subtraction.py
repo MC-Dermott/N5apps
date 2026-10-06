@@ -77,10 +77,10 @@ def generate_decimal_addition_subtraction_l1():
     return _build(a, b, op, (dp, dp), f"Calculate {_fmt(a, dp)} {sym} {_fmt(b, dp)}")
 
 
-# Level 2 — different numbers of decimal places (pad with zeros)
+# Level 2 — different numbers of decimal places, up to 2 d.p. (pad with zeros)
 def generate_decimal_addition_subtraction_l2():
     op = random.choice(["+", "-"])
-    dp_a, dp_b = random.choice([(1, 2), (2, 1), (1, 3), (2, 0)])
+    dp_a, dp_b = random.choice([(1, 2), (2, 1), (2, 0), (0, 2), (1, 0)])
     a, b = _dec(1, 90, dp_a), _dec(1, 90, dp_b)
     if op == "-" and a < b:
         a, b, dp_a, dp_b = b, a, dp_b, dp_a

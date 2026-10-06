@@ -106,18 +106,36 @@ from topics.numeracy.decimal_multiplication_division import (
     generate_decimal_multiplication_division_l1,
     generate_decimal_multiplication_division_l2,
     generate_decimal_multiplication_division_l3,
-    generate_decimal_multiplication_division_l4,
 )
-from topics.numeracy.estimation import (
-    generate_estimation_question,
-    generate_estimation_l1,
-    generate_estimation_l2,
-    generate_estimation_l3,
+from topics.numeracy.mixed_fractions import (
+    generate_mixed_fractions_question,
+    generate_mixed_fractions_l1,
+    generate_mixed_fractions_l2,
+    generate_mixed_fractions_l3,
+)
+from topics.numeracy.equivalences import (
+    generate_equivalences_question,
+    generate_equivalences_l1,
+    generate_equivalences_l2,
+    generate_equivalences_l3,
+)
+from topics.numeracy.reading_scales_skill import (
+    generate_reading_scales_question,
+    generate_reading_scales_l1,
+    generate_reading_scales_l2,
+)
+from topics.numeracy.shapes_fractions_percentages import (
+    generate_shapes_fp_question,
+    generate_shapes_fp_l1,
+    generate_shapes_fp_l2,
+    generate_shapes_fp_l3,
 )
 from topics.numeracy.core_skills_rounding import (
     generate_core_skills_rounding_question,
     generate_core_skills_rounding_l1,
     generate_core_skills_rounding_l2,
+    generate_core_skills_rounding_l3,
+    generate_core_skills_rounding_l4,
 )
 from topics.numeracy.simplifying_fractions import (
     generate_simplifying_fractions_question,
@@ -373,7 +391,10 @@ _N5_TOPICS = {
         "Simplifying Fractions": generate_simplifying_fractions_question,
         "Decimal Addition and Subtraction": generate_decimal_addition_subtraction_question,
         "Decimal Multiplication and Division": generate_decimal_multiplication_division_question,
-        "Estimation": generate_estimation_question,
+        "Mixed Fractions": generate_mixed_fractions_question,
+        "Fractions, Decimals and Percentages": generate_equivalences_question,
+        "Fractions and Percentages of Shapes": generate_shapes_fp_question,
+        "Reading Scales": generate_reading_scales_question,
     },
     "Finance and Statistics": {
         "Simple Interest": generate_simple_interest_question,
@@ -577,6 +598,8 @@ _N5_LEVELS = {
         "Rounding": {
             "Nearest 10 / 100 / 1000": generate_core_skills_rounding_l1,
             "Decimal Places": generate_core_skills_rounding_l2,
+            "3 Decimal Places": generate_core_skills_rounding_l3,
+            "Significant Figures": generate_core_skills_rounding_l4,
         },
         "Simplifying Fractions": {
             "Small Factor": generate_simplifying_fractions_l1,
@@ -590,13 +613,26 @@ _N5_LEVELS = {
         "Decimal Multiplication and Division": {
             "Single-Digit Whole Number": generate_decimal_multiplication_division_l1,
             "Powers of 10": generate_decimal_multiplication_division_l2,
-            "Decimal x Decimal": generate_decimal_multiplication_division_l3,
-            "Dividing by a Decimal": generate_decimal_multiplication_division_l4,
+            "Multiples of 10, 100 and 1000": generate_decimal_multiplication_division_l3,
         },
-        "Estimation": {
-            "Nearest 10": generate_estimation_l1,
-            "Nearest 100": generate_estimation_l2,
-            "1 Significant Figure": generate_estimation_l3,
+        "Mixed Fractions": {
+            "Fractional Parts in a Mixed Number": generate_mixed_fractions_l1,
+            "Mixed to Improper": generate_mixed_fractions_l2,
+            "Improper to Mixed": generate_mixed_fractions_l3,
+        },
+        "Fractions, Decimals and Percentages": {
+            "Fraction to Decimal / Decimal to Percentage": generate_equivalences_l1,
+            "Fraction to Percentage / Percentage to Fraction": generate_equivalences_l2,
+            "Decimal to Fraction": generate_equivalences_l3,
+        },
+        "Fractions and Percentages of Shapes": {
+            "Fraction Shaded": generate_shapes_fp_l1,
+            "Percentage Shaded": generate_shapes_fp_l2,
+            "Area Shaded": generate_shapes_fp_l3,
+        },
+        "Reading Scales": {
+            "Value of One Small Gap": generate_reading_scales_l1,
+            "Reading the Arrow": generate_reading_scales_l2,
         },
     },
     "Finance and Statistics": {

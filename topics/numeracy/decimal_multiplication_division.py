@@ -10,18 +10,14 @@ NOTES = """
   then put the point back in the same relative position.
 - By **10 / 100 / 1000**: multiply moves the point **right** 1 / 2 / 3 places; divide moves it
   **left** 1 / 2 / 3 places.
-- **Decimal × decimal**: ignore both points and multiply the whole numbers. Count the decimal
-  places in the question (both numbers together) and give the answer that many.
-- **Dividing by a decimal**: multiply both numbers by 10 (or 100) until the divisor is a whole
-  number, then divide.
+- - By a **multiple of 10, 100 or 1000** (e.g. 30, 200, 4000): split it, e.g. 200 = 2 × 100 —
+  multiply or divide by the single digit, then by the 10 / 100 / 1000.
 
 **Example:** 16·3 × 6 = **97·8**
 
 **Example:** 57·5 ÷ 100 — move the point 2 places left → **0·575**
 
-**Example:** 0·4 × 3·6 — 4 × 36 = 144; 2 decimal places in total → **1·44**
-
-**Example:** 7·2 ÷ 0·4 — multiply both by 10: 72 ÷ 4 = **18**
+**Example:** 3·4 × 200 — 3·4 × 2 = 6·8, then × 100 → **680**
 """
 
 
@@ -94,43 +90,43 @@ def generate_decimal_multiplication_division_l2():
               {"value": _fmt(value), "operation": "divide", "kind": "shift", "n": power})
 
 
-# Level 3 — decimal × decimal (lattice on the whole numbers, then place the point)
+# Level 3 — multiples of 10, 100 and 1000 (e.g. 30, 200, 4000)
 def generate_decimal_multiplication_division_l3():
-    dp_a, dp_b = random.choice([(1, 1), (1, 1), (2, 1), (1, 2)])
-    a = _dec(1, 9, dp_a) if dp_a == 2 else _dec(2, 40, dp_a)
-    b = _dec(1, 9, dp_b)
-    ia, ib = int(a * 10 ** dp_a), int(b * 10 ** dp_b)
-    total_dp = dp_a + dp_b
-    answer = a * b
+    k = random.randint(2, 9)
+    power = random.choice([10, 100, 1000])
+    m = k * power
+    dp = random.choice([1, 2])
+    if random.random() < 0.5:
+        value = _dec(1, 40, dp)
+        answer = value * m
+        iv = int(value * 10 ** dp)
+        scaffold = [
+            {"prompt": f"Ignore the decimal point and multiply {iv} × {k}", "answer": iv * k},
+            {"prompt": f"Now multiply {_fmt(value * k)} by {power}", "answer": float(answer)},
+        ]
+        worked = [
+            f"{m} = {k} × {power}, so multiply by {k} then by {power}.",
+            f"{_fmt(value)} × {k} = {_fmt(value * k)}",
+            f"{_fmt(value * k)} × {power} = **{_fmt(answer)}**",
+        ]
+        return _q(f"Calculate {_fmt(value)} × {m}", answer, worked, scaffold,
+                  "lattice_multiplication", {"a": iv, "b": k})
+    answer = _dec(1, 40, dp)
+    value = answer * m
+    shifted = value / power
+    d = max(-shifted.normalize().as_tuple().exponent, -answer.normalize().as_tuple().exponent, 0)
+    n = int(shifted * 10 ** d)
     scaffold = [
-        {"prompt": f"Ignore the decimal points and multiply {ia} × {ib}", "answer": ia * ib},
-        {"prompt": "How many decimal places are there in total in the question?", "answer": total_dp},
+        {"prompt": f"Divide {_fmt(value)} by {power}", "answer": float(shifted)},
+        {"prompt": f"Now divide {_fmt(shifted)} by {k}", "answer": float(answer)},
     ]
     worked = [
-        f"Ignore the points: {ia} × {ib} = {ia * ib}",
-        f"{dp_a} + {dp_b} = {total_dp} decimal places in the question, so {total_dp} in the answer.",
-        f"{_fmt(a)} × {_fmt(b)} = **{_fmt(answer)}**",
+        f"{m} = {k} × {power}, so divide by {power} then by {k}.",
+        f"{_fmt(value)} ÷ {power} = {_fmt(shifted)}",
+        f"{_fmt(shifted)} ÷ {k} = **{_fmt(answer)}**",
     ]
-    return _q(f"Calculate {_fmt(a)} × {_fmt(b)}", answer, worked, scaffold,
-              "lattice_multiplication", {"a": ia, "b": ib})
-
-
-# Level 4 — divide by a decimal (multiply both by 10, then bus stop)
-def generate_decimal_multiplication_division_l4():
-    divisor = Decimal(random.randint(2, 9)) / 10
-    answer = Decimal(random.randint(3, 60))
-    value = answer * divisor
-    iv, idv = int(value * 10), int(divisor * 10)
-    scaffold = [
-        {"prompt": f"Multiply both numbers by 10 so the divisor is a whole number. "
-                   f"What is {_fmt(value)} × 10?", "answer": iv},
-    ]
-    worked = [
-        f"Multiply both numbers by 10: {_fmt(value)} ÷ {_fmt(divisor)} = {iv} ÷ {idv}",
-        f"{iv} ÷ {idv} = **{_fmt(answer)}**",
-    ]
-    return _q(f"Calculate {_fmt(value)} ÷ {_fmt(divisor)}", answer, worked, scaffold,
-              "bus_stop_division", {"dividend": iv, "divisor": idv})
+    return _q(f"Calculate {_fmt(value)} ÷ {m}", answer, worked, scaffold,
+              "bus_stop_division", {"dividend": n, "divisor": k})
 
 
 def generate_decimal_multiplication_division_question():
@@ -138,5 +134,4 @@ def generate_decimal_multiplication_division_question():
         generate_decimal_multiplication_division_l1,
         generate_decimal_multiplication_division_l2,
         generate_decimal_multiplication_division_l3,
-        generate_decimal_multiplication_division_l4,
     ])()

@@ -66,12 +66,11 @@ def render_decimal_mul_div_widget(value, operation, kind, n):
     _embed("dms-app", setup, 680)
 
 
-def render_estimation_widget(a, b, op, place):
-    """Round a and b to the nearest `place` (10 or 100), then add/subtract."""
-    setup = (_click_matching("nps-modePills", "mode", "custom")
-             + _click_matching("nps-kindPills", "kind", "estimate")
-             + _set_value("nps-aInput", a) + _set_value("nps-bInput", b)
-             + _click_matching("nps-opPills", "op", op)
-             + _click_matching("nps-placePills", "place", str(place))
-             + "document.getElementById('nps-startBtn').click();")
-    _embed("nps-app", setup, 680)
+def render_scale_stepper_widget(min_value, max_value, major_step, minor_step, marker_value, unit_label=""):
+    """Step-by-step reading of a graduated scale: value of one small gap, then the marker's reading."""
+    setup = (_click_matching("ss-modePills", "mode", "custom")
+             + _set_value("ss-minInput", min_value) + _set_value("ss-maxInput", max_value)
+             + _set_value("ss-majorInput", major_step) + _set_value("ss-minorInput", minor_step)
+             + _set_value("ss-markerInput", marker_value) + _set_value("ss-unitInput", unit_label)
+             + "document.getElementById('ss-startBtn').click();")
+    _embed("ss-app", setup, 520)
