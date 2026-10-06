@@ -22,7 +22,7 @@ import json
 import streamlit.components.v1 as components
 
 
-def _build_html(dividend, divisor, max_decimals, height):
+def _build_html(dividend, divisor, max_decimals, height, round_dp=None):
     if divisor < 2:
         raise ValueError("divisor must be at least 2")
     if dividend <= divisor:
@@ -148,6 +148,7 @@ def _build_html(dividend, divisor, max_decimals, height):
       const DIVIDEND = {dividend};
       const DIVISOR = {divisor};
       const MAX_DECIMALS = {max_decimals};
+      const ROUND_DP = {'null' if round_dp is None else int(round_dp)};  // recurring: work one place past this, then round
 
       function computeSteps(dividend, divisor, maxDecimals){{
         const wholeDigits = String(dividend).split('').map(Number);
@@ -163,9 +164,10 @@ def _build_html(dividend, divisor, max_decimals, height):
         const decimals = [];
         const seen = new Map();
         let repeatStart = null, terminates = false;
-        for (let i=0; i<maxDecimals; i++){{
+        const limit = ROUND_DP === null ? maxDecimals : ROUND_DP + 1;
+        for (let i=0; i<limit; i++){{
           if (running === 0){{ terminates = true; break; }}
-          if (seen.has(running)){{ repeatStart = seen.get(running); break; }}
+          if (ROUND_DP === null && seen.has(running)){{ repeatStart = seen.get(running); break; }}
           seen.set(running, i);
           const combined = running*10;
           const q = Math.floor(combined/divisor);
@@ -469,6 +471,19 @@ def _build_html(dividend, divisor, max_decimals, height):
                 <p><span class="n">${{DIVIDEND}}</span> ÷ <span class="n">${{DIVISOR}}</span> = <span class="ans">${{result.wholeValue}}.${{decStr}}</span></p>
               </div>`;
           }}
+        }} else if (ROUND_DP !== null){{
+          const decStr = result.decimals.join('');
+          const scale = Math.pow(10, ROUND_DP);
+          const rounded = (Math.floor((2*DIVIDEND*scale + DIVISOR) / (2*DIVISOR)) / scale).toFixed(ROUND_DP);
+          const keep = result.decimals.slice(0, ROUND_DP).join('');
+          const next = result.decimals[ROUND_DP];
+          finishHost.innerHTML = `
+            <div class="finishBox">
+              <div class="headline">That's ${{ROUND_DP + 1}} decimal places — now round!</div>
+              <p><span class="n">${{DIVIDEND}}</span> ÷ <span class="n">${{DIVISOR}}</span> = <span class="ans">${{result.wholeValue}}.${{decStr}}…</span> (the digits keep going — it is a recurring decimal)</p>
+              <p>To round to <b>${{ROUND_DP}} decimal places</b>, look at the decimal place after it: the digit is <b>${{next}}</b>, so ${{next >= 5 ? 'round the last kept digit <b>up</b>' : 'leave the last kept digit <b>as it is</b>'}}.</p>
+              <p><span class="n">${{DIVIDEND}}</span> ÷ <span class="n">${{DIVISOR}}</span> = <span class="ans">${{rounded}}</span> (to ${{ROUND_DP}} d.p.)</p>
+            </div>`;
         }} else {{
           const repeatStart = result.repeatStart;
           const startColIdx = activeColumnIndexFor(result.wholeDigits.length + repeatStart);
@@ -492,12 +507,13 @@ def _build_html(dividend, divisor, max_decimals, height):
     """
 
 
-def render_bus_stop_division_widget(dividend, divisor, max_decimals=10, height=560):
+def render_bus_stop_division_widget(dividend, divisor, max_decimals=10, height=560, round_dp=None):
     """Render the interactive bus-stop division walkthrough for `dividend ÷ divisor`.
 
     Walks the pupil through the long-division method column by column, checking
     each quotient digit and remainder as they go, and reveals whether the
-    division terminates or recurs once complete.
+    division terminates or recurs once complete. With `round_dp` set (for a recurring decimal),
+    the pupil keeps dividing one place past `round_dp`, then is told to round using that digit.
     """
-    html_code = _build_html(dividend, divisor, max_decimals, height)
+    html_code = _build_html(dividend, divisor, max_decimals, height, round_dp)
     components.html(html_code, height=height, scrolling=True)

@@ -101,8 +101,21 @@ def _generate(digit_count, want_type, max_decimals=10):
     raise RuntimeError(f"could not generate a {digit_count}-digit '{want_type}' division question")
 
 
-def _diagram(dividend, divisor):
-    return {"diagram": "bus_stop_division", "diagram_params": {"dividend": dividend, "divisor": divisor}}
+def _decimal_digits(dividend, divisor, n):
+    rem = dividend % divisor
+    out = []
+    for _ in range(n):
+        rem *= 10
+        out.append(rem // divisor)
+        rem %= divisor
+    return out
+
+
+def _diagram(dividend, divisor, round_dp=None):
+    params = {"dividend": dividend, "divisor": divisor}
+    if round_dp is not None:
+        params["round_dp"] = round_dp
+    return {"diagram": "bus_stop_division", "diagram_params": params}
 
 
 # ---------------------------------------------------------------------------
@@ -184,10 +197,13 @@ def generate_division_l3(calc_mode=False):
 
     question_text = f"Calculate {dividend} ÷ {divisor}. Give your answer correct to 2 decimal places."
 
+    digits3 = _decimal_digits(dividend, divisor, 3)
     scaffold_steps = [
         {"prompt": "What is the whole number part of the answer (before the decimal point)?",
          "answer": res["whole_value"]},
-        {"prompt": "What is the full answer, correct to 2 decimal places?", "answer": answer},
+        {"prompt": "Keep dividing until you have 3 decimal places. What is the digit in the "
+                   "3rd decimal place?", "answer": digits3[2]},
+        {"prompt": "Now round to 2 decimal places. What is the full answer?", "answer": answer},
     ]
 
     repeat_start = res["repeat_start"]
@@ -197,6 +213,10 @@ def generate_division_l3(calc_mode=False):
         f"Divide {divisor} into {dividend} using bus-stop division, continuing into the decimal places.",
         f"The remainder starts repeating, so the digits {repeating} recur forever: "
         f"{dividend} ÷ {divisor} = {res['whole_value']}.{non_repeating}{repeating}... (recurring)",
+        f"Keep dividing to 3 decimal places: {dividend} ÷ {divisor} = {res['whole_value']}."
+        f"{''.join(str(d) for d in digits3)}...",
+        f"The 3rd decimal place is {digits3[2]}, so "
+        f"{'round the 2nd decimal place up' if digits3[2] >= 5 else 'leave the 2nd decimal place as it is'}.",
         f"Rounded to 2 decimal places: **{answer}**",
     ]
 
@@ -208,7 +228,7 @@ def generate_division_l3(calc_mode=False):
         scaffold_steps=scaffold_steps,
         worked_solution=worked,
         notes=NOTES_RECURRING,
-        metadata=_diagram(dividend, divisor),
+        metadata=_diagram(dividend, divisor, round_dp=2),
     )
 
 
