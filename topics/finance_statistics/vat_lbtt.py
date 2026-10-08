@@ -87,9 +87,9 @@ that falls within that band — in the same way Income Tax is calculated in band
 | Band | Price | LBTT rate |
 |---|---|---|
 | Nil rate | £0 – £145,000 | 0% |
-| | £145,001 – £250,000 | 2% |
-| | £250,001 – £325,000 | 5% |
-| | £325,001 – £750,000 | 10% |
+| | £145,000 – £250,000 | 2% |
+| | £250,000 – £325,000 | 5% |
+| | £325,000 – £750,000 | 10% |
 | | Above £750,000 | 12% |
 
 **Common mistake:** The whole price does not get charged at the top rate it reaches — work
@@ -102,9 +102,9 @@ _REFERENCE_SHEET_LBTT = """
 | Price | LBTT rate |
 |---|---|
 | £0 – £145,000 | 0% |
-| £145,001 – £250,000 | 2% |
-| £250,001 – £325,000 | 5% |
-| £325,001 – £750,000 | 10% |
+| £145,000 – £250,000 | 2% |
+| £250,000 – £325,000 | 5% |
+| £325,000 – £750,000 | 10% |
 | Above £750,000 | 12% |
 
 LBTT is charged instead of VAT when buying property or land; it is a separate tax.
