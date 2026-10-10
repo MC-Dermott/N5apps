@@ -37,7 +37,7 @@ def _is_correct(user_input, expected):
         return str(user_input).strip().lower() == str(expected).strip().lower()
 
 
-def render_test(topic, question_type, qualification="National 5", user_id=None, calc_mode=False):
+def render_test(topic, question_type, qualification="National 5", user_id=None, calc_mode=False, assignment_id=None):
     test = st.session_state.test
 
     if not test["questions"]:
@@ -57,7 +57,10 @@ def render_test(topic, question_type, qualification="National 5", user_id=None, 
 
     if test["complete"]:
         if not test.get("saved") and user_id:
-            save_test_result(user_id, qualification, topic, question_type, sum(test["results"]), _NUM_QUESTIONS)
+            if not save_test_result(user_id, qualification, topic, question_type, sum(test["results"]),
+                                    _NUM_QUESTIONS, assignment_id=assignment_id) and assignment_id:
+                st.error("Your score could not be saved, so it won't count towards the assignment. "
+                         "Please tell your teacher.")
             test["saved"] = True
         if sum(test["results"]) == _NUM_QUESTIONS and "game_unlock_time" not in test:
             test["game_unlock_time"] = time.time()

@@ -137,3 +137,12 @@ question types here in one pass — is documented at
 per-level pointer file in each `<Level> Apps/` folder), mirroring the equivalent Physics pipeline
 at `Resources/Physics/CLAUDE.md`. Read that file when Luke attaches a worksheet — this file only
 covers this repo's own module contract and registry mechanism.
+
+## Assignments (teacher-set work, checked from stored results)
+
+`core/db/assignments.py` + `core/ui/assignments_ui.py`: a teacher sets topic tests (or a unit's Unit Assessment) with a
+pass mark and due date for classes/pupils (teacher home → Set & Track Assignments; pupils see My Assignments). A test
+counts only if taken through the assignment (`test_results.assignment_id`). The Supabase project is shared with N3apps, so
+`assignments.subject` scopes each app's assignments. Schema: `migrations/2026-10-10_assignments.sql` (note the anon RLS
+policies). The "Import from tracker" tab takes the CSV from `Resources/Apps/.pipeline-tools/assessment_tracker/
+export_app_assignments.py`; a new topic needs a `topic_map.py` entry there. Tests: `venv/bin/python tests/test_assignments.py`.

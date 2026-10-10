@@ -20,16 +20,23 @@ def save_practice_attempt(user_id: str, qualification: str, topic: str, question
         pass  # Don't break the app if tracking fails
 
 
-def save_test_result(user_id: str, qualification: str, topic: str, question_type: str, score: int, total: int):
+def save_test_result(user_id: str, qualification: str, topic: str, question_type: str, score: int, total: int,
+                     assignment_id: str | None = None) -> bool:
+    """Returns True if saved. assignment_id is only sent when set, so ordinary tests still save
+    on a database that hasn't had the assignments migration run yet."""
+    row = {
+        "user_id": user_id,
+        "subject": SUBJECT,
+        "qualification": qualification,
+        "topic": topic,
+        "question_type": question_type,
+        "score": score,
+        "total": total,
+    }
+    if assignment_id:
+        row["assignment_id"] = assignment_id
     try:
-        get_supabase().table("test_results").insert({
-            "user_id": user_id,
-            "subject": SUBJECT,
-            "qualification": qualification,
-            "topic": topic,
-            "question_type": question_type,
-            "score": score,
-            "total": total,
-        }).execute()
+        get_supabase().table("test_results").insert(row).execute()
+        return True
     except Exception:
-        pass
+        return False  # Don't break the app if tracking fails

@@ -24,7 +24,7 @@ def _is_correct(user_input, expected):
         return str(user_input).strip().lower() == str(expected).strip().lower()
 
 
-def render_unit_assessment(topic, qualification="National 5", user_id=None, calc_mode=False):
+def render_unit_assessment(topic, qualification="National 5", user_id=None, calc_mode=False, assignment_id=None):
     assessment = st.session_state.unit_assessment
 
     if not assessment["questions"]:
@@ -47,10 +47,12 @@ def render_unit_assessment(topic, qualification="National 5", user_id=None, calc
 
     if assessment["complete"]:
         if not assessment.get("saved") and user_id:
-            save_test_result(
+            if not save_test_result(
                 user_id, qualification, topic,
-                "Unit Assessment", sum(assessment["results"]), _NUM_QUESTIONS,
-            )
+                "Unit Assessment", sum(assessment["results"]), _NUM_QUESTIONS, assignment_id=assignment_id,
+            ) and assignment_id:
+                st.error("Your score could not be saved, so it won't count towards the assignment. "
+                         "Please tell your teacher.")
             assessment["saved"] = True
         _render_summary(assessment, topic)
         if st.button("Start New Assessment", type="primary"):

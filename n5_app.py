@@ -20,6 +20,8 @@ from core.ui.auth_ui import render_auth, render_change_password
 from core.auth.auth import login_as_admin
 from core.ui.dashboard_ui import render_dashboard
 from core.ui.student_dashboard_ui import render_student_dashboard
+from core.ui.assignments_ui import render_my_assignments, render_assignment_runner, render_teacher_assignments
+from core.db.assignments import outstanding_count
 from core.db.tracker import save_practice_attempt
 from core.models.answers import clock_answers_match
 
@@ -60,7 +62,8 @@ if "submitted" not in st.session_state:
 def _do_logout():
     for key in ["user", "qualification", "submitted", "last_qualification",
                 "last_topic", "last_question_type", "last_tracked_qid",
-                "show_dashboard", "show_student_dashboard"]:
+                "show_dashboard", "show_student_dashboard", "show_assignments",
+                "show_teacher_assignments", "active_assignment"]:
         st.session_state.pop(key, None)
     reset_test()
     reset_numeracy_assessment()
@@ -141,6 +144,27 @@ if st.session_state.get("show_dashboard"):
     render_dashboard()
     st.stop()
 
+# --- Assignments pages ---
+if st.session_state.get("show_assignments") or st.session_state.get("show_teacher_assignments"):
+    st.title("Applications of Maths Practice")
+    col_back, col_corner = st.columns([5, 1])
+    with col_back:
+        if st.button("← Back"):
+            for key in ("show_assignments", "show_teacher_assignments", "active_assignment"):
+                st.session_state.pop(key, None)
+            reset_test()
+            reset_unit_assessment()
+            st.rerun()
+    with col_corner:
+        _render_auth_button()
+    if st.session_state.get("show_teacher_assignments"):
+        render_teacher_assignments(user)
+    elif st.session_state.get("active_assignment"):
+        render_assignment_runner(user)
+    else:
+        render_my_assignments(user)
+    st.stop()
+
 # --- Homepage: qualification selection ---
 if "qualification" not in st.session_state:
     st.title("Applications of Maths Practice")
@@ -152,6 +176,17 @@ if "qualification" not in st.session_state:
     if user and user["role"] == "teacher":
         if st.button("📊 Teacher Dashboard", use_container_width=True):
             st.session_state.show_dashboard = True
+            st.rerun()
+        if st.button("📝 Set & Track Assignments", use_container_width=True):
+            st.session_state.show_teacher_assignments = True
+            st.rerun()
+        st.write("")
+
+    if user and user["role"] != "teacher":
+        todo = outstanding_count(user)
+        if st.button("📝 My Assignments" + (f" ({todo} to do)" if todo else ""), use_container_width=True,
+                     type="primary" if todo else "secondary"):
+            st.session_state.show_assignments = True
             st.rerun()
         st.write("")
 
