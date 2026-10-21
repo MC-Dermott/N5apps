@@ -5,16 +5,25 @@ import pandas as pd
 import streamlit as st
 
 from core.db import assignments as db
-from core.db import tracker_import
+from core.db import reviews, tracker_import
 from core.db.client import get_supabase
 from core.engine.question_factory import QUAL_REGISTRY, calc_mode_available
 from core.engine.session_manager import reset_test, reset_unit_assessment
+from core.ui.solution_ui import answer_display, correct_answer_display, render_common_mistake, render_solution
 from core.ui.test_ui import render_test
 from core.ui.unit_assessment_ui import render_unit_assessment
 
 UNIT_ASSESSMENT = "Unit Assessment"
 
 _ICON = {db.DONE: "✅", db.IN_PROGRESS: "🟡", db.NOT_STARTED: "⚪"}
+
+
+def _how_it_counts(a):
+    if a["pass_pct"]:
+        return (f"Score at least **{a['pass_pct']}%** on each test to complete it. "
+                "You can retry as often as you like; your best score counts.")
+    return ("Complete each test and your score is recorded. You can retry as often as you like; "
+            "your best score counts. Use **Review** to look back over an attempt.")
 
 
 def _due_text(a, state):
@@ -47,10 +56,9 @@ def render_my_assignments(user):
             s = a["status"]
             with st.expander(f"{_ICON[s['state']]} {a['title']} — {s['done']}/{s['total']} done · "
                              f"{_due_text(a, s['state'])}", expanded=expanded):
-                st.caption(f"Score at least **{a['pass_pct']}%** on each test to complete it. "
-                           "You can retry as often as you like; your best score counts.")
+                st.caption(_how_it_counts(a))
                 for n, (item, ist) in enumerate(zip(a["items"], s["items"])):
-                    c1, c2, c3 = st.columns([5, 2, 2])
+                    c1, c2, c3, c4 = st.columns([5, 2, 1.5, 1.5])
                     c1.markdown(f"{_ICON[ist['state']]} **{item['question_type']}** · {item['topic']} "
                                 f"({item['qualification']})")
                     c2.caption("Not started" if ist["best"] is None
@@ -63,6 +71,46 @@ def render_my_assignments(user):
                         reset_unit_assessment()
                         st.session_state.active_assignment = {"assignment": a, "item": item}
                         st.rerun()
+                    latest = _latest_result(a, item)
+                    key = f"review_{a['id']}_{item['id']}"
+                    if latest and c4.button("Hide" if st.session_state.get(key) else "Review", key=f"btn_{key}"):
+                        st.session_state[key] = not st.session_state.get(key)
+                        st.rerun()
+                    if latest and st.session_state.get(key):
+                        _render_review(latest)
+
+
+def _latest_result(a, item):
+    rows = [r for r in a["results"] if (r["qualification"], r["topic"], r["question_type"])
+            == (item["qualification"], item["topic"], item["question_type"])]
+    return max(rows, key=lambda r: r.get("taken_at") or "", default=None)
+
+
+def _render_review(result):
+    """Read-only look back over a completed attempt: every question, the pupil's answer, the correct
+    answer and the worked solution."""
+    when = (result.get("taken_at") or "")[:10]
+    try:
+        attempt = reviews.load_review(result["id"])
+    except Exception:
+        attempt = None
+    if not attempt:
+        st.info(f"Your score from {when} was {result['score']} / {result['total']}. "
+                "The questions from this attempt weren't saved, so they can't be shown.")
+        return
+    with st.container(border=True):
+        st.markdown(f"**Review — attempt on {when}: {result['score']} / {result['total']}**")
+        for i, (q, ans, ok) in enumerate(zip(attempt["questions"], attempt["answers"], attempt["results"])):
+            label = f"Q{i + 1}" + (f" – {attempt['types'][i]}" if attempt["types"] else "")
+            st.markdown(f"**{label}**  \n{q.question_text}")
+            if ok:
+                st.success(f"Your answer: **{answer_display(q, ans)}** ✅")
+            else:
+                st.error(f"Your answer: **{answer_display(q, ans)}** ❌  \n"
+                         f"Correct answer: **{correct_answer_display(q)}**")
+                render_common_mistake(q, ans)
+            with st.expander("Worked solution"):
+                render_solution(q)
 
 
 def render_assignment_runner(user):
@@ -77,7 +125,7 @@ def render_assignment_runner(user):
         reset_unit_assessment()
         st.rerun()
     st.subheader(a["title"])
-    st.caption(f"{qual} · {unit} · {qtype} · pass mark {a['pass_pct']}%")
+    st.caption(f"{qual} · {unit} · {qtype}" + (f" · pass mark {a['pass_pct']}%" if a["pass_pct"] else ""))
 
     state = st.session_state.unit_assessment if qtype == UNIT_ASSESSMENT else st.session_state.test
     calc_mode = False
@@ -97,7 +145,8 @@ def render_assignment_runner(user):
     if test.get("complete") and test["results"]:
         pct = 100 * sum(test["results"]) / len(test["results"])
         if pct >= a["pass_pct"]:
-            st.success(f"✅ {pct:.0f}% — this one is complete.")
+            st.success(f"✅ {pct:.0f}% — this one is complete and your score is recorded. "
+                       "You can look back over it from My Assignments.")
         else:
             st.warning(f"{pct:.0f}% — the pass mark is {a['pass_pct']}%. Read the review and try again.")
 
@@ -192,7 +241,7 @@ def _render_track(students):
     named = sum(1 for t in a["targets"] if t.get("user_id"))
     if named:
         who.append(f"{named} named pupil{'s' if named != 1 else ''}")
-    st.caption(f"{a['pass_pct']}% pass mark · {_due_text(a, None)} · set for " + ", ".join(who))
+    st.caption((f"{a['pass_pct']}% pass mark · " if a["pass_pct"] else "No pass mark · ") + f"{_due_text(a, None)} · set for " + ", ".join(who))
     c1, c2, c3 = st.columns(3)
     c1.metric("Complete", f"{counts[db.DONE]}/{len(pupils)}")
     c2.metric("In progress", counts[db.IN_PROGRESS])

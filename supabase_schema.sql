@@ -120,3 +120,13 @@ CREATE POLICY "anon full access" ON assignment_items
     FOR ALL TO anon USING (true) WITH CHECK (true);
 CREATE POLICY "anon full access" ON assignment_targets
     FOR ALL TO anon USING (true) WITH CHECK (true);
+
+-- Saved attempts for "Review" in My Assignments (migrations/2026-10-21_test_result_reviews.sql)
+CREATE TABLE IF NOT EXISTS test_result_reviews (
+    test_result_id UUID PRIMARY KEY REFERENCES test_results(id) ON DELETE CASCADE,
+    payload        JSONB NOT NULL,
+    created_at     TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE test_result_reviews ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "anon full access" ON test_result_reviews
+    FOR ALL TO anon USING (true) WITH CHECK (true);

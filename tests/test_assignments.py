@@ -63,6 +63,17 @@ def test_save_test_result_omits_assignment_id_when_unset():
     assert sent[1]["assignment_id"] == "x"
 
 
+def test_review_roundtrip():
+    from core.db import reviews
+    from core.engine.question_factory import generate_question
+    qs = [generate_question("Numeracy", "Fractions"), generate_question("Higher" and "Finance", "Credit Cards", qualification="Higher")]
+    state = dict(questions=qs, answers=["1", ["a"]], results=[True, False], types=["Fractions", "Credit Cards"])
+    back = reviews.attempt_from_json(__import__("json").loads(__import__("json").dumps(reviews.attempt_to_json(state))))
+    assert [q.question_text for q in back["questions"]] == [q.question_text for q in qs]
+    assert back["answers"] == ["1", ["a"]] and back["results"] == [True, False]
+    assert all(q.worked_solution == b.worked_solution for q, b in zip(qs, back["questions"]))
+
+
 def test_pages_render():
     from streamlit.testing.v1 import AppTest
     qual, unit, qt = "National 5", "Numeracy", "Fractions"
@@ -89,6 +100,33 @@ else:
     start.click(); at.run(timeout=30)
     assert not at.exception, at.exception
     assert any("Start Test" in b.label or "Start Unit" in b.label for b in at.button), [b.label for b in at.button]
+
+
+def test_review_button_shows_saved_attempt():
+    from streamlit.testing.v1 import AppTest
+    qual, unit, qt = "National 5", "Numeracy", "Fractions"
+    item = dict(id="i1", assignment_id="a1", qualification=qual, topic=unit, question_type=qt)
+    res = dict(id="r1", qualification=qual, topic=unit, question_type=qt, score=3, total=5, taken_at="2026-10-21T09:00:00")
+    a = dict(id="a1", title="T", pass_pct=0, due_date=None, items=[item], results=[res],
+             status=db.assignment_status([item], [res], 0))
+    assert a["status"]["state"] == db.DONE          # no pass mark: taking it once completes it
+    script = f"""
+import streamlit as st
+from core.db import assignments as db, reviews
+db.pupil_assignments = lambda user: [{a!r}]
+from core.engine.question_factory import generate_question
+qs = [generate_question("Numeracy", "Fractions") for _ in range(2)]
+reviews.load_review = lambda rid: dict(questions=qs, answers=["1", "2"], results=[True, False], types=[])
+from core.engine.session_manager import initialise_session
+initialise_session()
+from core.ui.assignments_ui import render_my_assignments
+render_my_assignments({{"id": "u1", "username": "p", "class_code": "5A"}})
+"""
+    at = AppTest.from_string(script).run(timeout=30)
+    assert not at.exception, at.exception
+    next(b for b in at.button if b.label == "Review").click(); at.run(timeout=30)
+    assert not at.exception, at.exception
+    assert any("Review — attempt" in m.value for m in at.markdown), [m.value for m in at.markdown][:10]
 
 
 def test_tracker_import_groups_identical_focus_sets():

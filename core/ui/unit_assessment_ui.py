@@ -49,7 +49,7 @@ def render_unit_assessment(topic, qualification="National 5", user_id=None, calc
         if not assessment.get("saved") and user_id:
             if not save_test_result(
                 user_id, qualification, topic,
-                "Unit Assessment", sum(assessment["results"]), _NUM_QUESTIONS, assignment_id=assignment_id,
+                "Unit Assessment", sum(assessment["results"]), _NUM_QUESTIONS, assignment_id=assignment_id, review_state=assessment,
             ) and assignment_id:
                 st.error("Your score could not be saved, so it won't count towards the assignment. "
                          "Please tell your teacher.")

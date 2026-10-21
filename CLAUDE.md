@@ -146,3 +146,11 @@ counts only if taken through the assignment (`test_results.assignment_id`). The 
 `assignments.subject` scopes each app's assignments. Schema: `migrations/2026-10-10_assignments.sql` (note the anon RLS
 policies). The "Import from tracker" tab takes the CSV from `Resources/Apps/.pipeline-tools/assessment_tracker/
 export_app_assignments.py`; a new topic needs a `topic_map.py` entry there. Tests: `venv/bin/python tests/test_assignments.py`.
+
+**Automatic assignments and Review (Oct 2026).** `Resources/Apps/.pipeline-tools/assessment_tracker/sync_app_assignments.py`
+(daily via launchd) creates "Focus topics — …" assignments straight from the trackers, with pass mark 0 (a pass mark of 0
+means "no pass mark": taking the test once completes the item and the UI hides the pass-mark wording). Pupils can **Review**
+a completed attempt from My Assignments: `core/db/reviews.py` stores the questions, answers and marks as JSON in
+`test_result_reviews` (migration `2026-10-21_test_result_reviews.sql`; scores still save without it). Don't put anything in a
+question's metadata that isn't JSON-friendly (bytes and tuples are handled; other objects become text).
+

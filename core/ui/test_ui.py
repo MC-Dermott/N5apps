@@ -58,7 +58,7 @@ def render_test(topic, question_type, qualification="National 5", user_id=None, 
     if test["complete"]:
         if not test.get("saved") and user_id:
             if not save_test_result(user_id, qualification, topic, question_type, sum(test["results"]),
-                                    _NUM_QUESTIONS, assignment_id=assignment_id) and assignment_id:
+                                    _NUM_QUESTIONS, assignment_id=assignment_id, review_state=test) and assignment_id:
                 st.error("Your score could not be saved, so it won't count towards the assignment. "
                          "Please tell your teacher.")
             test["saved"] = True
