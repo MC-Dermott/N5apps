@@ -38,7 +38,7 @@ def save_test_result(user_id: str, qualification: str, topic: str, question_type
         row["assignment_id"] = assignment_id
     try:
         saved = getattr(get_supabase().table("test_results").insert(row).execute(), "data", None)
-        if review_state and saved:
+        if review_state and saved and assignment_id:   # only assignment attempts are kept for review
             from core.db.reviews import save_review
             save_review(saved[0]["id"], review_state)
         return True

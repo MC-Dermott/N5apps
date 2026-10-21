@@ -61,6 +61,9 @@ def test_save_test_result_omits_assignment_id_when_unset():
     assert "assignment_id" not in sent[0] and sent[0]["subject"] == "maths"
     assert tracker.save_test_result("u", "Higher", "U", "A", 3, 5, assignment_id="x")
     assert sent[1]["assignment_id"] == "x"
+    assert len(sent) == 2          # no review row for an ordinary test, even when review_state is passed
+    assert tracker.save_test_result("u", "Higher", "U", "A", 3, 5, review_state={"questions": []})
+    assert len(sent) == 3
 
 
 def test_change_username():
