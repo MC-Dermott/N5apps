@@ -154,3 +154,7 @@ a completed attempt from My Assignments: `core/db/reviews.py` stores the questio
 `test_result_reviews` (migration `2026-10-21_test_result_reviews.sql`; scores still save without it). Don't put anything in a
 question's metadata that isn't JSON-friendly (bytes and tuples are handled; other objects become text).
 
+**Usernames.** Teacher dashboard -> Change Username (`auth.change_username`) renames an account without losing its results or
+password. The trackers' `App username` values are 5-character initials+digits names made by
+`.pipeline-tools/assessment_tracker/assign_usernames.py`.
+

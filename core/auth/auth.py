@@ -71,6 +71,34 @@ def reset_password(user_id: str, new_password: str) -> "str | None":
         return f"Reset failed: {e}"
 
 
+def valid_username(name: str) -> "str | None":
+    """None if acceptable, else why not. Letters and digits only (so a username can't be confused with
+    anything else when it is copied between the app and the trackers), 3-20 characters."""
+    if not (3 <= len(name) <= 20) or not name.isascii() or not name.isalnum():
+        return "Usernames must be 3-20 letters or digits, with no spaces or symbols."
+    return None
+
+
+def change_username(user_id: str, new_username: str) -> "str | None":
+    """Teacher tool: rename an account. Everything is keyed on the user id, so the pupil's results,
+    assignments and password are unchanged — they just log in with the new name. Returns None on
+    success, error string on failure."""
+    new_username = new_username.strip()
+    problem = valid_username(new_username)
+    if problem:
+        return problem
+    try:
+        sb = get_supabase()
+        taken = sb.table("users").select("id").eq("username", new_username).execute().data or []
+        if any(u["id"] != user_id for u in taken):
+            return "That username is already taken."
+        sb.table("users").update({"username": new_username}).eq("id", user_id).execute()
+        return None
+    except Exception as e:
+        logger.exception("Username change failed for user_id=%r", user_id)
+        return f"Rename failed: {e}"
+
+
 def signup(username: str, password: str, role: str = "student", class_code: str = "") -> "dict | str":
     """Returns user dict on success, error string on failure."""
     try:

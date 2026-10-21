@@ -63,6 +63,33 @@ def test_save_test_result_omits_assignment_id_when_unset():
     assert sent[1]["assignment_id"] == "x"
 
 
+def test_change_username():
+    from core.auth import auth
+    assert auth.valid_username("jm483") is None
+    assert all(auth.valid_username(x) for x in ("ab", "j m483", "jm_48", "x" * 21, "jmé48"))
+    table = [dict(id="1", username="aa111"), dict(id="2", username="bb222")]
+
+    class T:
+        def __init__(s): s.f = None; s.upd = None
+        def select(s, *_): return s
+        def eq(s, col, v): s.f = (col, v); return s
+        def update(s, row): s.upd = row; return s
+        def execute(s):
+            if s.upd is not None:
+                for u in table:
+                    if u["id"] == s.f[1]: u.update(s.upd)
+                return s
+            s.data = [u for u in table if u[s.f[0]] == s.f[1]]
+            return s
+    class C:
+        def table(s, _): return T()
+    auth.get_supabase = lambda: C()
+    assert auth.change_username("1", "bb222") == "That username is already taken."
+    assert auth.change_username("1", "x y") is not None
+    assert auth.change_username("1", " cc333 ") is None and table[0]["username"] == "cc333"
+    assert auth.change_username("1", "cc333") is None            # renaming to your own name is fine
+
+
 def test_review_roundtrip():
     from core.db import reviews
     from core.engine.question_factory import generate_question
