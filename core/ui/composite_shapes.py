@@ -19,6 +19,7 @@ arrows with the text written beside them. Drawings are to scale, so they need se
     square_semis(s, d, labels)     square with a semi-circle (diameter d) on each side
     path_round(L, w, p, labels)    white lawn L × w with a shaded path of width p all round
     semi(d, label) / quarter(r, label)
+    rect(L, w, labels) / triangle(b, h, labels) / lshape(...) / lshape_r(W, H, a, b, labels, rot, mirror)
 """
 import math
 
@@ -230,3 +231,47 @@ def quarter(r, label, path):
     ax.plot([q, q, 0], [0, q, q], color="black", lw=0.9, zorder=3)
     _dim(ax, (0, 0), (r, 0), label, -_o(r))
     return _save(fig, ax, path, 0.1)
+
+
+def rect(L, w, labels, path):
+    fig, ax = _fig(L, w)
+    _outline(ax, [(0, 0), (L, 0), (L, w), (0, w)])
+    o = _o(L)
+    _dim(ax, (0, 0), (L, 0), labels[0], -o)
+    _dim(ax, (0, w), (0, 0), labels[1], -o)
+    return _save(fig, ax, path, 0.08)
+
+
+def triangle(b, h, labels, path):
+    ax_ = 0.35 * b
+    fig, ax = _fig(b, h)
+    _outline(ax, [(0, 0), (b, 0), (ax_, h)])
+    _dashed(ax, (ax_, 0), (ax_, h))
+    q = 0.07 * min(b, h)
+    ax.plot([ax_, ax_ + q, ax_ + q], [q, q, 0], color="black", lw=0.9, zorder=3)
+    o = _o(b)
+    _dim(ax, (0, 0), (b, 0), labels[0], -o)
+    _dim(ax, (ax_, 0), (ax_, h), labels[1], 0.05 * b)
+    return _save(fig, ax, path, 0.08)
+
+
+def lshape(W, H, a, b, labels, path, rot=0, mirror=False):
+    pts = [(0, 0), (W, 0), (W, H - b), (W - a, H - b), (W - a, H), (0, H)]
+    if mirror:
+        pts = [(-x, y) for x, y in pts]
+    for _ in range(rot % 4):
+        pts = [(-y, x) for x, y in pts]
+    xs, ys = [p[0] for p in pts], [p[1] for p in pts]
+    fig, ax = _fig(max(xs) - min(xs), max(ys) - min(ys))
+    _outline(ax, pts)
+    area = sum(pts[i][0] * pts[(i + 1) % 6][1] - pts[(i + 1) % 6][0] * pts[i][1] for i in range(6))
+    o = _o(max(max(xs) - min(xs), max(ys) - min(ys)))
+    off = -o if area > 0 else o        # outside is the right-hand side of an anticlockwise path
+    for i in range(6):
+        _dim(ax, pts[i], pts[(i + 1) % 6], labels[i], -off if i in (2, 3) else off)   # notch sides inside, so arrows don't cross
+    return _save(fig, ax, path, 0.08)
+
+
+def lshape_r(W, H, a, b, labels, rot, mirror, path):
+    """lshape with rot/mirror before the path, so a question's diagram_params args can carry them."""
+    return lshape(W, H, a, b, labels, path, rot=rot, mirror=bool(mirror))

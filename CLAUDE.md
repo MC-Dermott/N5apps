@@ -41,6 +41,12 @@ Assessment" mode under the `"N5 Numeracy"` qualification key, listed in
 `_NUMERACY_ASSESSMENT_GENERATORS`) — same module contract, different registry wiring. Don't add
 regular practice topics there.
 
+**Costed shape questions (Oct 2026).** Perimeter and Area (`topics/geometry_measure/perimeter.py`, `area.py`) share
+`shape_costs.py`: each shape maker returns a spec and `finish()` turns it into the plain question or the exam-style costed
+one (price per metre / per m², "calculate the cost"), adding the cost to the text, scaffold, worked solution and
+distractors. To make a new shape costable, give its spec `kind`, `u="m"` and a bold final quantity line. Tests:
+`venv/bin/python tests/test_perimeter_area.py`.
+
 ## `Question` model (`core/models/question_model.py`)
 
 ```python

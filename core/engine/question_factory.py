@@ -295,9 +295,13 @@ from topics.geometry_measure.volume import (
     generate_volume_question, generate_volume_question_n4, generate_volume_prism, generate_cylinder_question,
     generate_sphere_question, generate_cone_question, generate_volume_composite, generate_volume_litres,
 )
-from topics.geometry_measure.perimeter_area import (
-    generate_perimeter_area_question, generate_perimeter_area_l1, generate_perimeter_area_l2,
-    generate_perimeter_area_l3, generate_perimeter_area_l4, generate_perimeter_area_l5,
+from topics.geometry_measure.perimeter import (
+    generate_perimeter_question, generate_perimeter_l1, generate_perimeter_l2, generate_perimeter_l3,
+    generate_perimeter_l4, generate_perimeter_l5, generate_perimeter_costs,
+)
+from topics.geometry_measure.area import (
+    generate_area_question, generate_area_l1, generate_area_l2, generate_area_l3, generate_area_l4,
+    generate_area_costs,
 )
 from topics.geometry_measure.time_zones import (
     generate_time_zone_question,
@@ -409,7 +413,8 @@ _N5_TOPICS = {
     "Geometry and Measure": {
         "Pythagoras Theorem": generate_pythagoras_question,
         "Area of a Circle": generate_circle_area_question,
-        "Perimeter and Area": generate_perimeter_area_question,
+        "Perimeter": generate_perimeter_question,
+        "Area": generate_area_question,
         "Container Packing": generate_container_packing_question,
         "Gradient": generate_gradient_question,
         "Volume": generate_volume_question,
@@ -694,12 +699,20 @@ _N5_LEVELS = {
             "Composite Solids": generate_volume_composite,
             "Litres and Filling": generate_volume_litres,
         },
-        "Perimeter and Area": {
-            "Arc Length of Semi-circles and Quarter Circles": generate_perimeter_area_l1,
-            "Perimeter of Composite Shapes": generate_perimeter_area_l2,
-            "Area of Semi-circles and Quarter Circles": generate_perimeter_area_l3,
-            "Area of Composite Shapes": generate_perimeter_area_l4,
-            "How Many Do I Need?": generate_perimeter_area_l5,
+        "Perimeter": {
+            "Perimeter of Rectangles and Squares": generate_perimeter_l1,
+            "Perimeter of L-Shapes": generate_perimeter_l2,
+            "Arc Length of Semi-circles and Quarter Circles": generate_perimeter_l3,
+            "Perimeter of Composite Shapes": generate_perimeter_l4,
+            "How Many Do I Need?": generate_perimeter_l5,
+            "Exam Style: The Cost of a Perimeter": generate_perimeter_costs,
+        },
+        "Area": {
+            "Area of Rectangles and Triangles": generate_area_l1,
+            "Area of Semi-circles and Quarter Circles": generate_area_l2,
+            "Area of Composite Shapes": generate_area_l3,
+            "How Many Do I Need?": generate_area_l4,
+            "Exam Style: The Cost of an Area": generate_area_costs,
         },
         "Time Zones": {
             "Time Zone Conversion": generate_time_zone_l1,
