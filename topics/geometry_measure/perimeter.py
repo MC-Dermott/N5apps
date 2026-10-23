@@ -443,7 +443,7 @@ def generate_perimeter_l4(calc_mode=False, cost=None):
 # ── Level 5: how many do I need? ──────────────────────────────────────────────────────────────
 def generate_perimeter_l5(calc_mode=False):
     """A perimeter → number of panels, rails or rolls (rounded UP) → cost."""
-    kind = random.choice(["panels", "rails", "garden", "ribbon"])
+    kind = random.choice(["panels", "rails", "garden", "ribbon", "track"])
     if kind in ("panels", "rails"):
         P = round(random.uniform(30, 90), 2)
         per = random.choice([1.8, 2, 2.4, 2.5]) if kind == "panels" else 3
@@ -485,26 +485,57 @@ def generate_perimeter_l5(calc_mode=False):
         if gap:
             wrong.append((r2(math.ceil((P + gap) / per) * price), "you forgot to take off the gap for the gate."))
         meta = diagram("rect", L, w, [f"{L} m", f"{w} m"])
+    elif kind == "track":
+        L = random.choice([60, 70, 85, 90, 100]); w = random.choice([40, 50, 64, 70])
+        per = random.choice([2, 2.4, 2.5, 3]); price = random.choice([19.95, 21.4, 23.6, 24.5])
+        circ = r2(math.pi * w); P = r2(circ + 2 * L)
+        while abs(P / per - round(P / per)) < 0.02:
+            L += 1; P = r2(circ + 2 * L)
+        text = (f"A running track is a rectangle {L} m long with a semi-circle at each end, {w} m wide, as shown. "
+                f"A fence is built all the way round the track, using panels {g(per)} m long costing £{price:.2f} "
+                f"each. Calculate the cost of the panels. Give the perimeter to 2 decimal places.")
+        q = P / per; n = math.ceil(q - 1e-9); cost = r2(n * price)
+        steps = [{"prompt": "Perimeter of the track (m)", "answer": P},
+                 {"prompt": "Number of panels needed (round UP)", "answer": float(n)}, {"prompt": "Cost", "answer": cost}]
+        worked = [f"Two semi-circles make one circle: C = π × d = π × {w} = {g(circ)} m",
+                  f"Perimeter = {g(circ)} + {L} + {L} = {g(P)} m",
+                  f"Panels = {g(P)} ÷ {g(per)} = {g(r2(q))} → {n} panels (round up)",
+                  f"Cost = {n} × £{price:.2f} = **£{cost:.2f}**"]
+        wrong = [(r2(math.floor(q) * price), f"you rounded DOWN — {math.floor(q)} panels isn't enough (2019 "
+                                              f"Paper 2 Q5 course report)."),
+                 (r2(q * price), f"you can't buy part of a panel — round up to {n} first."),
+                 (r2(math.ceil(circ / per) * price), "you left out the two straight edges (2018, 2019 course "
+                                                      "reports: a straight edge missed)."),
+                 (r2(math.ceil(((L * w) + math.pi * w * w / 4) / per) * price), "you used the AREA, not the "
+                                                                                  "perimeter (2019, 2025 course reports).")]
+        meta = diagram("track", L, w, [f"{L} m", f"{w} m"])
     else:
-        k = random.choice([12, 15, 20, 24, 30]); pcm = random.choice([22.5, 25.1, 31.42, 18.84, 28.26])
-        roll = random.choice([5, 10])
-        text = (f"Gold ribbon is put round the edge of {k} badges. Each badge has a perimeter of {g(pcm)} cm. "
-                f"Ribbon is sold in {roll} m rolls. How many rolls are needed?")
+        k = random.choice([12, 15, 20, 24, 30]); L = random.choice([8, 10, 12, 15]); w = random.choice([4, 6, 8, 10])
+        pcm = r2(2 * L + w + 3.14 * w / 2); roll = random.choice([5, 10])
+
+        def ribbon_text(k):
+            return (f"Gold ribbon is put round the edge of {k} badges. Each badge is a rectangle {L} cm by {w} cm "
+                    f"with a semi-circle on one end, as shown. Ribbon is sold in {roll} m rolls. How many rolls "
+                    f"are needed? Take π = 3.14.")
         X = r2(pcm * k); Xm = r2(X / 100); q = Xm / roll
         while abs(q - round(q)) < 0.02:
             k += 1; X = r2(pcm * k); Xm = r2(X / 100); q = Xm / roll
-            text = (f"Gold ribbon is put round the edge of {k} badges. Each badge has a perimeter of {g(pcm)} cm. "
-                    f"Ribbon is sold in {roll} m rolls. How many rolls are needed?")
+        text = ribbon_text(k)
+        arc = r2(3.14 * w / 2); straight = 2 * L + w
         n = math.ceil(q - 1e-9); cost = float(n)
-        steps = [{"prompt": "Total length of ribbon in cm", "answer": X},
+        steps = [{"prompt": "Perimeter of one badge (cm)", "answer": pcm},
+                 {"prompt": "Total length of ribbon in cm", "answer": X},
                  {"prompt": "Change to metres (÷ 100)", "answer": Xm},
                  {"prompt": "Number of rolls (round UP)", "answer": float(n)}]
-        worked = [f"Ribbon = {g(pcm)} × {k} = {g(X)} cm;  {g(X)} ÷ 100 = {g(Xm)} m",
+        worked = [f"Semi-circle: arc = π × d ÷ 2 = 3.14 × {w} ÷ 2 = {g(arc)} cm",
+                  f"Straight edges = {L} + {w} + {L} = {straight} cm;  Perimeter = {g(arc)} + {straight} = {g(pcm)} cm",
+                  f"Ribbon = {g(pcm)} × {k} = {g(X)} cm;  {g(X)} ÷ 100 = {g(Xm)} m",
                   f"Rolls = {g(Xm)} ÷ {roll} = {g(r2(q))} → **{n} rolls** (round up)"]
         wrong = [(float(max(1, math.floor(q))), "you rounded DOWN — that isn't enough ribbon."),
                  (r2(X / roll), "change the centimetres to metres first (÷ 100) — the rolls are in metres."),
-                 (r2(q), "you can't buy part of a roll — round up.")]
-        meta = {}
+                 (r2(q), "you can't buy part of a roll — round up."),
+                 (float(math.ceil(r2(r2(straight * k) / 100) / roll)), "you left out the curved edge of the badge.")]
+        meta = diagram("rect_semi", L, w, [f"{L} cm", f"{w} cm"])
     return Question(question_text=text, correct_answer=cost, topic=TOPIC, question_type=QTYPE,
                     scaffold_steps=steps, worked_solution=worked, notes=NOTES_HOW_MANY, metadata=meta,
                     distractors=distractors(cost, wrong))
