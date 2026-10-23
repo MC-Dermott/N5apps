@@ -66,6 +66,27 @@ def check_circle_levels():
     print("ok circle levels: radius-only costs, whole-edge questions", whole)
 
 
+def check_area_levels():
+    """Costed circle / semi-circle / quarter-circle area questions give the radius only; every answer is
+    recomputed from the text with the same 2 d.p. rounding."""
+    import math
+    R = lambda x: round(x + 1e-9, 2)
+    levels = get_levels("Geometry and Measure", "Area", "National 5")
+    for name, frac in (("Area of Circles", 1), ("Area of Semi-circles", 2), ("Area of Quarter Circles", 4)):
+        for _ in range(400):
+            q = levels[name](); t = q.question_text
+            pi = 3.14 if "3.14" in t else math.pi
+            kind, v = re.search(r"(radius|diameter) (?:of )?([\d.]+)", t).groups()
+            r = float(v) if kind == "radius" else float(v) / 2
+            exp = R(R(pi * r * r) / frac)
+            m = re.search(r"£([\d.]+) per square metre", t)
+            if m:
+                assert kind == "radius", t
+                exp = R(exp * float(m.group(1)))
+            assert abs(q.correct_answer - exp) < 0.011, (t, q.correct_answer, exp)
+    print("ok area circle levels: radius-only costs, answers recomputed")
+
+
 def main():
     costed = 0
     for qtype in ("Perimeter", "Area"):
@@ -86,6 +107,7 @@ def main():
     else:
         raise AssertionError("the old combined type should be gone")
     check_circle_levels()
+    check_area_levels()
     print("all good —", costed, "costed questions")
 
 

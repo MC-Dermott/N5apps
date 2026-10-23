@@ -40,6 +40,19 @@ angles to the base). Area is in square units (m², cm²).
 square metre, use the AREA, not the perimeter.
 """
 
+NOTES_CIRCLE_AREA = """
+**Area of a circle**
+
+A = πr² (use the **radius**). If you are given the diameter, halve it first: r = d ÷ 2. For a cost,
+multiply the area by the price per square metre.
+
+**Example (from the worksheet):** A circular table top has a diameter of 80 cm. Take π = 3.14.
+- r = 80 ÷ 2 = 40 cm
+- A = 3.14 × 40² = **5024 cm²**
+
+⚠ Using the diameter in πr² was common in 2023 and 2026; πd is the circumference (a length), not the area.
+"""
+
 NOTES_AREA = """
 **Area of a semi-circle or quarter circle**
 
@@ -132,15 +145,42 @@ _ARC_CONTEXTS = [("garden bed", "m"), ("badge", "cm"), ("stone arch", "m"), ("wi
                  ("table corner", "cm"), ("flower bed", "m")]
 
 
-def generate_area_l2(calc_mode=False, cost=None):
-    """Area of a semi-circle or quarter circle (and the cost of covering it)."""
-    cost = (random.random() < COST_SHARE) if cost is None else cost
-    what, u = random.choice([c for c in _ARC_CONTEXTS if c[1] == "m"] if cost else _ARC_CONTEXTS)
-    frac = random.choice([2, 4])
+_CIRCLE_CONTEXTS = [("round trampoline", "m"), ("circular pond", "m"), ("circular paddling pool", "m"),
+                    ("circular table top", "cm"), ("clock face", "cm")]
+_CIRCLE_COST_CONTEXTS = [("circular pond", "m"), ("circular paddling pool", "m"), ("circular flower bed", "m"),
+                         ("circular lawn", "m")]
+_RADII = [2, 3, 4, 5, 6, 8, 10, 12, 14, 15, 20]
+
+
+def _spec_circle_area(cost):
+    """A whole circle. A costed question gives the RADIUS only (as on the worksheet)."""
+    what, u = random.choice(_CIRCLE_COST_CONTEXTS if cost else _CIRCLE_CONTEXTS)
     non_calc = random.random() < 0.5
     pv, ps = pi_for(non_calc)
-    radius_given = random.random() < 0.5
-    r = random.choice([2, 3, 4, 5, 6, 8, 10, 12, 14, 15, 20]); d = 2 * r
+    radius_given = True if cost else random.random() < 0.5
+    r = random.choice(_RADII); d = 2 * r
+    A = r2(pv * r * r)
+    given = f"a radius of {r} {u}" if radius_given else f"a diameter of {d} {u}"
+    steps = ([] if radius_given else [{"prompt": "Radius (halve the diameter)", "answer": float(r)}])
+    steps += [{"prompt": f"Area, {ps} × r²", "answer": A}]
+    lines = ([f"r = {r} {u}"] if radius_given else [f"r = {d} ÷ 2 = {r} {u}"]) + [
+        f"A = π × r² = {ps} × {r}² = **{g(A)} {u}²**"]
+    diag = diagram("circle_r", r, f"{r} {u}") if radius_given else diagram("circle", d, f"{d} {u}")
+    return dict(desc=f"A {what} has {given}.", instr="Calculate its area.", ans=A, u=u, kind="area", final=False,
+                steps=steps, lines=lines, tail=tail_for(non_calc), diag=diag,
+                wrong=[(r2(pv * d * d), "you used the diameter in πr² — halve it first (2023 course report; 2026 "
+                                        "marking instructions)."),
+                       (r2(pv * d), "πd is the circumference (a length), not the area (2023, 2025 course reports)."),
+                       (r2(pv * 2 * r), "2r isn't r² — square the radius.")])
+
+
+def _spec_sector(cost, frac):
+    """A semi-circle (frac 2) or quarter circle (frac 4). A costed question gives the RADIUS only."""
+    what, u = random.choice([c for c in _ARC_CONTEXTS if c[1] == "m"] if cost else _ARC_CONTEXTS)
+    non_calc = random.random() < 0.5
+    pv, ps = pi_for(non_calc)
+    radius_given = True if cost else random.random() < 0.5
+    r = random.choice(_RADII); d = 2 * r
     name = "semi-circle" if frac == 2 else "quarter circle"
     given = f"radius {r} {u}" if radius_given else f"diameter {d} {u}"
     A = r2(pv * r * r); ans = r2(A / frac)
@@ -148,9 +188,11 @@ def generate_area_l2(calc_mode=False, cost=None):
     steps += [{"prompt": f"Area of the full circle, {ps} × r²", "answer": A}, {"prompt": f"Divide by {frac}", "answer": ans}]
     lines = ([f"r = {r} {u}"] if radius_given else [f"r = {d} ÷ 2 = {r} {u}"]) + [
         f"A = π × r² = {ps} × {r}² = {g(A)} {u}²", f"{name.capitalize()}: A = {g(A)} ÷ {frac} = **{g(ans)} {u}²**"]
-    diag = diagram("semi", d, f"{d} {u}") if (frac == 2 and not radius_given) else (
-        diagram("quarter", r, f"{r} {u}") if frac == 4 and radius_given else {})
-    spec = dict(desc=f"A {what} is a {name} with {given}.", instr="Calculate its area.", ans=ans, u=u, kind="area",
+    if frac == 2:
+        diag = diagram("semi_r", r, f"{r} {u}") if radius_given else diagram("semi", d, f"{d} {u}")
+    else:
+        diag = diagram("quarter", r, f"{r} {u}")
+    return dict(desc=f"A {what} is a {name} with {given}.", instr="Calculate its area.", ans=ans, u=u, kind="area",
                 final=False, steps=steps, lines=lines, tail=tail_for(non_calc), diag=diag,
                 wrong=[(r2(r2(pv * d * d) / frac), "you used the diameter in πr² — halve it first (2023 course "
                                                    "report; 2026 marking instructions)."),
@@ -158,7 +200,29 @@ def generate_area_l2(calc_mode=False, cost=None):
                        (r2(r2(pv * d) / frac), "πd is the circumference (a length), not the area (2023, 2025 "
                                                "course reports)."),
                        (r2(r2(pv * 2 * r) / frac), "2r isn't r² — square the radius.")])
-    return finish(spec, cost, QTYPE, NOTES_AREA, "Area")
+
+
+def generate_area_circles(calc_mode=False, cost=None):
+    """Area of a circle (and the cost of covering it)."""
+    cost = (random.random() < COST_SHARE) if cost is None else cost
+    return finish(_spec_circle_area(cost), cost, QTYPE, NOTES_CIRCLE_AREA, "Area")
+
+
+def generate_area_semicircles(calc_mode=False, cost=None):
+    """Area of a semi-circle (and the cost of covering it)."""
+    cost = (random.random() < COST_SHARE) if cost is None else cost
+    return finish(_spec_sector(cost, 2), cost, QTYPE, NOTES_AREA, "Area")
+
+
+def generate_area_quarters(calc_mode=False, cost=None):
+    """Area of a quarter circle (and the cost of covering it)."""
+    cost = (random.random() < COST_SHARE) if cost is None else cost
+    return finish(_spec_sector(cost, 4), cost, QTYPE, NOTES_AREA, "Area")
+
+
+def generate_area_l2(calc_mode=False, cost=None):
+    """Kept for older references: a semi-circle or quarter circle."""
+    return random.choice([generate_area_semicircles, generate_area_quarters])(calc_mode, cost)
 
 
 # ── Level 3: area of a composite shape ────────────────────────────────────────────────────────
@@ -269,7 +333,7 @@ def generate_area_l3(calc_mode=False, cost=None):
 # ── Level 4: how many do I need? ──────────────────────────────────────────────────────────────
 def generate_area_l4(calc_mode=False):
     """An area → number of bags, boxes or tins (rounded UP) → cost."""
-    kind = random.choice(["bark", "tiles", "paint", "lawn"])
+    kind = random.choice(["bark", "tiles", "paint", "lawn", "circle", "wall"])
     meta = {}
     if kind == "bark":
         A = round(random.uniform(40, 300), 2); per = random.choice([4, 5, 6, 8]); A = not_whole(A, per)
@@ -317,6 +381,42 @@ def generate_area_l4(calc_mode=False):
                  (r2(q * price), f"you can't buy part of a tin — round up to {n} first."),
                  (r2(math.ceil(A / per) * price), "the wall needs 2 coats — double the area first.") if coats == 2
                  else (r2(A * price), "divide by what one tin covers first.")]
+    elif kind == "circle":
+        r = random.choice([3, 4, 5, 6]); A = r2(math.pi * r * r)
+        per = random.choice([3, 4, 5, 6, 7]); price = random.choice([6.75, 7.5, 9.25])
+        while abs(A / per - round(A / per)) < 0.02:
+            per += 1
+        q = A / per; n = math.ceil(q - 1e-9); cost = r2(n * price)
+        text = (f"A circular lawn has a radius of {r} m, as shown. It is covered with topsoil. One bag covers "
+                f"{per} m² and costs £{price:.2f}. Calculate the cost of the topsoil.")
+        steps = [{"prompt": "Area of the lawn (to 2 decimal places)", "answer": A},
+                 {"prompt": "Number of bags needed (round UP)", "answer": float(n)}, {"prompt": "Cost", "answer": cost}]
+        worked = [f"Area = π × r² = π × {r}² = {g(A)} m²", f"{g(A)} ÷ {per} = {g(r2(q))} → {n} bags (round up)",
+                  f"Cost = {n} × £{price:.2f} = **£{cost:.2f}**"]
+        wrong = [(r2(math.floor(q) * price), f"you rounded DOWN — {math.floor(q)} bags isn't enough."),
+                 (r2(q * price), f"you can't buy part of a bag — round up to {n} first."),
+                 (r2(math.ceil(r2(math.pi * 2 * r) / per) * price), "πd is the circumference (a length), not the area."),
+                 (r2(math.ceil(r2(math.pi * 4 * r * r) / per) * price), "you used the diameter in πr² — halve it first.")]
+        meta = diagram("circle_r", r, f"{r} m")
+    elif kind == "wall":
+        coats = 2; price = random.choice([14.99, 18.5, 21.5])
+        while True:                                  # something to round up: resample until X ÷ per isn't whole
+            L = random.choice([6, 7, 8, 9, 10]); H = random.choice([2.5, 3, 4.5, 6.5]); A = r2(L * H)
+            per = random.choice([2.5, 4, 5, 9]); X = r2(A * coats)
+            if abs(X / per - round(X / per)) >= 0.02:
+                break
+        q = X / per; n = math.ceil(q - 1e-9); cost = r2(n * price)
+        text = (f"A wall is a rectangle {g(L)} m long and {g(H)} m high, as shown. It is painted with 2 coats. One tin "
+                f"of paint covers {g(per)} m² and costs £{price:.2f}. Calculate the cost of the paint.")
+        steps = [{"prompt": "Area of the wall", "answer": A}, {"prompt": "Total area to cover (2 coats)", "answer": X},
+                 {"prompt": "Number of tins needed (round UP)", "answer": float(n)}, {"prompt": "Cost", "answer": cost}]
+        worked = [f"Area = {g(L)} × {g(H)} = {g(A)} m²", f"Area to cover = {g(A)} × 2 coats = {g(X)} m²",
+                  f"{g(X)} ÷ {g(per)} = {g(r2(q))} → {n} tins (round up)", f"Cost = {n} × £{price:.2f} = **£{cost:.2f}**"]
+        wrong = [(r2(math.floor(q) * price), f"you rounded DOWN — {math.floor(q)} tins isn't enough."),
+                 (r2(q * price), f"you can't buy part of a tin — round up to {n} first."),
+                 (r2(math.ceil(A / per) * price), "the wall needs 2 coats — double the area first."),
+                 (r2(math.ceil(2 * (L + H) * 2 / per) * price), "you used the PERIMETER — paint covers an area.")]
+        meta = diagram("rect", L, H, [f"{g(L)} m", f"{g(H)} m"])
     else:
         L = random.choice([10, 12, 15, 18]); w = random.choice([6, 8, 9, 10]); A = float(L * w)
         per = random.choice([x for x in (3, 3.5, 4, 7) if w % x != 0]); price = random.choice([6.75, 7.5, 9.25])   # w % per == 0 would always divide exactly
@@ -342,9 +442,10 @@ def generate_area_l4(calc_mode=False):
 # ── Level 5: exam style — the cost of an area ─────────────────────────────────────────────────
 def generate_area_costs(calc_mode=False):
     """Any area question, asked the exam way: priced per square metre, calculate the cost."""
-    return random.choice([generate_area_l1, generate_area_l2, generate_area_l3])(calc_mode=calc_mode, cost=True)
+    return random.choice([generate_area_l1, generate_area_circles, generate_area_semicircles, generate_area_quarters,
+                          generate_area_l3])(calc_mode=calc_mode, cost=True)
 
 
 def generate_area_question(calc_mode=False):
-    return random.choice([generate_area_l1, generate_area_l2, generate_area_l3, generate_area_l4,
-                          generate_area_costs])(calc_mode=calc_mode)
+    return random.choice([generate_area_l1, generate_area_circles, generate_area_semicircles, generate_area_quarters,
+                          generate_area_l3, generate_area_l4, generate_area_costs])(calc_mode=calc_mode)

@@ -302,7 +302,7 @@ from topics.geometry_measure.perimeter import (
 )
 from topics.geometry_measure.area import (
     generate_area_question, generate_area_l1, generate_area_l2, generate_area_l3, generate_area_l4,
-    generate_area_costs,
+    generate_area_costs, generate_area_circles, generate_area_semicircles, generate_area_quarters,
 )
 from topics.geometry_measure.time_zones import (
     generate_time_zone_question,
@@ -712,7 +712,9 @@ _N5_LEVELS = {
         },
         "Area": {
             "Area of Rectangles and Triangles": generate_area_l1,
-            "Area of Semi-circles and Quarter Circles": generate_area_l2,
+            "Area of Circles": generate_area_circles,
+            "Area of Semi-circles": generate_area_semicircles,
+            "Area of Quarter Circles": generate_area_quarters,
             "Area of Composite Shapes": generate_area_l3,
             "How Many Do I Need?": generate_area_l4,
             "Exam Style: The Cost of an Area": generate_area_costs,
