@@ -1,7 +1,8 @@
 """N5 Geometry and Measure — Perimeter (split from the old Perimeter and Area, Oct 2026).
 
 Mirrors Perimeter_Worksheet.docx (N5 Apps/Worksheets/Geometry and Measure): rectangles and squares,
-L-shapes with missing sides, arc length of semi-circles and quarter circles, perimeter of composite
+L-shapes with missing sides, circumference of circles, arc length of semi-circles and of quarter circles
+(a costed one gives the radius only; some ask for the whole edge, curved plus straight), perimeter of composite
 shapes, and "how many do I need?" (a perimeter, round UP, then cost). Every shape can also be asked
 the exam way — a fence, edging or rail priced per metre, "calculate the cost" (2019 P2 Q5, 2021 P2 Q2)
 — through `shape_costs.finish`, and the last level is all costed questions.
@@ -58,10 +59,25 @@ the full width, and the sides going up and down add up to the full height. Then 
 the perimeter. An L-shape has six sides: tick each one as you add it.
 """
 
+NOTES_CIRCLE = """
+**Circumference of a circle**
+
+C = πd (use the **diameter**). If you are given the radius, double it first: d = 2 × r.
+
+**Example (from the worksheet):** A circular pond has a radius of 4 m. Take π = 3.14.
+- d = 2 × 4 = 8 m
+- C = 3.14 × 8 = **25.12 m**
+
+⚠ πr² is an AREA, not a length, and the radius is not the diameter (course reports 2023, 2024, 2026).
+For a cost, multiply the circumference by the price per metre.
+"""
+
 NOTES_ARC = """
 **Arc length of a semi-circle or quarter circle**
 
 C = πd (use the **diameter**). A semi-circle's curved edge is C ÷ 2; a quarter circle's is C ÷ 4.
+If the whole edge is needed, add the straight edge(s): the diameter of a semi-circle, the two radii of a
+quarter circle.
 
 **Example (from the worksheet):** A garden bed is a semi-circle with diameter 20 cm. Take π = 3.14.
 - C = 3.14 × 20 = 62.8 cm
@@ -196,45 +212,114 @@ def generate_perimeter_l2(calc_mode=False, cost=None):
     return finish(_spec_lshape(cost), cost, QTYPE, NOTES_LSHAPE, "Perimeter")
 
 
-# ── Level 3: arc length ───────────────────────────────────────────────────────────────────────
+# ── Level 3: circles, semi-circles and quarter circles ────────────────────────────────────────
+_CIRCLE_CONTEXTS = [("round trampoline", "m"), ("circular pond", "m"), ("circular paddling pool", "m"),
+                    ("circular table top", "cm"), ("clock face", "cm")]
+_CIRCLE_COST_CONTEXTS = [("circular pond", "m"), ("circular paddling pool", "m"), ("circular flower bed", "m"),
+                         ("circular sheep pen", "m")]
 _ARC_CONTEXTS = [("garden bed", "m"), ("badge", "cm"), ("stone arch", "m"), ("window", "m"),
                  ("table corner", "cm"), ("flower bed", "m")]
+_RADII = [3, 4, 5, 6, 7, 8, 10, 12, 15, 20, 25, 30]
 
 
-def _spec_arc(cost):
-    what, u = random.choice([c for c in _ARC_CONTEXTS if c[1] == "m"] if cost else _ARC_CONTEXTS)
-    frac = random.choice([2, 4])
+def _spec_circle(cost):
+    """A whole circle. A costed question gives the RADIUS only (the worksheet's rule)."""
+    what, u = random.choice(_CIRCLE_COST_CONTEXTS if cost else _CIRCLE_CONTEXTS)
     non_calc = random.random() < 0.6
     pv, ps = pi_for(non_calc)
-    radius_given = random.random() < 0.5
-    r = random.choice([3, 4, 5, 6, 7, 8, 10, 12, 15, 20, 25, 30]); d = 2 * r
+    radius_given = True if cost else random.random() < 0.5
+    r = random.choice(_RADII); d = 2 * r
+    C = r2(pv * d)
+    given = f"a radius of {r} {u}" if radius_given else f"a diameter of {d} {u}"
+    steps = ([{"prompt": "Diameter (double the radius)", "answer": float(d)}] if radius_given else [])
+    steps += [{"prompt": f"Circumference, {ps} × d", "answer": C}]
+    lines = ([f"d = 2 × {r} = {d} {u}"] if radius_given else [f"d = {d} {u}"]) + [
+        f"C = π × d = {ps} × {d} = **{g(C)} {u}**"]
+    diag = diagram("circle_r", r, f"{r} {u}") if radius_given else diagram("circle", d, f"{d} {u}")
+    return dict(desc=f"A {what} has {given}.", instr="Calculate its circumference.",
+                ans=C, u=u, kind="length", final=False, steps=steps, lines=lines, tail=tail_for(non_calc),
+                item=("fencing", "Fencing"), diag=diag,
+                wrong=[(r2(pv * r * r), "that's πr² — an AREA. Circumference uses πd (2024 and 2026 marking "
+                                        "instructions: πr² scores 0)."),
+                       (r2(pv * r), "you used the radius as the diameter — double it first (2023, 2024 course "
+                                    "reports; 2026 marking instructions)."),
+                       (r2(pv * d * d), "you multiplied by the diameter twice — C = π × d.")])
+
+
+def _spec_arc(cost, frac=None):
+    """A semi-circle (frac 2) or quarter circle (frac 4). A costed question gives the RADIUS only, and half
+    of them ask for the WHOLE edge: the curved edge plus the straight edge(s)."""
+    frac = frac or random.choice([2, 4])
+    what, u = random.choice([c for c in _ARC_CONTEXTS if c[1] == "m"] if cost else _ARC_CONTEXTS)
+    non_calc = random.random() < 0.6
+    pv, ps = pi_for(non_calc)
+    radius_given = True if cost else random.random() < 0.5
+    edge = bool(cost) and random.random() < 0.5
+    r = random.choice(_RADII); d = 2 * r
     name = "semi-circle" if frac == 2 else "quarter circle"
     given = f"radius {r} {u}" if radius_given else f"diameter {d} {u}"
     C = r2(pv * d); arc = r2(C / frac)
+    straight = d if frac == 2 else 2 * r
     steps = ([{"prompt": "Diameter (double the radius)", "answer": float(d)}] if radius_given else [])
     steps += [{"prompt": f"Circumference of the full circle, {ps} × d", "answer": C},
               {"prompt": f"Divide by {frac}", "answer": arc}]
     lines = ([f"d = 2 × {r} = {d} {u}"] if radius_given else [f"d = {d} {u}"]) + [
         f"C = π × d = {ps} × {d} = {g(C)} {u}", f"Arc = {g(C)} ÷ {frac} = **{g(arc)} {u}**"]
-    diag = diagram("semi", d, f"{d} {u}") if frac == 2 else diagram("quarter", r, f"{r} {u}")
-    if radius_given and frac == 2:
-        diag = {}
-    return dict(desc=f"A {what} is a {name} with {given}.", instr="Calculate the length of its curved edge.",
+    if radius_given:
+        diag = diagram("semi_r", r, f"{r} {u}") if frac == 2 else diagram("quarter", r, f"{r} {u}")
+    else:
+        diag = diagram("semi", d, f"{d} {u}") if frac == 2 else diagram("quarter", r, f"{r} {u}")
+    wrong = [(r2(r2(pv * r * r) / frac), "that's πr² — an AREA. Arc length uses πd (2024 and 2026 "
+                                         "marking instructions: πr² scores 0)."),
+             (r2(r2(pv * r) / frac), "you used the radius as the diameter — double it first (2023, "
+                                     "2024 course reports; 2026 marking instructions)."),
+             (C, f"that's the whole circle — divide by {frac} for a {name} (2022 marking "
+                 f"instructions)."),
+             (r2(r2(pv * d) / (6 - frac)), f"a {name} is ÷ {frac}, not ÷ {6 - frac}.")]
+    spec = dict(desc=f"A {what} is a {name} with {given}.", instr="Calculate the length of its curved edge.",
                 ans=arc, u=u, kind="length", final=False, steps=steps, lines=lines, tail=tail_for(non_calc),
-                item=("edging", "Edging"), diag=diag,
-                wrong=[(r2(r2(pv * r * r) / frac), "that's πr² — an AREA. Arc length uses πd (2024 and 2026 "
-                                                   "marking instructions: πr² scores 0)."),
-                       (r2(r2(pv * r) / frac), "you used the radius as the diameter — double it first (2023, "
-                                               "2024 course reports; 2026 marking instructions)."),
-                       (C, f"that's the whole circle — divide by {frac} for a {name} (2022 marking "
-                           f"instructions)."),
-                       (r2(r2(pv * d) / (6 - frac)), f"a {name} is ÷ {frac}, not ÷ {6 - frac}.")])
+                item=("edging", "Edging"), diag=diag, wrong=wrong)
+    if edge:
+        whole = r2(arc + straight)
+        straight_word = "straight edge" if frac == 2 else "two straight edges"
+        spec.update(
+            desc=(f"A {what} is a {name} with {given}. It is edged all the way round, along the curved edge "
+                  f"and the {straight_word}."),
+            instr="Calculate the length of the whole edge.", ans=whole, item=("edging", "Edging"),
+            steps=steps + [{"prompt": f"Whole edge: curved edge + {straight_word} "
+                                      f"({g(straight)} {u})", "answer": whole}],
+            lines=lines[:-1] + [f"Arc = {g(C)} ÷ {frac} = {g(arc)} {u}",
+                                f"Whole edge = {g(arc)} + {g(straight)} = **{g(whole)} {u}**"],
+            wrong=[(arc, f"that's only the curved edge — add the {straight_word} too (2023 course report: "
+                         f"straight edges missed)."),
+                   (r2(arc + r), f"the {straight_word} {'is the diameter' if frac == 2 else 'are TWO radii'}, "
+                                 f"{'not the radius' if frac == 2 else 'not one'}."),
+                   (r2(wrong[0][0] + straight), "you used πr² (an AREA) for the curve."),
+                   (r2(C + straight), f"you didn't divide the circumference by {frac}.")])
+    return spec
+
+
+def generate_perimeter_circles(calc_mode=False, cost=None):
+    """Circumference of a circle (and the cost of fencing it)."""
+    cost = (random.random() < COST_SHARE) if cost is None else cost
+    return finish(_spec_circle(cost), cost, QTYPE, NOTES_CIRCLE, "Circumference")
+
+
+def generate_perimeter_semicircles(calc_mode=False, cost=None):
+    """Arc length of a semi-circle (and the cost of edging it, curved edge only or the whole edge)."""
+    cost = (random.random() < COST_SHARE) if cost is None else cost
+    return finish(_spec_arc(cost, 2), cost, QTYPE, NOTES_ARC, "Length of the edge")
+
+
+def generate_perimeter_quarters(calc_mode=False, cost=None):
+    """Arc length of a quarter circle (and the cost of edging it, curved edge only or the whole edge)."""
+    cost = (random.random() < COST_SHARE) if cost is None else cost
+    return finish(_spec_arc(cost, 4), cost, QTYPE, NOTES_ARC, "Length of the edge")
 
 
 def generate_perimeter_l3(calc_mode=False, cost=None):
-    """Arc length of a semi-circle or quarter circle (and the cost of edging it)."""
-    cost = (random.random() < COST_SHARE) if cost is None else cost
-    return finish(_spec_arc(cost), cost, QTYPE, NOTES_ARC, "Length of the curved edge")
+    """Kept for older references: a semi-circle or quarter circle."""
+    return random.choice([generate_perimeter_semicircles, generate_perimeter_quarters])(calc_mode, cost)
 
 
 # ── Level 4: composite perimeter ──────────────────────────────────────────────────────────────
@@ -428,11 +513,13 @@ def generate_perimeter_l5(calc_mode=False):
 # ── Level 6: exam style — the cost of a perimeter ─────────────────────────────────────────────
 def generate_perimeter_costs(calc_mode=False):
     """Any perimeter question, asked the exam way: priced per metre, calculate the cost."""
-    return random.choice([generate_perimeter_l1, generate_perimeter_l2, generate_perimeter_l3,
+    return random.choice([generate_perimeter_l1, generate_perimeter_l2, generate_perimeter_circles,
+                          generate_perimeter_semicircles, generate_perimeter_quarters,
                           generate_perimeter_l4])(calc_mode=calc_mode, cost=True)
 
 
 def generate_perimeter_question(calc_mode=False):
-    return random.choice([generate_perimeter_l1, generate_perimeter_l2, generate_perimeter_l3,
+    return random.choice([generate_perimeter_l1, generate_perimeter_l2, generate_perimeter_circles,
+                          generate_perimeter_semicircles, generate_perimeter_quarters,
                           generate_perimeter_l4, generate_perimeter_l5, generate_perimeter_costs])(
         calc_mode=calc_mode)

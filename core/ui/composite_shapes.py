@@ -233,6 +233,31 @@ def quarter(r, label, path):
     return _save(fig, ax, path, 0.1)
 
 
+def circle(d, label, path):
+    """A circle with its DIAMETER marked."""
+    r = d / 2
+    fig, ax = _fig(d, d)
+    _outline(ax, _arc(0, 0, r, 0, 360))
+    _dim(ax, (-r, 0), (r, 0), label, 0.0001)
+    return _save(fig, ax, path, 0.1)
+
+
+def circle_r(r, label, path):
+    """A circle with its RADIUS marked."""
+    fig, ax = _fig(2 * r, 2 * r)
+    _outline(ax, _arc(0, 0, r, 0, 360))
+    _dim(ax, (0, 0), (r, 0), label, 0.0001)
+    return _save(fig, ax, path, 0.1)
+
+
+def semi_r(r, label, path):
+    """A semi-circle with its RADIUS marked."""
+    fig, ax = _fig(2 * r, r)
+    _outline(ax, _arc(0, 0, r, 0, 180))
+    _dim(ax, (0, 0), (r, 0), label, 0.0001)
+    return _save(fig, ax, path, 0.1)
+
+
 def rect(L, w, labels, path):
     fig, ax = _fig(L, w)
     _outline(ax, [(0, 0), (L, 0), (L, w), (0, w)])

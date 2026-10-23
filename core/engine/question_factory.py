@@ -297,6 +297,7 @@ from topics.geometry_measure.volume import (
 )
 from topics.geometry_measure.perimeter import (
     generate_perimeter_question, generate_perimeter_l1, generate_perimeter_l2, generate_perimeter_l3,
+    generate_perimeter_circles, generate_perimeter_semicircles, generate_perimeter_quarters,
     generate_perimeter_l4, generate_perimeter_l5, generate_perimeter_costs,
 )
 from topics.geometry_measure.area import (
@@ -702,7 +703,9 @@ _N5_LEVELS = {
         "Perimeter": {
             "Perimeter of Rectangles and Squares": generate_perimeter_l1,
             "Perimeter of L-Shapes": generate_perimeter_l2,
-            "Arc Length of Semi-circles and Quarter Circles": generate_perimeter_l3,
+            "Circumference of Circles": generate_perimeter_circles,
+            "Arc Length of Semi-circles": generate_perimeter_semicircles,
+            "Arc Length of Quarter Circles": generate_perimeter_quarters,
             "Perimeter of Composite Shapes": generate_perimeter_l4,
             "How Many Do I Need?": generate_perimeter_l5,
             "Exam Style: The Cost of a Perimeter": generate_perimeter_costs,

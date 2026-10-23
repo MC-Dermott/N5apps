@@ -40,6 +40,32 @@ def check(q, level, render=True):
         assert buf.getvalue()[:4] == b"\x89PNG", (level, p)
 
 
+def check_circle_levels():
+    """Costed circle / semi-circle / quarter-circle questions give the radius only; whole-edge questions add
+    the straight edge(s); every answer is recomputed from the text with the same 2 d.p. rounding."""
+    import math
+    R = lambda x: round(x + 1e-9, 2)
+    levels = get_levels("Geometry and Measure", "Perimeter", "National 5")
+    whole = 0
+    for name, frac in (("Circumference of Circles", 1), ("Arc Length of Semi-circles", 2),
+                       ("Arc Length of Quarter Circles", 4)):
+        for _ in range(400):
+            q = levels[name](); t = q.question_text
+            pi = 3.14 if "3.14" in t else math.pi
+            kind, v = re.search(r"(radius|diameter) (?:of )?([\d.]+)", t).groups()
+            r = float(v) if kind == "radius" else float(v) / 2
+            exp = R(R(pi * 2 * r) / frac)
+            if "whole edge" in t or "edged all the way round" in t:
+                exp = R(exp + 2 * r); whole += 1        # the diameter, or the two radii
+            m = re.search(r"£([\d.]+) per metre", t)
+            if m:
+                assert kind == "radius", t
+                exp = R(exp * float(m.group(1)))
+            assert abs(q.correct_answer - exp) < 0.011, (t, q.correct_answer, exp)
+    assert whole > 50, whole
+    print("ok circle levels: radius-only costs, whole-edge questions", whole)
+
+
 def main():
     costed = 0
     for qtype in ("Perimeter", "Area"):
@@ -59,6 +85,7 @@ def main():
         pass
     else:
         raise AssertionError("the old combined type should be gone")
+    check_circle_levels()
     print("all good —", costed, "costed questions")
 
 
