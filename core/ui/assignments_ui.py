@@ -124,9 +124,9 @@ def _latest_result(a, item):
     return max(rows, key=lambda r: r.get("taken_at") or "", default=None)
 
 
-def _render_review(result):
+def _render_review(result, only_wrong=False):
     """Read-only look back over a completed attempt: every question, the pupil's answer, the correct
-    answer and the worked solution."""
+    answer and the worked solution. only_wrong (the teacher's view) shows just the ones marked wrong."""
     when = (result.get("taken_at") or "")[:10]
     try:
         attempt = reviews.load_review(result["id"])
@@ -138,7 +138,11 @@ def _render_review(result):
         return
     with st.container(border=True):
         st.markdown(f"**Review — attempt on {when}: {result['score']} / {result['total']}**")
+        if only_wrong and all(attempt["results"]):
+            st.success("Every question was answered correctly.")
         for i, (q, ans, ok) in enumerate(zip(attempt["questions"], attempt["answers"], attempt["results"])):
+            if only_wrong and ok:
+                continue
             label = f"Q{i + 1}" + (f" – {attempt['types'][i]}" if attempt["types"] else "")
             st.markdown(f"**{label}**  \n{q.question_text}")
             if ok:
@@ -346,11 +350,32 @@ def _render_track(students):
     else:
         st.info("No pupils match this assignment's classes yet.")
 
+    _render_pupil_attempts(a, pupils, results)
+
     with st.expander("Delete this assignment"):
         st.caption("Removes the assignment. Tests already taken stay as ordinary test results.")
         if st.button("Delete assignment", key="del_assignment"):
             err = db.delete_assignment(a["id"])
             st.error(err) if err else st.rerun()
+
+
+def _render_pupil_attempts(a, pupils, results):
+    """Pick a pupil to see the questions they got wrong, with their answer, the correct answer and the working."""
+    by_pupil = {}
+    for r in results:
+        by_pupil.setdefault(r["user_id"], []).append(r)
+    taken = [p for p in pupils if p["id"] in by_pupil]
+    if not taken:
+        return
+    st.markdown("#### Questions a pupil got wrong")
+    who = st.selectbox("Pupil", [p["username"] for p in taken], key=f"track_pupil_{a['id']}")
+    pupil = next(p for p in taken if p["username"] == who)
+    attempts = sorted(by_pupil[pupil["id"]], key=lambda r: r.get("taken_at") or "", reverse=True)
+    for n, r in enumerate(attempts):
+        label = (f"{(r.get('taken_at') or '')[:10]} · {r['score']}/{r['total']}"
+                 + ("" if db.is_mixed(a) else f" · {r['question_type']}"))
+        with st.expander(label, expanded=n == 0):
+            _render_review(r, only_wrong=True)
 
 
 def _render_import(teacher, students):
@@ -390,7 +415,8 @@ def _render_import(teacher, students):
         errors = []
         for g in known:
             err = db.create_assignment(teacher["id"], tracker_import.title_for(base, g), None if no_due else due,
-                                       pass_pct, g["items"], [], [ids[u] for u in g["usernames"]])
+                                       pass_pct, g["items"], [], [ids[u] for u in g["usernames"]],
+                                       fmt=db.MIXED)
             if err:
                 errors.append(err)
         if errors:

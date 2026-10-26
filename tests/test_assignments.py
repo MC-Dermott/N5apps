@@ -207,6 +207,23 @@ st.session_state["_saved"] = len(SAVED)
     assert any("Result:" in m.value for m in at.markdown)
 
 
+def test_tracker_pick_items_fills_from_class():
+    import importlib.util
+    path = Path("/Users/luke/Library/CloudStorage/OneDrive-GlowScotland/Resources/Apps/.pipeline-tools/assessment_tracker")
+    if not (path / "export_app_assignments.py").exists():
+        return
+    sys.path.insert(0, str(path))
+    spec = importlib.util.spec_from_file_location("exp", path / "export_app_assignments.py")
+    m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+    unit = next(iter(m.MAP["National 5"]))
+    topics = [t for t, (_, qts) in m.MAP["National 5"][unit].items() if qts]
+    entries = [(0.3, unit, topics[0], "pupil")] + [(0.5 + i / 100, unit, t, "class") for i, t in enumerate(topics[1:])]
+    got = m.pick_items("National 5", entries, 5, set())
+    assert len(got) == 5 and got[0][3] == "pupil" and all(g[3] == "class" for g in got[1:])
+    assert len({(g[4], g[5]) for g in got}) == 5                       # no question type twice
+    assert len(m.pick_items("National 5", entries[:1], 5, set())) <= 5
+
+
 def test_pages_render():
     from streamlit.testing.v1 import AppTest
     qual, unit, qt = "National 5", "Numeracy", "Fractions"
