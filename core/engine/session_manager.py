@@ -36,6 +36,10 @@ def reset_unit_assessment():
     st.session_state.unit_assessment = _empty_unit_assessment()
 
 
+def reset_mixed_assignment():
+    st.session_state.mixed_assignment = _empty_unit_assessment()
+
+
 def initialise_session():
     if "quiz" not in st.session_state:
         st.session_state.quiz = {
@@ -49,3 +53,5 @@ def initialise_session():
         st.session_state.numeracy_assessment = _empty_test()
     if "unit_assessment" not in st.session_state:
         st.session_state.unit_assessment = _empty_unit_assessment()
+    if "mixed_assignment" not in st.session_state:
+        st.session_state.mixed_assignment = _empty_unit_assessment()

@@ -8,8 +8,9 @@ from core.db import assignments as db
 from core.db import progress, reviews, tracker_import
 from core.db.client import get_supabase
 from core.engine.question_factory import QUAL_REGISTRY, calc_mode_available
-from core.engine.session_manager import reset_test, reset_unit_assessment
+from core.engine.session_manager import reset_mixed_assignment, reset_test, reset_unit_assessment
 from core.ui.solution_ui import answer_display, correct_answer_display, render_common_mistake, render_solution
+from core.ui.mixed_assignment_ui import render_mixed_assignment
 from core.ui.test_ui import render_test
 from core.ui.unit_assessment_ui import render_unit_assessment
 
@@ -55,9 +56,14 @@ def render_my_assignments(user):
         st.subheader(heading)
         for a in group:
             s = a["status"]
-            with st.expander(f"{_ICON[s['state']]} {a['title']} — {s['done']}/{s['total']} done · "
+            mixed = db.is_mixed(a)
+            progress_text = (f"{len(a['items'])} questions" if mixed else f"{s['done']}/{s['total']} done")
+            with st.expander(f"{_ICON[s['state']]} {a['title']} — {progress_text} · "
                              f"{_due_text(a, s['state'])}", expanded=expanded):
                 st.caption(_how_it_counts(a))
+                if mixed:
+                    _render_mixed_row(a, s["items"][0], paused.get(a["items"][0]["id"]))
+                    continue
                 for n, (item, ist) in enumerate(zip(a["items"], s["items"])):
                     c1, c2, c3, c4 = st.columns([5, 2, 1.5, 1.5])
                     c1.markdown(f"{_ICON[ist['state']]} **{item['question_type']}** · {item['topic']} "
@@ -84,7 +90,35 @@ def render_my_assignments(user):
                         _render_review(latest)
 
 
+def _render_mixed_row(a, ist, saved):
+    """A mixed-practice assignment is one attempt: list its topics, then Start / Continue / Retry and Review."""
+    first = a["items"][0]
+    st.markdown("One exam-style question from each of: "
+                + ", ".join(f"**{i['question_type']}**" for i in a["items"]) + ".")
+    c1, c2, c3 = st.columns([5, 2, 1.5])
+    attempts = ("Not started" if ist["best"] is None
+                else f"Best {ist['best']:.0f}% · {ist['attempts']} attempt{'s' if ist['attempts'] != 1 else ''}")
+    c1.caption(f"⏸ Paused at Q{saved['index'] + 1} of {saved['total']} · {attempts}" if saved else attempts)
+    label = "Continue" if saved else "Retry" if ist["attempts"] else "Start"
+    if c2.button(label, key=f"run_{a['id']}", type="secondary" if ist["state"] == db.DONE and not saved else "primary"):
+        reset_test()
+        reset_unit_assessment()
+        reset_mixed_assignment()
+        st.session_state.active_assignment = {"assignment": a, "item": first}
+        st.rerun()
+    latest = _latest_result(a, None)
+    key = f"review_{a['id']}"
+    if latest and c3.button("Hide" if st.session_state.get(key) else "Review", key=f"btn_{key}"):
+        st.session_state[key] = not st.session_state.get(key)
+        st.rerun()
+    if latest and st.session_state.get(key):
+        _render_review(latest)
+
+
 def _latest_result(a, item):
+    if item is None:       # mixed assignment: every result belongs to the one attempt
+        rows = list(a["results"])
+        return max(rows, key=lambda r: r.get("taken_at") or "", default=None)
     rows = [r for r in a["results"] if (r["qualification"], r["topic"], r["question_type"])
             == (item["qualification"], item["topic"], item["question_type"])]
     return max(rows, key=lambda r: r.get("taken_at") or "", default=None)
@@ -123,15 +157,18 @@ def render_assignment_runner(user):
     a, item = ctx["assignment"], ctx["item"]
     qual, unit, qtype = item["qualification"], item["topic"], item["question_type"]
 
+    mixed = db.is_mixed(a)
     if st.button("← Back to my assignments"):
         st.session_state.pop("active_assignment", None)
         reset_test()
         reset_unit_assessment()
+        reset_mixed_assignment()
         st.rerun()
     st.subheader(a["title"])
-    st.caption(f"{qual} · {unit} · {qtype}" + (f" · pass mark {a['pass_pct']}%" if a["pass_pct"] else ""))
+    st.caption(("Mixed practice · exam-style questions" if mixed else f"{qual} · {unit} · {qtype}")
+               + (f" · pass mark {a['pass_pct']}%" if a["pass_pct"] else ""))
 
-    state_key = "unit_assessment" if qtype == UNIT_ASSESSMENT else "test"
+    state_key = "mixed_assignment" if mixed else "unit_assessment" if qtype == UNIT_ASSESSMENT else "test"
     state = st.session_state[state_key]
     calc_key = f"asg_calc_{a['id']}_{item['id']}"
 
@@ -157,7 +194,7 @@ def render_assignment_runner(user):
         return
 
     calc_mode = False
-    if qual != "Higher" and (qtype == UNIT_ASSESSMENT or calc_mode_available(unit, qtype, qualification=qual)):
+    if not mixed and qual != "Higher" and (qtype == UNIT_ASSESSMENT or calc_mode_available(unit, qtype, qualification=qual)):
         choice = st.radio("Calculator", ["Calculator", "Non-calculator"], horizontal=True,
                           disabled=bool(state["questions"]), key=calc_key)
         calc_mode = choice == "Non-calculator"
@@ -171,7 +208,9 @@ def render_assignment_runner(user):
             progress.save_progress(user["id"], item["id"], state, calc_mode)
             ctx["fp"] = fp
 
-    if qtype == UNIT_ASSESSMENT:
+    if mixed:
+        render_mixed_assignment(a, user["id"])
+    elif qtype == UNIT_ASSESSMENT:
         render_unit_assessment(unit, qualification=qual, user_id=user["id"], calc_mode=calc_mode,
                                assignment_id=a["id"])
     else:
@@ -198,18 +237,25 @@ def _students():
             .order("username").execute().data or [])
 
 
-def _topic_choices(qual, unit):
-    return list(QUAL_REGISTRY[qual][unit].keys()) + [UNIT_ASSESSMENT]
+def _topic_choices(qual, unit, mixed=False):
+    return list(QUAL_REGISTRY[qual][unit].keys()) + ([] if mixed else [UNIT_ASSESSMENT])
 
 
 def _render_set_new(teacher, students):
     items = st.session_state.setdefault("new_assignment_items", [])
 
     st.markdown("**1. Choose the work**")
+    fmt = st.radio("Format", ["Tests (5 questions on each topic)", "Mixed practice (one exam-style question per topic)"],
+                   key="na_format", horizontal=True,
+                   help="Mixed practice is a single attempt with one question from each topic you add — an "
+                        "exam-style one where the topic has them, otherwise a random question.")
+    mixed = fmt.startswith("Mixed")
+    if mixed and any(i["question_type"] == UNIT_ASSESSMENT for i in items):
+        items[:] = [i for i in items if i["question_type"] != UNIT_ASSESSMENT]
     c1, c2, c3 = st.columns(3)
     qual = c1.selectbox("Level", list(QUAL_REGISTRY), key="na_qual")
     unit = c2.selectbox("Unit", list(QUAL_REGISTRY[qual]), key="na_unit")
-    picks = c3.multiselect("Topics", _topic_choices(qual, unit), key=f"na_topics_{qual}_{unit}")
+    picks = c3.multiselect("Topics", _topic_choices(qual, unit, mixed), key=f"na_topics_{qual}_{unit}")
     if st.button("Add to assignment", disabled=not picks):
         for qt in picks:
             item = {"qualification": qual, "topic": unit, "question_type": qt}
@@ -240,7 +286,8 @@ def _render_set_new(teacher, students):
 
     if st.button("Set assignment", type="primary"):
         err = db.create_assignment(teacher["id"], title, None if no_due else due, pass_pct, items,
-                                   sel_classes, [names[p] for p in sel_pupils])
+                                   sel_classes, [names[p] for p in sel_pupils],
+                                   fmt=db.MIXED if mixed else "tests")
         if err:
             st.error(err)
         else:
@@ -268,12 +315,17 @@ def _render_track(students):
     rows, counts = [], {db.DONE: 0, db.IN_PROGRESS: 0, db.NOT_STARTED: 0}
     for p in pupils:
         mine = [r for r in results if r["user_id"] == p["id"]]
-        s = db.assignment_status(a["items"], mine, a["pass_pct"])
+        s = db.assignment_status(a["items"], mine, a["pass_pct"], a.get("format", "tests"))
         counts[s["state"]] += 1
         row = {"Pupil": p["username"], "Class": p.get("class_code") or "—"}
-        for item, ist in zip(a["items"], s["items"]):
-            row[item["question_type"]] = ("—" if ist["best"] is None else
-                                          f"{_ICON[ist['state']]} {ist['best']:.0f}%")
+        if db.is_mixed(a):
+            ist = s["items"][0]
+            row["Best score"] = "—" if ist["best"] is None else f"{ist['best']:.0f}%"
+            row["Attempts"] = ist["attempts"]
+        else:
+            for item, ist in zip(a["items"], s["items"]):
+                row[item["question_type"]] = ("—" if ist["best"] is None else
+                                              f"{_ICON[ist['state']]} {ist['best']:.0f}%")
         row["Status"] = ("⚠️ overdue · " if db.is_overdue(a, s["state"]) else "") + s["state"]
         rows.append(row)
 

@@ -1112,3 +1112,26 @@ def generate_test_question(topic, question_type, qualification="National 5", cal
     generator = (_weighted_level_generator(topic, question_type, qualification)
                  or (random.choice(list(levels.values())) if levels else QUAL_REGISTRY[qualification][topic][question_type]))
     return _invoke(generator, calc_mode)
+
+
+def exam_style_levels(topic, question_type, qualification="National 5"):
+    """The levels designated exam-style for a question type (their names start "Exam Style"), or {}."""
+    return {name: gen for name, gen in get_levels(topic, question_type, qualification).items()
+            if name.lower().startswith("exam style")}
+
+
+def generate_exam_question(topic, question_type, qualification="National 5"):
+    """One exam-style question for a topic: a random one of its designated Exam Style levels, or, when it
+    has none, a random question as a Test would give. A question type that is itself exam style (e.g.
+    "Fractions (Exam Style)") just uses its own generator."""
+    exam = exam_style_levels(topic, question_type, qualification)
+    if exam:
+        return random.choice(list(exam.values()))()
+    return generate_test_question(topic, question_type, qualification=qualification)
+
+
+def generate_mixed_assignment(items):
+    """One exam-style question per item ({qualification, topic, question_type}). Returns
+    (questions, labels) where each label is "<topic> · <question type>"."""
+    questions = [generate_exam_question(i["topic"], i["question_type"], i["qualification"]) for i in items]
+    return questions, [f"{i['topic']} · {i['question_type']}" for i in items]

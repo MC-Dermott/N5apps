@@ -153,6 +153,60 @@ render_assignment_runner({"id": "u1"})
     assert any("Start Test" in b.label for b in at2.button)
 
 
+def test_exam_question_prefers_exam_style_levels():
+    from core.engine.question_factory import exam_style_levels, generate_exam_question
+    assert len(exam_style_levels("Numeracy", "Fractions", "National 5")) == 3
+    assert exam_style_levels("Numeracy", "Ratio and Proportion", "National 5") == {}
+    for _ in range(20):
+        assert generate_exam_question("Numeracy", "Fractions", "National 5").question_text
+        assert generate_exam_question("Numeracy", "Ratio and Proportion", "National 5").question_text    # no exam levels: random
+
+
+def test_mixed_status():
+    res = [dict(score=2, total=5), dict(score=4, total=5)]
+    s = db.assignment_status([], res, 60, "mixed")
+    assert s["state"] == db.DONE and s["items"][0]["best"] == 80 and s["items"][0]["attempts"] == 2
+    assert db.assignment_status([], [dict(score=1, total=5)], 60, "mixed")["state"] == db.IN_PROGRESS
+    assert db.assignment_status([], [], 60, "mixed")["state"] == db.NOT_STARTED
+
+
+def test_mixed_assignment_runs_and_saves():
+    from streamlit.testing.v1 import AppTest
+    script = """
+import streamlit as st
+from core.db import progress, tracker
+SAVED = []
+progress.load_progress = lambda u, i: None
+progress.save_progress = lambda *a, **k: True
+progress.delete_progress = lambda *a, **k: None
+tracker.save_test_result = lambda *a, **k: SAVED.append((a, k)) or True
+import core.ui.mixed_assignment_ui as m
+m.save_test_result = tracker.save_test_result
+from core.engine.session_manager import initialise_session
+initialise_session()
+items = [dict(id="i%d" % n, qualification="National 5", topic="Numeracy", question_type=t)
+         for n, t in enumerate(["Fractions", "Ratio and Proportion"])]
+if "active_assignment" not in st.session_state:
+    st.session_state.active_assignment = {"assignment": dict(id="a1", title="T", pass_pct=0, format="mixed", items=items),
+                                          "item": items[0]}
+from core.ui.assignments_ui import render_assignment_runner
+render_assignment_runner({"id": "u1"})
+st.session_state["_saved"] = len(SAVED)
+"""
+    at = AppTest.from_string(script).run(timeout=30)
+    assert not at.exception, at.exception
+    at.button(key="mixed_start").click(); at.run(timeout=30)
+    assert not at.exception, at.exception
+    assert len(at.session_state.mixed_assignment["questions"]) == 2
+    for _ in range(2):
+        for ti in at.text_input:
+            ti.set_value("1")
+        next(b for b in at.button if b.label == "Submit").click(); at.run(timeout=30)
+        assert not at.exception, at.exception
+    assert at.session_state.mixed_assignment["complete"]
+    assert any("Result:" in m.value for m in at.markdown)
+
+
 def test_pages_render():
     from streamlit.testing.v1 import AppTest
     qual, unit, qt = "National 5", "Numeracy", "Fractions"

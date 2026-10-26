@@ -28,8 +28,30 @@ def item_status(item, results, pass_pct):
     return {"state": DONE if best >= pass_pct else IN_PROGRESS, "best": best, "attempts": len(rows)}
 
 
-def assignment_status(items, results, pass_pct):
+MIXED = "mixed"
+MIXED_KEY = {"qualification": "Mixed", "topic": "Mixed assignment", "question_type": "Mixed"}
+
+
+def is_mixed(assignment):
+    return assignment.get("format") == MIXED
+
+
+def mixed_status(results, pass_pct):
+    """A mixed assignment is one attempt covering every topic: the best attempt decides. The result has the
+    same shape as assignment_status, with the whole assignment as its single item."""
+    rows = [r for r in results if r.get("total")]
+    if not rows:
+        item = {"state": NOT_STARTED, "best": None, "attempts": 0}
+    else:
+        best = max(100 * r["score"] / r["total"] for r in rows)
+        item = {"state": DONE if best >= pass_pct else IN_PROGRESS, "best": best, "attempts": len(rows)}
+    return {"state": item["state"], "done": int(item["state"] == DONE), "total": 1, "items": [item]}
+
+
+def assignment_status(items, results, pass_pct, fmt="tests"):
     """Overall state of one pupil's assignment, plus the per-item statuses."""
+    if fmt == MIXED:
+        return mixed_status(results, pass_pct)
     per_item = [item_status(i, results, pass_pct) for i in items]
     done = sum(s["state"] == DONE for s in per_item)
     if items and done == len(items):
@@ -54,7 +76,7 @@ def item_label(item):
 
 # ── Teacher: create / list / delete ───────────────────────────────────────────
 
-def create_assignment(teacher_id, title, due, pass_pct, items, class_codes, user_ids):
+def create_assignment(teacher_id, title, due, pass_pct, items, class_codes, user_ids, fmt="tests"):
     """Returns None on success, or an error string. items: [{qualification, topic, question_type}]."""
     if not title.strip():
         return "Give the assignment a title."
@@ -64,10 +86,11 @@ def create_assignment(teacher_id, title, due, pass_pct, items, class_codes, user
         return "Choose at least one class or pupil."
     sb = get_supabase()
     try:
-        created = sb.table("assignments").insert({
-            "title": title.strip(), "created_by": teacher_id, "subject": SUBJECT,
-            "due_date": due.isoformat() if due else None, "pass_pct": int(pass_pct),
-        }).execute().data[0]
+        row = {"title": title.strip(), "created_by": teacher_id, "subject": SUBJECT,
+               "due_date": due.isoformat() if due else None, "pass_pct": int(pass_pct)}
+        if fmt == MIXED:          # only sent when needed, so ordinary assignments work before the migration
+            row["format"] = MIXED
+        created = sb.table("assignments").insert(row).execute().data[0]
     except Exception as e:
         return f"Could not create the assignment (has the assignments migration been run?): {e}"
     aid = created["id"]
@@ -142,7 +165,7 @@ def pupil_assignments(user):
     for a in assignments:
         a["items"] = [i for i in items if i["assignment_id"] == a["id"]]
         a["results"] = [r for r in results if r["assignment_id"] == a["id"]]
-        a["status"] = assignment_status(a["items"], a["results"], a["pass_pct"])
+        a["status"] = assignment_status(a["items"], a["results"], a["pass_pct"], a.get("format", "tests"))
     return assignments
 
 

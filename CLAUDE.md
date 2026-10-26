@@ -164,3 +164,11 @@ question's metadata that isn't JSON-friendly (bytes and tuples are handled; othe
 password. The trackers' `App username` values are 5-character initials+digits names made by
 `.pipeline-tools/assessment_tracker/assign_usernames.py`.
 
+
+**Saved progress and mixed assignments (Oct 2026).** A part-finished assignment test is saved after each answer
+(`core/db/progress.py`, table `assignment_progress`, migration `2026-10-26_assignment_progress.sql`); the pupil gets
+Continue / Start over. An assignment with `format = 'mixed'` (migration `2026-10-26_assignment_format.sql`) is a single
+attempt with one question per topic from `generate_exam_question` (`question_factory.py`): a random level whose name
+starts "Exam Style", else a random Test-style question. It saves one `test_results` row keyed `db.MIXED_KEY`, its progress
+is stored under its first item's id, and `core/ui/mixed_assignment_ui.py` runs it. The tracker sync/import still creates
+ordinary 'tests' assignments.
