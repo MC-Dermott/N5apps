@@ -40,11 +40,11 @@ def _decode(value):
     return value
 
 
-def question_to_json(question):
+def question_to_json(question, keep_bytes=False):
     d = asdict(question)
 
     def strip(q):
-        for k in _DROP_METADATA:
+        for k in () if keep_bytes else _DROP_METADATA:
             q["metadata"].pop(k, None)
         for part in q["parts"]:
             strip(part)

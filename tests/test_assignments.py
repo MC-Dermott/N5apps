@@ -104,6 +104,55 @@ def test_review_roundtrip():
     assert all(q.worked_solution == b.worked_solution for q, b in zip(qs, back["questions"]))
 
 
+def test_progress_roundtrip():
+    import json
+    from core.db import progress
+    from core.engine.question_factory import generate_question
+    qs = [generate_question("Numeracy", "Fractions") for _ in range(3)]
+    state = dict(questions=qs, answers=["1", None, None], results=[True, None, None], types=[], index=1)
+    back, calc = progress.progress_from_json(json.loads(json.dumps(progress.progress_to_json(state, True))))
+    assert calc and back["index"] == 1 and back["results"] == [True, None, None] and back["answers"][0] == "1"
+    assert [q.question_text for q in back["questions"]] == [q.question_text for q in qs]
+    assert not back["complete"] and progress.answered_count(back) == 1
+
+
+def test_continue_and_start_over():
+    from streamlit.testing.v1 import AppTest
+    script = """
+import streamlit as st
+from core.db import progress
+from core.engine.question_factory import generate_question
+STORE = {}
+progress.save_progress = lambda u, i, s, c=False: STORE.update({i: progress.progress_to_json(s, c)}) or True
+progress.load_progress = lambda u, i: progress.progress_from_json(STORE[i]) if i in STORE else None
+progress.delete_progress = lambda u, i: STORE.pop(i, None)
+from core.engine.session_manager import initialise_session
+initialise_session()
+st.session_state.setdefault("seeded", False)
+if not st.session_state.seeded:
+    qs = [generate_question("Numeracy", "Fractions") for _ in range(5)]
+    STORE["i1"] = progress.progress_to_json(
+        dict(questions=qs, answers=["1", "2", None, None, None], results=[True, False, None, None, None],
+             types=[], index=2), False)
+    st.session_state.seeded = True
+    st.session_state.active_assignment = {"assignment": dict(id="a1", title="T", pass_pct=60, items=[]),
+        "item": dict(id="i1", qualification="National 5", topic="Numeracy", question_type="Fractions")}
+from core.ui.assignments_ui import render_assignment_runner
+render_assignment_runner({"id": "u1"})
+"""
+    at = AppTest.from_string(script).run(timeout=30)
+    assert not at.exception, at.exception
+    assert any("question 3 of 5" in i.value for i in at.info)
+    at.button(key="asg_continue").click(); at.run(timeout=30)
+    assert not at.exception, at.exception
+    assert at.session_state.test["index"] == 2 and at.session_state.test["answers"][1] == "2"
+    # leaving mid-test then coming back offers Continue again; Start over discards the saved attempt
+    at2 = AppTest.from_string(script).run(timeout=30)
+    at2.button(key="asg_start_over").click(); at2.run(timeout=30)
+    assert not at2.exception, at2.exception
+    assert any("Start Test" in b.label for b in at2.button)
+
+
 def test_pages_render():
     from streamlit.testing.v1 import AppTest
     qual, unit, qt = "National 5", "Numeracy", "Fractions"

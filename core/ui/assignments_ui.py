@@ -5,7 +5,7 @@ import pandas as pd
 import streamlit as st
 
 from core.db import assignments as db
-from core.db import reviews, tracker_import
+from core.db import progress, reviews, tracker_import
 from core.db.client import get_supabase
 from core.engine.question_factory import QUAL_REGISTRY, calc_mode_available
 from core.engine.session_manager import reset_test, reset_unit_assessment
@@ -46,6 +46,7 @@ def render_my_assignments(user):
         st.info("Nothing has been set for you yet.")
         return
 
+    paused = progress.progress_summaries(user["id"])
     todo = [a for a in assignments if a["status"]["state"] != db.DONE]
     done = [a for a in assignments if a["status"]["state"] == db.DONE]
     for heading, group, expanded in (("To do", todo, True), ("Completed", done, False)):
@@ -61,12 +62,15 @@ def render_my_assignments(user):
                     c1, c2, c3, c4 = st.columns([5, 2, 1.5, 1.5])
                     c1.markdown(f"{_ICON[ist['state']]} **{item['question_type']}** · {item['topic']} "
                                 f"({item['qualification']})")
-                    c2.caption("Not started" if ist["best"] is None
-                               else f"Best {ist['best']:.0f}% · {ist['attempts']} attempt"
-                                    f"{'s' if ist['attempts'] != 1 else ''}")
-                    label = "Retry" if ist["attempts"] else "Start"
+                    saved = paused.get(item["id"])
+                    attempts = ("Not started" if ist["best"] is None
+                                else f"Best {ist['best']:.0f}% · {ist['attempts']} attempt"
+                                     f"{'s' if ist['attempts'] != 1 else ''}")
+                    c2.caption(f"⏸ Paused at Q{saved['index'] + 1} of {saved['total']} · {attempts}"
+                               if saved else attempts)
+                    label = "Continue" if saved else "Retry" if ist["attempts"] else "Start"
                     if c3.button(label, key=f"run_{a['id']}_{item['id']}",
-                                 type="secondary" if ist["state"] == db.DONE else "primary"):
+                                 type="secondary" if ist["state"] == db.DONE and not saved else "primary"):
                         reset_test()
                         reset_unit_assessment()
                         st.session_state.active_assignment = {"assignment": a, "item": item}
@@ -127,12 +131,45 @@ def render_assignment_runner(user):
     st.subheader(a["title"])
     st.caption(f"{qual} · {unit} · {qtype}" + (f" · pass mark {a['pass_pct']}%" if a["pass_pct"] else ""))
 
-    state = st.session_state.unit_assessment if qtype == UNIT_ASSESSMENT else st.session_state.test
+    state_key = "unit_assessment" if qtype == UNIT_ASSESSMENT else "test"
+    state = st.session_state[state_key]
+    calc_key = f"asg_calc_{a['id']}_{item['id']}"
+
+    # A part-finished attempt is kept; offer to carry on or throw it away before anything else is drawn.
+    if "saved" not in ctx:
+        ctx["saved"] = progress.load_progress(user["id"], item["id"])
+    if ctx["saved"] and not state["questions"]:
+        saved_state, saved_calc = ctx["saved"]
+        st.info(f"You have an unfinished attempt — you were on question {saved_state['index'] + 1} of "
+                f"{len(saved_state['questions'])} and had answered {progress.answered_count(saved_state)}. "
+                "You can pick up where you left off, or start again with a new set of questions.")
+        cont, over, _ = st.columns([1, 1, 3])
+        if cont.button("Continue", type="primary", key="asg_continue"):
+            st.session_state[state_key] = saved_state
+            st.session_state[calc_key] = "Non-calculator" if saved_calc else "Calculator"
+            ctx["saved"] = None
+            ctx["fp"] = None
+            st.rerun()
+        if over.button("Start over", key="asg_start_over"):
+            progress.delete_progress(user["id"], item["id"])
+            ctx["saved"] = None
+            st.rerun()
+        return
+
     calc_mode = False
     if qual != "Higher" and (qtype == UNIT_ASSESSMENT or calc_mode_available(unit, qtype, qualification=qual)):
         choice = st.radio("Calculator", ["Calculator", "Non-calculator"], horizontal=True,
-                          disabled=bool(state["questions"]), key=f"asg_calc_{a['id']}_{item['id']}")
+                          disabled=bool(state["questions"]), key=calc_key)
         calc_mode = choice == "Non-calculator"
+
+    # Save after every submitted answer (and every Previous), so leaving at any point keeps the work so far.
+    if not state["questions"]:
+        ctx["cleared"] = False
+    elif not state["complete"] and (state["index"] or progress.answered_count(state)):
+        fp = (state["index"], repr(state["answers"]))
+        if fp != ctx.get("fp"):
+            progress.save_progress(user["id"], item["id"], state, calc_mode)
+            ctx["fp"] = fp
 
     if qtype == UNIT_ASSESSMENT:
         render_unit_assessment(unit, qualification=qual, user_id=user["id"], calc_mode=calc_mode,
@@ -141,7 +178,10 @@ def render_assignment_runner(user):
         render_test(unit, qtype, qualification=qual, user_id=user["id"], calc_mode=calc_mode,
                     assignment_id=a["id"])
 
-    test = state
+    test = st.session_state[state_key]
+    if test.get("complete") and not ctx.get("cleared"):
+        progress.delete_progress(user["id"], item["id"])
+        ctx["cleared"] = True
     if test.get("complete") and test["results"]:
         pct = 100 * sum(test["results"]) / len(test["results"])
         if pct >= a["pass_pct"]:
