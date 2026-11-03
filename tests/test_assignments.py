@@ -279,6 +279,41 @@ render_my_assignments({{"id": "u1", "username": "p", "class_code": "5A"}})
     assert any("Review — attempt" in m.value for m in at.markdown), [m.value for m in at.markdown][:10]
 
 
+def test_group_assignments_collapses_batches():
+    a = lambda i, batch=None: dict(id=i, batch=batch)
+    groups = db.group_assignments([a("1", "B"), a("2"), a("3", "B"), a("4", "C"), a("5")])
+    assert [(g["batch"], [x["id"] for x in g["assignments"]]) for g in groups] == [
+        ("B", ["1", "3"]), (None, ["2"]), ("C", ["4"]), (None, ["5"])]
+
+
+def test_track_page_shows_batch_as_one_entry():
+    from streamlit.testing.v1 import AppTest
+    item = dict(id="i1", assignment_id="a1", qualification="National 5", topic="Numeracy", question_type="Ratio and Proportion")
+    def asg(i, who, batch=None):
+        return dict(id=i, title="Focus", pass_pct=0, due_date="2026-11-02", created_at="2026-10-26T10:00:00",
+                    format="mixed", batch=batch, items=[{**item, "assignment_id": i}],
+                    targets=[dict(user_id=u) for u in who])
+    assignments = [asg("a1", ["u1", "u2"], "Batch"), asg("a2", ["u3"], "Batch"), asg("a3", ["u1"])]
+    script = f"""
+from core.db import assignments as db
+db.teacher_assignments = lambda: {assignments!r}
+db.assignment_results = lambda aid: [dict(user_id="u2", assignment_id=aid, score=3, total=6, taken_at="2026-11-01",
+                                         qualification="National 5", topic="Numeracy", question_type="Ratio and Proportion")] if aid == "a1" else []
+from core.ui import assignments_ui
+assignments_ui._students = lambda: [dict(id=u, username=u, class_code="N5") for u in ("u1", "u2", "u3")]
+assignments_ui._render_review = lambda r, only_wrong=False: None
+assignments_ui._render_track(assignments_ui._students())
+"""
+    at = AppTest.from_string(script).run(timeout=30)
+    assert not at.exception, at.exception
+    options = list(at.selectbox[0].options)
+    assert len(options) == 2 and "Batch" in options[0] and "3 pupils" in options[0], options
+    assert [m.value for m in at.metric] == ["1/3", "0", "2"] or [m.value for m in at.metric][0] == "0/3", at.metric
+    assert [r for r in at.dataframe[0].value["Pupil"]] == ["u1", "u2", "u3"]
+    at.selectbox[0].select(options[1]).run(timeout=30)
+    assert not at.exception, at.exception
+
+
 def test_tracker_import_groups_identical_focus_sets():
     from core.db import tracker_import
     from core.engine.question_factory import QUAL_REGISTRY

@@ -130,3 +130,6 @@ CREATE TABLE IF NOT EXISTS test_result_reviews (
 ALTER TABLE test_result_reviews ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "anon full access" ON test_result_reviews
     FOR ALL TO anon USING (true) WITH CHECK (true);
+
+-- Batches (see migrations/2026-11-03_assignment_batch.sql): assignments from one tracker run share a name.
+ALTER TABLE assignments ADD COLUMN IF NOT EXISTS batch TEXT;

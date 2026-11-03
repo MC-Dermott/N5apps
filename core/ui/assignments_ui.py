@@ -301,6 +301,35 @@ def _render_set_new(teacher, students):
             st.rerun()
 
 
+def _group_label(g, students):
+    pupils = {p["id"] for a in g["assignments"] for p in db.recipients(a, students)}
+    who = f"{len(pupils)} pupil{'s' if len(pupils) != 1 else ''}"
+    if g["batch"]:
+        k = len(g["assignments"])
+        return f"📦 {g['batch']}  ·  {who}  ·  {k} assignment{'s' if k != 1 else ''}"
+    a = g["assignments"][0]
+    return f"{a['title']}  ·  {a['created_at'][:10]}  ·  {who}"
+
+
+def _track_row(a, p, s, single):
+    row = {"Pupil": p["username"], "Class": p.get("class_code") or "—"}
+    if not single:
+        row["Focus"] = ", ".join(i["question_type"] for i in a["items"])
+    if db.is_mixed(a):
+        ist = s["items"][0]
+        row["Best score"] = "—" if ist["best"] is None else f"{ist['best']:.0f}%"
+        row["Attempts"] = ist["attempts"]
+    elif single:
+        for item, ist in zip(a["items"], s["items"]):
+            row[item["question_type"]] = ("—" if ist["best"] is None else
+                                          f"{_ICON[ist['state']]} {ist['best']:.0f}%")
+    else:
+        row["Best score"] = f"{s['done']}/{s['total']} tests"
+        row["Attempts"] = sum(i["attempts"] for i in s["items"])
+    row["Status"] = ("⚠️ overdue · " if db.is_overdue(a, s["state"]) else "") + s["state"]
+    return row
+
+
 def _render_track(students):
     try:
         assignments = db.teacher_assignments()
@@ -311,67 +340,89 @@ def _render_track(students):
         st.info("No assignments set yet.")
         return
 
-    labels = {f"{a['title']}  ·  {a['created_at'][:10]}": a for a in assignments}
-    a = labels[st.selectbox("Assignment", list(labels), key="track_assignment")]
-    pupils = db.recipients(a, students)
-    results = db.assignment_results(a["id"])
+    labels = {}
+    for g in db.group_assignments(assignments):
+        label = _group_label(g, students)
+        if label in labels:
+            n = 2
+            while f"{label}  ·  #{n}" in labels:
+                n += 1
+            label += f"  ·  #{n}"
+        labels[label] = g
+    g = labels[st.selectbox("Assignment", list(labels), key="track_assignment")]
+    batch = g["batch"]
+    single = not batch
+    parts = [(a, db.recipients(a, students), db.assignment_results(a["id"])) for a in g["assignments"]]
 
     rows, counts = [], {db.DONE: 0, db.IN_PROGRESS: 0, db.NOT_STARTED: 0}
-    for p in pupils:
-        mine = [r for r in results if r["user_id"] == p["id"]]
-        s = db.assignment_status(a["items"], mine, a["pass_pct"], a.get("format", "tests"))
-        counts[s["state"]] += 1
-        row = {"Pupil": p["username"], "Class": p.get("class_code") or "—"}
-        if db.is_mixed(a):
-            ist = s["items"][0]
-            row["Best score"] = "—" if ist["best"] is None else f"{ist['best']:.0f}%"
-            row["Attempts"] = ist["attempts"]
-        else:
-            for item, ist in zip(a["items"], s["items"]):
-                row[item["question_type"]] = ("—" if ist["best"] is None else
-                                              f"{_ICON[ist['state']]} {ist['best']:.0f}%")
-        row["Status"] = ("⚠️ overdue · " if db.is_overdue(a, s["state"]) else "") + s["state"]
-        rows.append(row)
+    for a, pupils, results in parts:
+        for p in pupils:
+            mine = [r for r in results if r["user_id"] == p["id"]]
+            s = db.assignment_status(a["items"], mine, a["pass_pct"], a.get("format", "tests"))
+            counts[s["state"]] += 1
+            rows.append(_track_row(a, p, s, single))
+    if batch:
+        rows.sort(key=lambda r: r["Pupil"].lower())
 
-    who = [f"class {t['class_code']}" for t in a["targets"] if t.get("class_code")]
-    named = sum(1 for t in a["targets"] if t.get("user_id"))
-    if named:
-        who.append(f"{named} named pupil{'s' if named != 1 else ''}")
-    st.caption((f"{a['pass_pct']}% pass mark · " if a["pass_pct"] else "No pass mark · ") + f"{_due_text(a, None)} · set for " + ", ".join(who))
+    a0 = parts[0][0]
+    if batch:
+        passes = {a["pass_pct"] for a, _, _ in parts}
+        dues = {a.get("due_date") for a, _, _ in parts}
+        st.caption(f"{len(parts)} assignments from one import · "
+                   + ((f"{a0['pass_pct']}% pass mark" if a0["pass_pct"] else "No pass mark") if len(passes) == 1 else "several pass marks") + " · "
+                   + (_due_text(a0, None) if len(dues) == 1 else "several due dates"))
+    else:
+        who = [f"class {t['class_code']}" for t in a0["targets"] if t.get("class_code")]
+        named = sum(1 for t in a0["targets"] if t.get("user_id"))
+        if named:
+            who.append(f"{named} named pupil{'s' if named != 1 else ''}")
+        st.caption((f"{a0['pass_pct']}% pass mark · " if a0["pass_pct"] else "No pass mark · ")
+                   + f"{_due_text(a0, None)} · set for " + ", ".join(who))
     c1, c2, c3 = st.columns(3)
-    c1.metric("Complete", f"{counts[db.DONE]}/{len(pupils)}")
+    c1.metric("Complete", f"{counts[db.DONE]}/{len(rows)}")
     c2.metric("In progress", counts[db.IN_PROGRESS])
     c3.metric("Not started", counts[db.NOT_STARTED])
     if rows:
         df = pd.DataFrame(rows)
         st.dataframe(df, use_container_width=True, hide_index=True)
         st.download_button("Download as CSV", df.to_csv(index=False).encode(),
-                           file_name=f"{a['title']}.csv", mime="text/csv")
+                           file_name=f"{batch or a0['title']}.csv", mime="text/csv")
     else:
         st.info("No pupils match this assignment's classes yet.")
 
-    _render_pupil_attempts(a, pupils, results)
+    _render_pupil_attempts(parts, batch or a0["id"])
 
-    with st.expander("Delete this assignment"):
-        st.caption("Removes the assignment. Tests already taken stay as ordinary test results.")
-        if st.button("Delete assignment", key="del_assignment"):
-            err = db.delete_assignment(a["id"])
-            st.error(err) if err else st.rerun()
+    if batch:
+        with st.expander("Delete this batch"):
+            st.caption(f"Removes all {len(parts)} assignments in it. Tests already taken stay as ordinary "
+                       "test results.")
+            if st.checkbox("Yes, delete the whole batch", key="del_batch_ok") and st.button(
+                    "Delete batch", key="del_batch"):
+                errs = [e for e in (db.delete_assignment(a["id"]) for a, _, _ in parts) if e]
+                st.error("\n".join(errs)) if errs else st.rerun()
+    else:
+        with st.expander("Delete this assignment"):
+            st.caption("Removes the assignment. Tests already taken stay as ordinary test results.")
+            if st.button("Delete assignment", key="del_assignment"):
+                err = db.delete_assignment(a0["id"])
+                st.error(err) if err else st.rerun()
 
 
-def _render_pupil_attempts(a, pupils, results):
+def _render_pupil_attempts(parts, key):
     """Pick a pupil to see the questions they got wrong, with their answer, the correct answer and the working."""
     by_pupil = {}
-    for r in results:
-        by_pupil.setdefault(r["user_id"], []).append(r)
-    taken = [p for p in pupils if p["id"] in by_pupil]
+    for a, _, results in parts:
+        for r in results:
+            by_pupil.setdefault(r["user_id"], []).append((a, r))
+    taken = {p["id"]: p for _, pupils, _ in parts for p in pupils if p["id"] in by_pupil}
     if not taken:
         return
     st.markdown("#### Questions a pupil got wrong")
-    who = st.selectbox("Pupil", [p["username"] for p in taken], key=f"track_pupil_{a['id']}")
-    pupil = next(p for p in taken if p["username"] == who)
-    attempts = sorted(by_pupil[pupil["id"]], key=lambda r: r.get("taken_at") or "", reverse=True)
-    for n, r in enumerate(attempts):
+    who = st.selectbox("Pupil", sorted((p["username"] for p in taken.values()), key=str.lower),
+                       key=f"track_pupil_{key}")
+    pupil = next(p for p in taken.values() if p["username"] == who)
+    attempts = sorted(by_pupil[pupil["id"]], key=lambda ar: ar[1].get("taken_at") or "", reverse=True)
+    for n, (a, r) in enumerate(attempts):
         label = (f"{(r.get('taken_at') or '')[:10]} · {r['score']}/{r['total']}"
                  + ("" if db.is_mixed(a) else f" · {r['question_type']}"))
         with st.expander(label, expanded=n == 0):
@@ -403,6 +454,8 @@ def _render_import(teacher, students):
     no_due = c3.checkbox("No due date", key="imp_nodue")
     due = c2.date_input("Due date", value=date.today() + timedelta(days=7), disabled=no_due, key="imp_due")
     pass_pct = st.number_input("Pass mark (%)", 0, 100, 60, step=5, key="imp_pass")
+    batch = f"{base.strip()}, {date.today():%d %b %Y}"
+    st.caption(f"Tracked together as one batch: **{batch}**")
     st.markdown(f"**{len(known)} assignment{'s' if len(known) != 1 else ''}** for "
                 f"{sum(len(g['usernames']) for g in known)} pupils:")
     for g in known:
@@ -416,7 +469,7 @@ def _render_import(teacher, students):
         for g in known:
             err = db.create_assignment(teacher["id"], tracker_import.title_for(base, g), None if no_due else due,
                                        pass_pct, g["items"], [], [ids[u] for u in g["usernames"]],
-                                       fmt=db.MIXED)
+                                       fmt=db.MIXED, batch=batch)
             if err:
                 errors.append(err)
         if errors:

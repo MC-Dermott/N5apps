@@ -76,8 +76,9 @@ def item_label(item):
 
 # ── Teacher: create / list / delete ───────────────────────────────────────────
 
-def create_assignment(teacher_id, title, due, pass_pct, items, class_codes, user_ids, fmt="tests"):
-    """Returns None on success, or an error string. items: [{qualification, topic, question_type}]."""
+def create_assignment(teacher_id, title, due, pass_pct, items, class_codes, user_ids, fmt="tests", batch=None):
+    """Returns None on success, or an error string. items: [{qualification, topic, question_type}].
+    batch names the import an assignment came from, so the Track page can show the whole import as one."""
     if not title.strip():
         return "Give the assignment a title."
     if not items:
@@ -90,6 +91,8 @@ def create_assignment(teacher_id, title, due, pass_pct, items, class_codes, user
                "due_date": due.isoformat() if due else None, "pass_pct": int(pass_pct)}
         if fmt == MIXED:          # only sent when needed, so ordinary assignments work before the migration
             row["format"] = MIXED
+        if batch:
+            row["batch"] = batch
         created = sb.table("assignments").insert(row).execute().data[0]
     except Exception as e:
         return f"Could not create the assignment (has the assignments migration been run?): {e}"
@@ -131,6 +134,22 @@ def teacher_assignments():
         a["items"] = [i for i in items if i["assignment_id"] == a["id"]]
         a["targets"] = [t for t in targets if t["assignment_id"] == a["id"]]
     return assignments
+
+
+def group_assignments(assignments):
+    """Track-page groups, in the order given: assignments sharing a batch collapse into one group and the
+    rest stand alone. Each group is {"batch": name or None, "assignments": [...]}."""
+    groups, by_batch = [], {}
+    for a in assignments:
+        name = a.get("batch")
+        if not name:
+            groups.append({"batch": None, "assignments": [a]})
+        elif name in by_batch:
+            by_batch[name]["assignments"].append(a)
+        else:
+            by_batch[name] = {"batch": name, "assignments": [a]}
+            groups.append(by_batch[name])
+    return groups
 
 
 def assignment_results(assignment_id):
