@@ -372,11 +372,15 @@ length 40 cm.
 
 COMPOSITE_NOTES = """
 **Composite solids:** split into shapes you know. ADD the parts that make it up; SUBTRACT anything
-taken out or left empty. Give units.
+taken out (a hole or hollow) or left empty (one solid inside another). Give units.
 
 **Worksheet example:** A bottle is a cuboid 12 × 5 × 9 cm with a cylinder (diameter 4 cm, height 5 cm)
 on top.
 - Cuboid = 540 cm³;  cylinder = π × 2² × 5 = 62.83 cm³;  total = **602.83 cm³**
+
+**Worksheet example (subtract):** a concrete block 30 × 20 × 15 cm has a cylindrical hole of diameter 10 cm
+right through it.
+- Cuboid = 9000 cm³;  hole = π × 5² × 15 = 1178.1 cm³;  block = 9000 − 1178.1 = **7821.9 cm³**
 
 ⚠ 2023: many couldn't find the cube, or used a whole sphere for a hemisphere. 2025: empty space =
 box − balls. 2022: the 2 cm gap at the top of the tank.
@@ -444,7 +448,8 @@ def generate_volume_prism(calc_mode=False):
 
 def generate_volume_composite(calc_mode=False):
     """Composite solids: add parts, or subtract what's empty."""
-    kind = random.choice(["bottle", "cube_hemi", "house", "box_balls", "silo", "tank_gap"])
+    kind = random.choice(["bottle", "cube_hemi", "house", "box_balls", "silo", "tank_gap",
+                          "block_hole", "pipe", "tin_balls"])
     pi = math.pi
     if kind == "bottle":
         l, b, h = random.choice([8, 10, 12]), random.choice([4, 5, 6]), random.choice([8, 9, 10, 12])
@@ -500,6 +505,41 @@ def generate_volume_composite(calc_mode=False):
         worked = [f"Cylinder = π × {_g(r)}² × {h} = {_g(C)} m³", f"Hemisphere = (4 ÷ 3) × π × {_g(r)}³ ÷ 2 = {_g(H)} m³",
                   f"Total = {_g(C)} + {_g(H)} = **{_g(ans)} m³**"]
         wrong = [(_r2(C + 2 * H), "you used a whole sphere — it's a HEMISPHERE (2023 marking instructions).")]
+    elif kind == "block_hole":
+        l, b, h = random.choice([24, 30, 40]), random.choice([16, 20, 25]), random.choice([10, 12, 15])
+        d = random.choice([4, 6, 8, 10])
+        C = l * b * h; Y = _r2(pi * (d / 2) ** 2 * h); ans = _r2(C - Y)
+        text = (f"A concrete block is a cuboid with a cylindrical hole drilled right through it, as shown. Calculate the "
+                f"volume of the block, to 2 decimal places.")
+        diag = _solid("cuboid_hole", l, b, h, d, [f"{l} cm", f"{b} cm", f"{h} cm", f"{d} cm"])
+        steps = [{"prompt": "Volume of the cuboid", "answer": float(C)}, {"prompt": "Volume of the hole", "answer": Y}]
+        worked = [f"Cuboid = {l} × {b} × {h} = {C} cm³", f"Hole = π × {_g(d / 2)}² × {h} = {_g(Y)} cm³",
+                  f"Block = {C} − {_g(Y)} = **{_g(ans)} cm³**"]
+        wrong = [(_r2(C + Y), "the hole is taken OUT, so subtract (2025 marking instructions: box − balls)."),
+                 (_r2(C - pi * d * d * h), "you used the diameter in the cylinder formula.")]
+    elif kind == "pipe":
+        D, d, L = random.choice([[1.2, 0.8], [1, 0.6], [1.4, 1], [0.8, 0.6]]) + [random.choice([2, 2.5, 3, 4])]
+        O = _r2(pi * (D / 2) ** 2 * L); I = _r2(pi * (d / 2) ** 2 * L); ans = _r2(O - I)
+        text = (f"A concrete pipe is a hollow cylinder, as shown. The outer diameter is {_g(D)} m, the inner diameter is "
+                f"{_g(d)} m and the pipe is {_g(L)} m long. Calculate the volume of concrete in the pipe, to 2 decimal places.")
+        diag = _solid("hollow_cylinder", D, d, L, [f"{_g(D)} m", f"{_g(d)} m", f"{_g(L)} m"])
+        steps = [{"prompt": "Volume of the outer cylinder", "answer": O}, {"prompt": "Volume of the hollow (inner cylinder)", "answer": I}]
+        worked = [f"Outer = π × {_g(D / 2)}² × {_g(L)} = {_g(O)} m³", f"Inner = π × {_g(d / 2)}² × {_g(L)} = {_g(I)} m³",
+                  f"Concrete = {_g(O)} − {_g(I)} = **{_g(ans)} m³**"]
+        wrong = [(O, "you found the outer cylinder only — subtract the hollow."),
+                 (_r2(O + I), "the hollow is taken OUT, so subtract."),
+                 (_r2(pi * ((D - d) / 2) ** 2 * L), "you can't subtract the radii first — subtract the VOLUMES.")]
+    elif kind == "tin_balls":
+        dball = random.choice([5, 6, 6.5, 7]); n = random.choice([2, 3, 4]); h = n * dball + random.choice([0, 0.5, 1])
+        Tn = _r2(pi * (dball / 2) ** 2 * h); S = _r2(n * 4 / 3 * pi * (dball / 2) ** 3); ans = _r2(Tn - S)
+        text = (f"A tin is a cylinder with diameter {_g(dball)} cm and height {_g(h)} cm. It holds {n} tennis balls, each a "
+                f"sphere with diameter {_g(dball)} cm. Calculate the volume of empty space in the tin, to 2 decimal places.")
+        diag = _solid("cylinder", dball, h, [f"{_g(dball)} cm", f"{_g(h)} cm"])
+        steps = [{"prompt": "Volume of the tin", "answer": Tn}, {"prompt": f"Volume of the {n} balls", "answer": S}]
+        worked = [f"Tin = π × {_g(dball / 2)}² × {_g(h)} = {_g(Tn)} cm³",
+                  f"Balls = {n} × (4 ÷ 3) × π × {_g(dball / 2)}³ = {_g(S)} cm³", f"Empty space = {_g(Tn)} − {_g(S)} = **{_g(ans)} cm³**"]
+        wrong = [(_r2(Tn - S / n), f"there are {n} balls (2025 marking instructions)."),
+                 (_r2(Tn + S), "the empty space is the tin MINUS the balls (2025 marking instructions).")]
     else:
         l, b, H, gap = random.choice([40, 50, 60]), random.choice([25, 30, 35]), random.choice([30, 35, 40, 45]), random.choice([2, 3, 5])
         V = l * b * (H - gap); ans = _r2(V / 1000)

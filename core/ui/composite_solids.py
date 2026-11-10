@@ -14,6 +14,8 @@ shapes.py: each function takes dimensions, a list of label strings and a path (o
     cube_hemisphere(s, labels)              hemisphere (diameter s) on a cube; labels = [s]
     house_prism(b, h, t, L, labels)         cuboid with a triangular prism roof; labels = [b, h, t, L]
     cylinder_hemisphere(d, h, labels)       silo: cylinder with a hemisphere on top; labels = [d, h]
+    cuboid_hole(l, w, h, d, labels)         cuboid with a cylindrical hole through it; labels = [l, w, h, d]
+    hollow_cylinder(D, d, h, labels)        pipe standing on end; labels = [D, d, h]
 
 Hidden edges are dashed. Drawings are to scale.
 """
@@ -227,4 +229,41 @@ def cylinder_hemisphere(d, h, labels, path):
     _draw_dome(ax, 0, h, r, z=8)
     _dim(ax, (-r, -E * r - 0.12 * d), (r, -E * r - 0.12 * d), labels[0], 0.001)
     _dim(ax, (r, 0), (r, h), labels[1], -0.14 * max(d, h))
+    return _save(fig, ax, path, 0.1)
+
+
+# ── solids with a hole ─────────────────────────────────────────────────────────────────────────
+def cuboid_hole(l, w, h, d, labels, path):
+    """Cuboid with a cylindrical hole drilled right through the height. labels = [l, w, h, d]."""
+    dx, dy = _shift(w)
+    r = d / 2
+    fig, ax = _fig(l + dx, h + dy)
+    F, _ = _draw_prism(ax, [(0, 0), (l, 0), (l, h), (0, h)], w)
+    cx, cy = l / 2 + dx / 2, h + dy / 2
+    _poly(ax, _ell(cx, cy, r, 0, 360), "#ffffff", 2)
+    _curve(ax, _ell(cx, cy, r, 0, 360), z=13)
+    _curve(ax, _ell(cx, cy - h, r, 180, 360), hidden=True, z=13)
+    _line(ax, (cx - r, cy), (cx - r, cy - h), hidden=True, z=13)
+    _line(ax, (cx + r, cy), (cx + r, cy - h), hidden=True, z=13)
+    _labels(ax, F, (dx, dy), [(0, 1, labels[0], -1), (3, 0, labels[2], -1), ("depth", labels[1])], max(l + dx, h))
+    _dim(ax, (cx - r, cy), (cx + r, cy), labels[3], 0.001)
+    return _save(fig, ax, path, 0.08)
+
+
+def hollow_cylinder(D, d, h, labels, path):
+    """Pipe standing on end: outer diameter D, inner diameter d, height h. labels = [D, d, h]."""
+    R, r = D / 2, d / 2
+    fig, ax = _fig(D, h + 2 * E * R)
+    _draw_cylinder(ax, 0, 0, R, h)
+    _poly(ax, _ell(0, h, r, 0, 360), "#ffffff", 8)
+    _curve(ax, _ell(0, h, r, 0, 360), z=9)
+    _curve(ax, _ell(0, 0, r, 180, 360), hidden=True, z=9)
+    _line(ax, (-r, h), (-r, 0), hidden=True, z=9)
+    _line(ax, (r, h), (r, 0), hidden=True, z=9)
+    top = h + E * R + 0.13 * D
+    for x in (-r, r):                                   # leader lines up from the inner rim
+        ax.plot([x, x], [h + E * r * 0.0, top], color="black", lw=0.6, ls=":", zorder=7)
+    _dim(ax, (-r, top), (r, top), "inner " + labels[1], 0.001)
+    _dim(ax, (-R, -E * R - 0.13 * D), (R, -E * R - 0.13 * D), "outer " + labels[0], 0.001)
+    _dim(ax, (R, 0), (R, h), labels[2], -0.14 * max(D, h))
     return _save(fig, ax, path, 0.1)
