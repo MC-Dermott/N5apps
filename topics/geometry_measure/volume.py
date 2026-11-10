@@ -382,6 +382,10 @@ on top.
 right through it.
 - Cuboid = 9000 cm³;  hole = π × 5² × 15 = 1178.1 cm³;  block = 9000 − 1178.1 = **7821.9 cm³**
 
+**Cone with a sphere or hemisphere on top (total height given):** the cone's height is NOT the total height.
+Sphere on a cone: cone height = total − the sphere's **diameter**. Hemisphere on a cone: total − the **radius**.
+(2026 Paper 2 Q7(b).)
+
 ⚠ 2023: many couldn't find the cube, or used a whole sphere for a hemisphere. 2025: empty space =
 box − balls. 2022: the 2 cm gap at the top of the tank.
 """
@@ -449,7 +453,7 @@ def generate_volume_prism(calc_mode=False):
 def generate_volume_composite(calc_mode=False):
     """Composite solids: add parts, or subtract what's empty."""
     kind = random.choice(["bottle", "cube_hemi", "house", "box_balls", "silo", "tank_gap",
-                          "block_hole", "pipe", "tin_balls"])
+                          "block_hole", "pipe", "tin_balls", "cone_top"])
     pi = math.pi
     if kind == "bottle":
         l, b, h = random.choice([8, 10, 12]), random.choice([4, 5, 6]), random.choice([8, 9, 10, 12])
@@ -540,6 +544,32 @@ def generate_volume_composite(calc_mode=False):
                   f"Balls = {n} × (4 ÷ 3) × π × {_g(dball / 2)}³ = {_g(S)} cm³", f"Empty space = {_g(Tn)} − {_g(S)} = **{_g(ans)} cm³**"]
         wrong = [(_r2(Tn - S / n), f"there are {n} balls (2025 marking instructions)."),
                  (_r2(Tn + S), "the empty space is the tin MINUS the balls (2025 marking instructions).")]
+    elif kind == "cone_top":
+        top = random.choice(["sphere", "hemi"]); r = random.choice([2, 2.5, 3, 3.5, 4])
+        sph = top == "sphere"
+        h = random.choice([3, 4, 5, 6, 8]); H = h + (2 * r if sph else r)
+        use_d = random.random() < 0.4
+        C = _r2(pi * r * r * h / 3); S = _r2(4 / 3 * pi * r ** 3 / (1 if sph else 2)); ans = _r2(C + S)
+        rtxt = f"diameter {_g(2 * r)} cm" if use_d else f"radius {_g(r)} cm"
+        what = random.choice(["trophy top", "spinning top", "ornament"])
+        text = (f"A {what} is made from a cone and a {'sphere' if sph else 'hemisphere'}, as shown. The cone and the "
+                f"{'sphere' if sph else 'hemisphere'} both have {rtxt} and the total height is {_g(H)} cm. Calculate the "
+                f"volume of the {what}, to 2 decimal places.")
+        diag = _solid("cone_top", r, H, top, f"{_g(2 * r if use_d else r)} cm", f"{_g(H)} cm", use_d)
+        sub = f"{_g(H)} − {_g(2 * r)}" if sph else f"{_g(H)} − {_g(r)}"
+        steps = [{"prompt": "Height of the cone" + (" (total height − the sphere's diameter)" if sph else " (total height − the hemisphere's radius)"),
+                  "answer": float(h)},
+                 {"prompt": "Volume of the cone", "answer": C},
+                 {"prompt": f"Volume of the {'sphere' if sph else 'hemisphere'}", "answer": S}]
+        worked = [f"Cone height = {sub} = {_g(h)} cm", f"Cone = (1 ÷ 3) × π × {_g(r)}² × {_g(h)} = {_g(C)} cm³",
+                  f"{'Sphere' if sph else 'Hemisphere'} = (4 ÷ 3) × π × {_g(r)}³{'' if sph else ' ÷ 2'} = {_g(S)} cm³",
+                  f"Total = {_g(C)} + {_g(S)} = **{_g(ans)} cm³**"]
+        Hbad = H - r if sph else H - 2 * r
+        wrong = [(_r2(pi * r * r * Hbad / 3 + S), "the cone's height isn't the total height — take off the "
+                  + ("sphere's DIAMETER" if sph else "hemisphere's radius") + " (2026 Paper 2 Q7(b))."),
+                 (_r2(pi * r * r * H / 3 + S), "you used the total height as the cone's height (2026 Paper 2 Q7(b))."),
+                 (_r2(C + 2 * S), "you used a whole sphere — it's a HEMISPHERE (2023 marking instructions).") if not sph
+                 else (_r2(C + S / 2), "you used a hemisphere — it's a whole sphere.")]
     else:
         l, b, H, gap = random.choice([40, 50, 60]), random.choice([25, 30, 35]), random.choice([30, 35, 40, 45]), random.choice([2, 3, 5])
         V = l * b * (H - gap); ans = _r2(V / 1000)

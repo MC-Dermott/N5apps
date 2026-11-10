@@ -267,3 +267,29 @@ def hollow_cylinder(D, d, h, labels, path):
     _dim(ax, (-R, -E * R - 0.13 * D), (R, -E * R - 0.13 * D), "outer " + labels[0], 0.001)
     _dim(ax, (R, 0), (R, h), labels[2], -0.14 * max(D, h))
     return _save(fig, ax, path, 0.1)
+
+
+def cone_top(r, H, top, rlabel, hlabel, as_diameter, path):
+    """Upside-down cone (point down) with a sphere or a hemisphere on top, as in 2026 Paper 2 Q7(b).
+    r = radius of both, H = total height, top = "sphere" (resting on the cone's base circle) or "hemi"."""
+    h = H - (2 * r if top == "sphere" else r)             # height of the cone
+    fig, ax = _fig(2 * r, H + E * r)
+    _poly(ax, [(-r, h), (0, 0), (r, h)] + _ell(0, h, r, 360, 180), FILL, 1)
+    _line(ax, (-r, h), (0, 0)); _line(ax, (r, h), (0, 0))
+    _curve(ax, _ell(0, h, r, 180, 360)); _curve(ax, _ell(0, h, r, 0, 180), hidden=True)
+    if top == "sphere":
+        t = np.radians(np.linspace(0, 360, 180))
+        circ = list(zip(r * np.cos(t), h + r + r * np.sin(t)))
+        _poly(ax, circ, FILL, 4); _curve(ax, circ, z=7)
+        _curve(ax, [(x, y + r) for x, y in _ell(0, h, r, 180, 360)], z=7)
+        _curve(ax, [(x, y + r) for x, y in _ell(0, h, r, 0, 180)], hidden=True, z=7)
+        cy = h + r
+    else:
+        _draw_dome(ax, 0, h, r, z=4)
+        cy = h
+    if as_diameter:
+        _dim(ax, (-r, cy), (r, cy), rlabel, 0.001)
+    else:
+        _dim(ax, (0, cy), (r, cy), rlabel, 0.001)
+    _dim(ax, (r * 1.45, 0), (r * 1.45, H), hlabel, 0.001)
+    return _save(fig, ax, path, 0.1)
