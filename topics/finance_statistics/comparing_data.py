@@ -69,6 +69,29 @@ s = 2.6 kg.
 or "the data is more varied" — every course report 2018–2026. You don't need to quote the numbers.
 """
 
+NOTES_LINE = """
+**Line graphs** — show how something changes over time.
+
+- **Reading a value:** go up from the label to the line, then across to the scale. Work out what **one small
+  square** is worth first.
+- **Increase or decrease:** subtract the earlier value from the later one.
+- **Drawing one:** choose a scale for each axis, label both axes, plot each point as a small cross and join
+  the points with a ruler.
+
+**Example (from the worksheet):** the number of visitors to the Stornoway museum each month: January 120,
+February 150, March 210, April 280, May 340, June 310. Months go along the bottom and visitors up the side,
+0 to 400 in steps of 50; plot each point, then join them with a ruler.
+"""
+
+_LINE_CONTEXTS = [
+    ("the number of cars on the Leverburgh ferry each day", "Number of cars", "Day", "cars",
+     ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"], "day"),
+    ("the number of visitors to the Stornoway museum each month", "Number of visitors", "Month", "visitors",
+     ["Jan", "Feb", "Mar", "Apr", "May", "Jun"], "month"),
+    ("the number of passengers on the Barra ferry each month", "Number of passengers", "Month", "passengers",
+     ["Jan", "Feb", "Mar", "Apr", "May", "Jun"], "month"),
+]
+
 _LISTS = [
     ("the number of creels hauled each day", "creels"),
     ("the number of cars on each ferry sailing", "cars"),
@@ -252,6 +275,53 @@ def generate_comparing_l4(calc_mode=False):
                     parts=parts, worked_solution=multipart_worked_solution(parts), notes=NOTES_COMPARE)
 
 
+def _line_data(n):
+    """n values, multiples of 5, one clear maximum, at least one rise (every graph has an increase to ask about)."""
+    while True:
+        v = [random.randrange(15, 71, 5)]
+        for _ in range(n - 1):
+            v.append(min(max(v[-1] + random.choice([-20, -15, -10, -5, 5, 10, 15, 20, 25]), 10), 90))
+        if v.count(max(v)) == 1 and any(b > a for a, b in zip(v, v[1:])) and max(v) - min(v) >= 25:
+            return v
+
+
+def generate_comparing_l5(calc_mode=False):
+    """Reading a line graph: a value, an increase and the peak (the worksheet's Section 6)."""
+    what, ylabel, xlabel, unit, labels, noun = random.choice(_LINE_CONTEXTS)
+    n = len(labels)
+    vals = _line_data(n)
+    ymax = (max(vals) // 10) * 10 + 20
+    i = random.randrange(n)
+    pairs = [(a, b) for a in range(n) for b in range(a + 1, n) if vals[b] > vals[a] and b - a >= 2]
+    a, b = random.choice(pairs or [(x, y) for x in range(n) for y in range(x + 1, n) if vals[y] > vals[x]])
+    peak = labels[vals.index(max(vals))]
+    diff = vals[b] - vals[a]
+    parts = [
+        make_part("(a)", f"Write down the {ylabel.lower()} on {labels[i]}." if noun == "day" else
+                  f"Write down the {ylabel.lower()} in {labels[i]}.", vals[i],
+                  scaffold_steps=[{"prompt": "What is one small square worth on the vertical scale?", "answer": 5}],
+                  worked_solution=[f"Go up from {labels[i]} to the line, then across to the scale: {vals[i]}."]),
+        make_part("(b)", f"Calculate the increase in the {ylabel.lower().replace('number of ', 'number of ')} "
+                         f"from {labels[a]} to {labels[b]}.", diff,
+                  scaffold_steps=[{"prompt": f"Value on {labels[a]}", "answer": vals[a]},
+                                  {"prompt": f"Value on {labels[b]}", "answer": vals[b]}],
+                  worked_solution=[f"{vals[b]} − {vals[a]} = {diff}"],
+                  distractors=distractors(diff, [(vals[b], "you read the later value instead of subtracting "
+                                                           "the earlier one from it.")])),
+        make_part("(c)", f"On which {noun} was the {ylabel.lower()} greatest?", peak, options=labels,
+                  worked_solution=[f"The highest point on the graph is {labels[vals.index(max(vals))]} "
+                                   f"({max(vals)})."]),
+    ]
+    q = Question(question_text=f"The graph shows {what}.", correct_answer=vals[i], topic=TOPIC,
+                 question_type=QTYPE, parts=parts, worked_solution=multipart_worked_solution(parts),
+                 notes=NOTES_LINE)
+    q.metadata["diagram"] = "composite_shape"
+    q.metadata["diagram_params"] = {"module_path": "topics.finance_statistics.comparing_data_diagrams",
+                                    "kind": "line_graph", "args": [labels, vals, ymax, ylabel, xlabel],
+                                    "width": 520}
+    return q
+
+
 def generate_comparing_question(calc_mode=False):
     return random.choice([generate_comparing_l1, generate_comparing_l2, generate_comparing_l3,
-                          generate_comparing_l4])(calc_mode=calc_mode)
+                          generate_comparing_l4, generate_comparing_l5])(calc_mode=calc_mode)
