@@ -889,6 +889,41 @@ _QUAL_LEVELS = {
     "N5 Numeracy": _N5_NUMERACY_LEVELS,
 }
 
+# ── Further question types from the Higher specification examples (Nov 2026) ───────────────────
+# Each adds levels to an existing question type: they appear in the per-level selector and are mixed into the type's
+# dispatcher (the existing levels together keep their previous share, each new level gets an equal slice).
+from topics.finance_statistics.further_finance import FURTHER as _FURTHER_FINANCE  # noqa: E402
+from topics.finance_statistics.further_planning_statistics import FURTHER as _FURTHER_PLAN_STATS  # noqa: E402
+from topics.modelling.modelling_further import FURTHER as _FURTHER_MODELLING  # noqa: E402
+
+
+def _tag_further(fn, group, qtype):
+    def gen(*args, **kwargs):
+        q = fn()
+        q.topic, q.question_type = group, qtype
+        for p in q.parts:
+            p.topic, p.question_type = group, qtype
+        return q
+    gen.__name__ = getattr(fn, "__name__", "further")
+    return gen
+
+
+def _extend_higher(further):
+    for (group, qtype), levels in further.items():
+        old_levels = _HIGHER_LEVELS[group][qtype]
+        n_old = max(len(old_levels), 1)
+        new = {name: _tag_further(fn, group, qtype) for name, fn in levels.items()}
+        old_levels.update(new)
+        old_dispatch = _HIGHER_TOPICS[group][qtype]
+
+        def dispatcher(*args, _old=old_dispatch, _new=list(new.values()), _n=n_old, **kwargs):
+            return random.choices([_old] + _new, weights=[_n] + [1] * len(_new))[0](*args, **kwargs)
+        _HIGHER_TOPICS[group][qtype] = dispatcher
+
+
+for _f in (_FURTHER_FINANCE, _FURTHER_PLAN_STATS, _FURTHER_MODELLING):
+    _extend_higher(_f)
+
 # Assessment sequence: one of each type in canonical order
 _NUMERACY_ASSESSMENT_GENERATORS = [
     generate_compound_percentages,
