@@ -666,7 +666,7 @@ _N5_LEVELS = {
         },
         "Comparing Data Sets": {
             "Median and Quartiles": generate_comparing_l1,
-            "Interquartile Range and Consistency": generate_comparing_l2,
+            "Interquartile Range and Spread": generate_comparing_l2,
             "Mean and Standard Deviation": generate_comparing_l3,
             "Comparing Mean and Standard Deviation": generate_comparing_l4,
             "Line Graphs": generate_comparing_l5,

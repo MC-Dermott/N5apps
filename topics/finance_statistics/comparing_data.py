@@ -33,15 +33,15 @@ days: 14, 22, 9, 17, 30, 12, 25, 19, 8, 21, 16, 27.
 """
 
 NOTES_IQR = """
-**Interquartile range and consistency**
+**Interquartile range and spread**
 
-IQR = Q3 − Q1. The **smaller** the IQR, the **more consistent** the data.
+IQR = Q3 − Q1. The **larger** the IQR, the **more spread out** the data.
 
 **Example (from the worksheet):** Q1 = 13 and Q3 = 23.5, so IQR = 23.5 − 13 = **10.5**. A second boat
-has an IQR of 6, so *the numbers of creels hauled by the second boat were more consistent.*
+has an IQR of 6, so *the numbers of creels hauled for the first boat are more spread out than for the second boat.*
 
 ⚠ Don't halve the IQR (that's the semi-interquartile range — 2019 course report), don't use
-"on average" about spread, and say whose **what** is more consistent (2022–2025 course reports).
+"on average" about spread, and say whose **what** is more spread out (2022–2025 course reports).
 """
 
 NOTES_SD = """
@@ -62,11 +62,12 @@ NOTES_COMPARE = """
 
 **Example (from the worksheet):** Tarbert peat bags: mean 25 kg, s = 1.79 kg. Stornoway: mean 23.4 kg,
 s = 2.6 kg.
-- *On average, the bags from Tarbert were heavier.*
-- *The weights of the Tarbert bags were more consistent.*
+- *On average, the weight of the Tarbert bags is bigger than the weight of the Stornoway bags.*
+- *The weight of the Stornoway bags is more spread out than the weight of the Tarbert bags.*
 
-⚠ "On average … more varied" gets no mark, and so does "the standard deviation was more consistent"
-or "the data is more varied" — every course report 2018–2026. You don't need to quote the numbers.
+⚠ "On average … more spread out" gets no mark, and neither does "the standard deviation is more spread
+out" or "the data is more spread out" — say whose **what** (every course report 2018–2026). You don't need to
+quote the numbers.
 """
 
 NOTES_LINE = """
@@ -148,7 +149,7 @@ def generate_comparing_l1(calc_mode=False):
 
 
 def generate_comparing_l2(calc_mode=False):
-    """IQR and a comment on consistency."""
+    """IQR and a comment on which data set is more spread out."""
     names = random.sample(["Iona", "Calum", "Mairi", "Ruaridh", "Eilidh", "Finlay", "Kirsty", "Lewis"], 2)
     what, unit = random.choice(_LISTS)
     n = random.choice([8, 10, 12])
@@ -158,12 +159,12 @@ def generate_comparing_l2(calc_mode=False):
     other = max(1, round(iqr + random.choice([-1, 1]) * random.choice([2, 3, 4, 5])))
     if other == iqr:
         other += 2
-    more = names[1] if other < iqr else names[0]
-    right = f"{more}'s {unit} were more consistent."
+    big, small = (names[0], names[1]) if iqr > other else (names[1], names[0])
+    right = f"{big}'s {unit} are more spread out than {small}'s {unit}."
     options = [right,
-               f"On average, {more}'s {unit} were more consistent.",
-               f"{more}'s interquartile range was more consistent.",
-               f"{names[0] if more == names[1] else names[1]}'s {unit} were more consistent."]
+               f"On average, {big}'s {unit} are more spread out than {small}'s {unit}.",
+               f"The interquartile range of {big} is more spread out than {small}'s.",
+               f"{small}'s {unit} are more spread out than {big}'s {unit}."]
     random.shuffle(options)
     parts = [
         make_part("(a)", f"Calculate the interquartile range for {names[0]}'s data.", iqr,
@@ -172,14 +173,14 @@ def generate_comparing_l2(calc_mode=False):
                   distractors=distractors(iqr, [(iqr / 2, "that's the semi-interquartile range — don't halve "
                                                           "it (2019 course report; 2024 and 2025 marking "
                                                           "instructions).")])),
-        make_part("(b)", f"{names[1]}'s {unit} have an interquartile range of {other}. Which comment is valid?",
+        make_part("(b)", f"{names[1]}'s {unit} have an interquartile range of {other}. Which comment about the spread is valid?",
                   right, options=options,
-                  worked_solution=[f"{_fmt(iqr)} vs {other}: the smaller IQR is more consistent.", right],
+                  worked_solution=[f"{_fmt(iqr)} vs {other}: the larger IQR is more spread out.", right],
                   distractors=[{"value": o, "mistake": m} for o, m in [
-                      (options[options.index(f"On average, {more}'s {unit} were more consistent.")],
-                       "'on average' is for the mean or median, not for consistency (course reports "
+                      (options[options.index(f"On average, {big}'s {unit} are more spread out than {small}'s {unit}.")],
+                       "'on average' is for the mean or median, not for the spread (course reports "
                        "2022–2025)."),
-                      (options[options.index(f"{more}'s interquartile range was more consistent.")],
+                      (options[options.index(f"The interquartile range of {big} is more spread out than {small}'s.")],
                        "the comment must be about the " + unit + ", not the IQR (marking instructions)."),
                   ]]),
     ]
@@ -222,10 +223,10 @@ def generate_comparing_l3(calc_mode=False):
 
 
 _PAIRS = [
-    ("peat bags from Tarbert", "peat bags from Stornoway", "weights of the bags", "kg", "heavier", "lighter"),
-    ("lambs on Crofter A's croft", "lambs on Crofter B's croft", "lambs' weights", "kg", "heavier", "lighter"),
-    ("visitors to Callanish", "visitors to the Blackhouse Village", "numbers of visitors", "", "higher", "lower"),
-    ("crossings from Ullapool", "crossings from Oban", "crossing times", "minutes", "longer", "shorter"),
+    ("the Tarbert bags", "the Stornoway bags", "weights of the bags", "kg", "heavier", "lighter"),
+    ("Crofter A's lambs", "Crofter B's lambs", "lambs' weights", "kg", "heavier", "lighter"),
+    ("Callanish", "the Blackhouse Village", "numbers of visitors", "", "higher", "lower"),
+    ("Ullapool", "Oban", "crossing times", "minutes", "longer", "shorter"),
 ]
 
 
@@ -238,14 +239,14 @@ def generate_comparing_l4(calc_mode=False):
     sb = round(sa + random.choice([-1, 1]) * random.uniform(0.8, 4), 2)
     sb = max(sb, 0.5)
     hi, lo = (a, b) if ma > mb else (b, a)
-    cons = a if sa < sb else b
+    cons = a if sa > sb else b          # the data set that is MORE spread out
     other = b if cons == a else a
-    mean_right = f"On average, the {what} for {hi} were {up} than for {lo}."
-    mean_opts = [mean_right, f"On average, the {what} for {lo} were {up} than for {hi}.",
-                 f"The mean for {hi} was higher.", f"On average, the {what} for {hi} were more varied."]
-    sd_right = f"The {what} for {cons} were more consistent."
-    sd_opts = [sd_right, f"On average, the {what} for {other} were more varied.",
-               f"The standard deviation for {cons} was more consistent.", f"The data for {other} is more varied."]
+    mean_right = f"On average, the {what} for {hi} are bigger than for {lo}."
+    mean_opts = [mean_right, f"On average, the {what} for {lo} are bigger than for {hi}.",
+                 f"The mean for {hi} was higher.", f"On average, the {what} for {hi} are more spread out."]
+    sd_right = f"The {what} for {cons} are more spread out than for {other}."
+    sd_opts = [sd_right, f"On average, the {what} for {cons} are more spread out than for {other}.",
+               f"The standard deviation for {cons} is more spread out.", f"The data for {cons} is more spread out."]
     random.shuffle(mean_opts); random.shuffle(sd_opts)
     unit = f" {u}" if u else ""
     parts = [
@@ -254,23 +255,23 @@ def generate_comparing_l4(calc_mode=False):
                   distractors=[{"value": f"The mean for {hi} was higher.", "mistake": "say what the mean is "
                                 "telling you, in context — 'the mean was higher' isn't accepted (2024 marking "
                                 "instructions)."},
-                               {"value": f"On average, the {what} for {hi} were more varied.",
-                                "mistake": "'more varied' is about spread, not the average (course reports "
+                               {"value": f"On average, the {what} for {hi} are more spread out.",
+                                "mistake": "'more spread out' is about the spread, not the average (course reports "
                                            "2018–2026)."}]),
         make_part("(b)", "Which is a valid comment about the standard deviation?", sd_right, options=sd_opts,
                   worked_solution=[sd_right],
-                  distractors=[{"value": f"On average, the {what} for {other} were more varied.",
+                  distractors=[{"value": f"On average, the {what} for {cons} are more spread out than for {other}.",
                                 "mistake": "'on average' is for the mean, not the spread (course reports "
                                            "2018–2026)."},
-                               {"value": f"The standard deviation for {cons} was more consistent.",
+                               {"value": f"The standard deviation for {cons} is more spread out.",
                                 "mistake": "the comment must be about the " + what + ", not the standard "
                                            "deviation (2024 marking instructions)."},
-                               {"value": f"The data for {other} is more varied.",
+                               {"value": f"The data for {cons} is more spread out.",
                                 "mistake": "say what the data is — 'the data' isn't in context (2019 and 2025 "
                                            "course reports)."}]),
     ]
-    text = (f"{a[0].upper() + a[1:]}: mean {ma}{unit}, standard deviation {sa}{unit}.\n\n"
-            f"{b[0].upper() + b[1:]}: mean {mb}{unit}, standard deviation {sb}{unit}.")
+    text = (f"{b[0].upper() + b[1:]}: mean {mb}{unit}, standard deviation {sb}{unit}.\n\n"
+            f"{a[0].upper() + a[1:]}: mean {ma}{unit}, standard deviation {sa}{unit}.")
     return Question(question_text=text, correct_answer=mean_right, topic=TOPIC, question_type=QTYPE,
                     parts=parts, worked_solution=multipart_worked_solution(parts), notes=NOTES_COMPARE)
 
