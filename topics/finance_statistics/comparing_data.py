@@ -223,8 +223,8 @@ def generate_comparing_l3(calc_mode=False):
 
 
 _PAIRS = [
-    ("the Tarbert bags", "the Stornoway bags", "weights of the bags", "kg", "heavier", "lighter"),
-    ("Crofter A's lambs", "Crofter B's lambs", "lambs' weights", "kg", "heavier", "lighter"),
+    ("the Tarbert bags", "the Stornoway bags", "weights", "kg", "heavier", "lighter"),
+    ("Crofter A's lambs", "Crofter B's lambs", "weights", "kg", "heavier", "lighter"),
     ("Callanish", "the Blackhouse Village", "numbers of visitors", "", "higher", "lower"),
     ("Ullapool", "Oban", "crossing times", "minutes", "longer", "shorter"),
 ]
