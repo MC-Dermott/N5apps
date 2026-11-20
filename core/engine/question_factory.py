@@ -1001,7 +1001,9 @@ _LEVEL_WEIGHTS = {
             # recurrence spreadsheets 2023 Q8 + 2024 Q4 = 15; profit function 2026 Q5(a) = 5
             # estimation (3 marks) 2022 Q10(b), 2023 Q1, 2024 Q10(c), 2025 Q1, 2026 Q11(c) = 15 marks
             "Mathematical Modelling": {"Calculator Questions": 5, "Spreadsheet: Recurrence Relation Model": 3,
-                                       "Spreadsheet: Profit Function": 1, "Estimation": 3},
+                                       "Spreadsheet: Profit Function": 1, "Estimation": 3,
+                                       # misrepresented data 2026 Q11(a)(b) + 2023 Q10(a)(ii) = 3 marks
+                                       "Misrepresented Data": 1},
         },
     },
 }

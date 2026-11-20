@@ -266,8 +266,77 @@ def generate_estimation():
     return question(T, QT, ctx, parts, NOTES_ESTIMATE, "Estimation")
 
 
+
+# ── Misrepresented data and extrapolated headlines (2026 Q11(a)(b), 2023 Q10(a)(ii)) ──
+NOTES_MISREP = """
+**Misrepresented data.** Two different marks are asked for:
+- *Why might the data misrepresent?* Give a reason about **how the data was collected** — who or what was left out of the count, or
+  when it was counted. **Do not** just say the trend is real ("fewer people use it") or that a number is wrong.
+- *Why is a headline unrealistic?* It **extrapolates**: it extends a trend far beyond the data. The future cannot be predicted from a few
+  years of data — the trend may change. Do not argue that numbers "will rebound" without saying the trend cannot be assumed to continue.
+To find where a trend reaches zero: average change per year = (last − first) ÷ number of intervals, then last value ÷ rate.
+"""
+
+_MISREP = [
+    dict(org="swimming club", things="members", head="Swimming club will have NO members by {y}!",
+         valid=["some people swim at the club without being members (for example pay-per-visit swimmers)",
+                "the count is made at one time of year, so people who join or leave later are missed"],
+         invalid=["fewer people are swimming at the club", "the club must have made a mistake in its counting",
+                  "the pool was closed for repairs"]),
+    dict(org="bus company", things="passengers (in thousands)", head="Buses will carry NO passengers by {y}!",
+         valid=["children who travel free may not be counted", "the data only includes this one company, not every bus operator"],
+         invalid=["fewer people use buses", "the buses must have been late", "passengers have stopped paying"]),
+    dict(org="library", things="books borrowed", head="Library will lend NO books by {y}!",
+         valid=["loans of e-books and audiobooks may not be counted", "books renewed online may not be counted as new loans"],
+         invalid=["people don't like reading any more", "the library must have lost its records", "the library is too small"]),
+    dict(org="museum", things="visitors", head="Museum will have NO visitors by {y}!",
+         valid=["visitors who enter through another entrance may not be counted", "only visitors who buy a ticket are counted, not those with free passes"],
+         invalid=["fewer people are visiting the museum", "the museum has become boring", "the exhibits have been moved"]),
+    dict(org="cinema", things="tickets sold", head="Cinema will sell NO tickets by {y}!",
+         valid=["tickets bought from other websites may not be counted", "only tickets sold at the box office are included, not online sales"],
+         invalid=["fewer people are going to the cinema", "the films must have been poor", "ticket prices have gone down"]),
+]
+
+
+def generate_misrepresented_data():
+    sc = random.choice(_MISREP)
+    d, k = random.choice([6, 8, 10, 12, 15, 20]), random.choice([3, 4, 5, 6, 7])
+    sf = random.choice([1, 5, 10]); y0 = random.choice([2018, 2019, 2020, 2021])
+    last = d * k; first = last + 3 * d
+    vals = [first, first - d + random.randint(-2, 2), first - 2 * d + random.randint(-2, 2), last]
+    vals = [v * sf for v in vals]
+    years = [y0 + i for i in range(4)]
+    rate = -d * sf
+    zero_year = years[-1] + k
+    head = sc["head"].format(y=zero_year)
+    ctx = (f"A {sc['org']} records the number of {sc['things']} each year.\n\n" + md_table(["Year"] + years, [[sc["things"].capitalize()] + vals]) +
+           f"\n\nA newspaper extends the trend as a straight line and publishes the headline: **‘{head}’**")
+    reason = random.choice(sc["valid"]); ropts = [reason] + random.sample(sc["invalid"], 3); random.shuffle(ropts)
+    ext = "It extends the downward trend far beyond the years of data, but the trend may change — the future cannot be predicted from a few years of data"
+    wrong = ["The numbers in the table must be wrong",
+             "The numbers will bounce back, because there will always be some",
+             "The headline is unrealistic because the table has no title"]
+    eopts = [ext] + wrong; random.shuffle(eopts)
+    rate_p = part("(b)", f"Find the average change per year from {years[0]} to {years[-1]}. (Use a negative number for a fall.)", float(rate),
+                  [f"({vals[-1]} − {vals[0]}) ÷ 3 = **{rate}** per year"],
+                  steps=[step("Total change", float(vals[-1] - vals[0])), step("Average change per year", float(rate))], marks=1)
+    rate_p.distractors = distractors(float(rate), [(float(vals[-1] - vals[0]), "that's the total change over the three years — divide by 3 for the change each year."),
+                                                   (round((vals[-1] - vals[0]) / 4, 2), "there are 3 intervals between 4 years of data, not 4.")])
+    year_p = part("(c)", f"If the {sc['things']} keep falling at this rate, in which year does the number reach 0?", float(zero_year),
+                  [f"{vals[-1]} ÷ {abs(rate)} = {k} more years after {years[-1]} → **{zero_year}**"],
+                  steps=[step(f"Years after {years[-1]} to fall to zero ({vals[-1]} ÷ {abs(rate)})", float(k)), step("Year", float(zero_year))], marks=1)
+    year_p.distractors = distractors(float(zero_year), [(float(years[0] + round(vals[0] / abs(rate))), f"count the years from {years[-1]}, the last year of data, using its value ({vals[-1]}).")])
+    parts = [part("(a)", "Which is a valid reason why the data might misrepresent the situation?", reason,
+                  [f"**{reason}** — a reason about how the data was collected. Saying the trend is real, or that numbers are wrong, is not a reason the data misrepresents."],
+                  options=ropts, marks=1),
+             rate_p, year_p,
+             part("(d)", "Why may the headline be unrealistic?", ext,
+                  ["The headline **extrapolates**: it assumes the trend continues unchanged for years beyond the data, which cannot be known."], options=eopts, marks=1)]
+    return question(T, QT, ctx, parts, NOTES_MISREP, "Misrepresented Data")
+
+
 FURTHER = {("Modelling", "Mathematical Modelling"): {
     "Suggest a Model": generate_suggest_model, "Choose Between Two Formulae": generate_choose_formula, "Implausible Predictions": generate_implausible,
     "Precision and Accuracy": generate_precision_accuracy, "Units Consistency": generate_units_consistency, "Improving a Model": generate_improve_model,
     "Good Spreadsheet Practice": generate_spreadsheet_practice,
-    "Estimation": generate_estimation}}
+    "Estimation": generate_estimation, "Misrepresented Data": generate_misrepresented_data}}
