@@ -4,6 +4,7 @@ accuracy, units consistency, good spreadsheet practice."""
 import math
 import random
 
+from core.models.distractors import distractors
 from core.models.further import g, part, question, r2, step, md_table
 
 T, QT = "Modelling", "Mathematical Modelling"
@@ -173,7 +174,100 @@ def generate_spreadsheet_practice():
     return question(T, QT, ctx, parts, NOTES_SHEET, "Good Spreadsheet Practice")
 
 
+
+# ── Estimation (2022 Q10(b), 2023 Q1, 2024 Q10(c), 2025 Q1, 2026 Q11(c): 3 marks each — two assumptions, then the calculation) ──
+NOTES_ESTIMATE = """
+**Estimating.** In every estimation question the marks are: **one for each assumption** (a sensible value, with its units) and
+**one for the calculation** that uses them. Choose values that are realistic — a lifetime of about 70–90 years, not 8 or 800 — and
+say them clearly. If an assumption is missing the calculation mark is not available. Convert units at the end (minutes to hours, …)
+and round sensibly: an estimate is not exact. Any reasonable assumptions are accepted in the exam; here you pick from a short list.
+"""
+
+
+def _hu(x):
+    """round half up (an exam candidate's rounding, not Python's banker's rounding)"""
+    return math.floor(x + 0.5)
+
+
+_EST = [
+    dict(ask="Estimate the total number of hours that a typical person spends brushing their teeth during their lifetime.",
+         a=("the number of years in a lifetime", [70, 75, 80, 85, 90], lambda v: f"{v} years", ["8 years", "800 years", "25 years"]),
+         b=("the time spent brushing teeth each day", [2, 3, 4, 5, 6], lambda v: f"{v} minutes a day", ["40 minutes a day", "0.5 minutes a day", "3 hours a day"]),
+         fixed="Use 365 days in a year.", unit="hours", dp=0,
+         total=lambda y, m: y * 365 * m / 60,
+         steps=lambda y, m: [("Minutes in a lifetime", y * 365 * m)],
+         formula=lambda y, m: f"{y} × 365 × {m} ÷ 60",
+         errs=lambda y, m: [(y * 365 * m, "that's still in minutes — divide by 60 to give hours."), (y * m / 60, "you left out the 365 days in a year.")]),
+    dict(ask="Estimate the total number of slices of bread that a typical person eats during their lifetime.",
+         a=("the number of years in a lifetime", [70, 75, 80, 85, 90], lambda v: f"{v} years", ["8 years", "800 years", "25 years"]),
+         b=("the number of slices eaten each day", [2, 3, 4, 5], lambda v: f"{v} slices a day", ["30 slices a day", "0.2 slices a day", "20 slices a day"]),
+         fixed="Use 365 days in a year.", unit="slices", dp=0,
+         total=lambda y, s: y * 365 * s,
+         steps=lambda y, s: [("Slices eaten in one year", 365 * s)],
+         formula=lambda y, s: f"{y} × 365 × {s}",
+         errs=lambda y, s: [(y * s, "you left out the 365 days in a year.")]),
+    dict(ask="Estimate the total amount of water, in litres, that a typical person drinks during their lifetime.",
+         a=("the number of years in a lifetime", [70, 75, 80, 85, 90], lambda v: f"{v} years", ["8 years", "800 years", "25 years"]),
+         b=("the amount of water drunk each day", [1.5, 2, 2.5], lambda v: f"{g(v)} litres a day", ["15 litres a day", "0.1 litres a day", "150 litres a day"]),
+         fixed="Use 365 days in a year.", unit="litres", dp=0,
+         total=lambda y, l: y * 365 * l,
+         steps=lambda y, l: [("Litres drunk in one year", 365 * l)],
+         formula=lambda y, l: f"{y} × 365 × {g(l)}",
+         errs=lambda y, l: [(y * l, "you left out the 365 days in a year.")]),
+    dict(ask="Estimate the total amount of petrol, in litres, that a typical car uses in one year.",
+         a=("the distance driven in a year", [8000, 10000, 12000], lambda v: f"{v:,} miles a year".replace(",", " "), ["100 miles a year", "1 000 000 miles a year", "500 miles a year"]),
+         b=("the fuel economy of the car", [40, 45, 50], lambda v: f"{v} miles per gallon", ["4 miles per gallon", "400 miles per gallon", "0.4 miles per gallon"]),
+         fixed="A gallon is about 4.5 litres.", unit="litres", dp=0,
+         total=lambda m, e: m / e * 4.5,
+         steps=lambda m, e: [("Gallons used in a year", m / e)],
+         formula=lambda m, e: f"{m:,} ÷ {e} × 4.5".replace(",", " "),
+         errs=lambda m, e: [(m / e, "that's the number of gallons — multiply by 4.5 to give litres."), (m * e * 4.5, "divide the distance by the miles per gallon, don't multiply.")]),
+    dict(ask="Estimate the total number of heartbeats of a typical person during their lifetime. Give your answer in billions.",
+         a=("the number of years in a lifetime", [70, 75, 80, 85, 90], lambda v: f"{v} years", ["8 years", "800 years", "25 years"]),
+         b=("the resting heart rate", [60, 65, 70, 75, 80], lambda v: f"{v} beats a minute", ["7 beats a minute", "700 beats a minute", "7000 beats a minute"]),
+         fixed="Use 365 days in a year. Give your answer to 2 decimal places.", unit="billion heartbeats", dp=2,
+         total=lambda y, b: y * 365 * 24 * 60 * b / 1e9,
+         steps=lambda y, b: [("Minutes in a lifetime", y * 365 * 24 * 60)],
+         formula=lambda y, b: f"{y} × 365 × 24 × 60 × {b} ÷ 1 000 000 000",
+         errs=lambda y, b: [(y * 365 * 24 * 60 * b, "that's the number of heartbeats, not billions of heartbeats."), (y * 365 * 24 * b / 1e9, "you left out ×60 for minutes in an hour.")]),
+    dict(ask="Estimate the total amount of water, in litres, that a typical person uses showering in one year.",
+         a=("the length of a shower", [4, 5, 6, 8, 10], lambda v: f"{v} minutes", ["50 minutes", "0.5 minutes", "2 hours"]),
+         b=("the amount of water used each minute", [8, 9, 10, 12], lambda v: f"{v} litres a minute", ["0.8 litres a minute", "80 litres a minute", "800 litres a minute"]),
+         fixed="Assume one shower a day and 365 days in a year.", unit="litres", dp=0,
+         total=lambda m, l: 365 * m * l,
+         steps=lambda m, l: [("Litres used in one shower", m * l)],
+         formula=lambda m, l: f"365 × {m} × {l}",
+         errs=lambda m, l: [(m * l, "that's one shower — multiply by 365 for a year.")]),
+]
+
+
+def generate_estimation():
+    sc = random.choice(_EST)
+    va, vb = random.choice(sc["a"][1]), random.choice(sc["b"][1])
+    la, lb = sc["a"][2](va), sc["b"][2](vb)
+    exact = sc["total"](va, vb)
+    ans = float(_hu(exact)) if sc["dp"] == 0 else round(exact + 1e-9, sc["dp"])
+    unit = sc["unit"]; shown = f"{ans:,.0f}".replace(",", " ") if sc["dp"] == 0 else f"{ans:.{sc['dp']}f}"
+
+    def options(label, bad):
+        o = [label] + list(bad); random.shuffle(o); return o
+    steps = [step(p, float(_hu(v))) for p, v in sc["steps"](va, vb)] + [step(f"The estimate ({unit})", ans)]
+    calc = part("(c)", f"Using {la} and {lb}, calculate your estimate. Give the answer in {unit}"
+                       + (" to the nearest whole number." if sc["dp"] == 0 else " to 2 decimal places."), ans,
+                [f"{sc['formula'](va, vb)} = **{shown} {unit}**",
+                 f"Written as in the exam: *Assume {la} and {lb}. Estimate ≈ {shown} {unit}.*"], steps=steps, marks=1)
+    calc.distractors = distractors(ans, [(float(_hu(v)) if sc["dp"] == 0 else round(v, sc["dp"]), m) for v, m in sc["errs"](va, vb)])
+    parts = [part("(a)", f"Which is a reasonable assumption for {sc['a'][0]}?", la,
+                  [f"**{la}** is realistic; the others are far too large or too small."], options=options(la, sc["a"][3]), marks=1),
+             part("(b)", f"Which is a reasonable assumption for {sc['b'][0]}?", lb,
+                  [f"**{lb}** is realistic; the others are far too large or too small."], options=options(lb, sc["b"][3]), marks=1),
+             calc]
+    ctx = f"{sc['ask']}\n\nState any assumptions you make. {sc['fixed']}"
+    return question(T, QT, ctx, parts, NOTES_ESTIMATE, "Estimation")
+
+
 FURTHER = {("Modelling", "Mathematical Modelling"): {
     "Suggest a Model": generate_suggest_model, "Choose Between Two Formulae": generate_choose_formula, "Implausible Predictions": generate_implausible,
     "Precision and Accuracy": generate_precision_accuracy, "Units Consistency": generate_units_consistency, "Improving a Model": generate_improve_model,
-    "Good Spreadsheet Practice": generate_spreadsheet_practice}}
+    "Good Spreadsheet Practice": generate_spreadsheet_practice,
+    "Estimation": generate_estimation}}
