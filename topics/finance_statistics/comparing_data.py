@@ -84,6 +84,28 @@ February 150, March 210, April 280, May 340, June 310. Months go along the botto
 0 to 400 in steps of 50; plot each point, then join them with a ruler.
 """
 
+NOTES_SCATTER = """
+**Scatter graphs** — each pair of values is one **cross**; the points are **not joined**.
+
+- **Correlation:** *positive* (both go up together), *negative* (one goes up as the other goes down) or *none*.
+- **Line of best fit:** a straight, ruled line through the middle of the points, with points above **and** below it,
+  across the full range of the data (not through the origin). To **estimate**, go up from the given value to the
+  line, then across to the scale.
+- An estimate **outside the range of the data** is less reliable.
+
+**Example (from the worksheet):** temperature (°C) and ice creams sold: (12, 35), (14, 45), (15, 46), (17, 57),
+(18, 56), (20, 72), (22, 74), (24, 88). Positive correlation; at 19 °C the line gives about 64 ice creams.
+"""
+
+# (x label, y label, x range, a, b) with y = a + b x on the line of best fit (integers, so estimates are exact)
+_SCATTER_CONTEXTS = [
+    ("Temperature (°C)", "Ice creams sold", (10, 26), -10, 4, "temperature", "ice creams sold"),
+    ("Distance (miles)", "Time (minutes)", (3, 24), 5, 3, "distance", "time"),
+    ("Age of car (years)", "Value (£ hundreds)", (1, 9), 100, -9, "age", "value"),
+    ("Hours of revision", "Test score", (1, 9), 25, 7, "hours of revision", "test score"),
+    ("Hours of sunshine", "Visitors", (2, 10), 10, 11, "hours of sunshine", "visitors"),
+]
+
 _LINE_CONTEXTS = [
     ("the number of cars on the Leverburgh ferry each day", "Number of cars", "Day", "cars",
      ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"], "day"),
@@ -323,6 +345,58 @@ def generate_comparing_l5(calc_mode=False):
     return q
 
 
+def generate_comparing_l6(calc_mode=False):
+    """Scattergraph with its line of best fit drawn: correlation, an estimate, and reliability (2025 P1 Q4, 2026 P1 Q8)."""
+    xl, yl, (lo, hi), a, b, xn, yn = random.choice(_SCATTER_CONTEXTS)
+    n = min(random.choice([8, 9, 10]), hi - lo - 1)     # leave at least one x free for the estimate
+    xs = sorted(random.sample(range(lo, hi + 1), n))
+    while True:
+        ys = [a + b * x + random.choice([-4, -3, -2, 2, 3, 4]) * max(1, abs(b) // 3) // 1 for x in xs]
+        res = [y - (a + b * x) for x, y in zip(xs, ys)]
+        r = sum((x - sum(xs) / n) * (y - sum(ys) / n) for x, y in zip(xs, ys)) / math.sqrt(
+            sum((x - sum(xs) / n) ** 2 for x in xs) * sum((y - sum(ys) / n) ** 2 for y in ys))
+        if sum(v > 0 for v in res) >= 3 and sum(v < 0 for v in res) >= 3 and min(ys) > 0 and abs(r) > 0.95:
+            break
+    ymax = ((max(ys + [a + b * xs[0], a + b * xs[-1]]) // 10) + 2) * 10
+    xmax = hi + 2
+    inside = range(min(xs) + 1, max(xs))                     # inside the range of the data
+    xe_options = [x for x in inside if x not in xs and (a + b * x) % 5 == 0] or \
+                 [x for x in inside if (a + b * x) % 5 == 0]
+    if not xe_options:                                       # rare: re-roll the data
+        return generate_comparing_l6(calc_mode)
+    xe = random.choice(xe_options)
+    ye = a + b * xe
+    positive = b > 0
+    far = max(xs) + random.choice([5, 7, 9])
+    corr_opts = ["Positive correlation", "Negative correlation", "No correlation"]
+    corr = corr_opts[0] if positive else corr_opts[1]
+    rel_right = "Less reliable: the value is outside the range of the data."
+    rel_opts = [rel_right, "Just as reliable: the line goes through every point.",
+                "Not possible: a line of best fit cannot be used to estimate.",
+                "More reliable: it is a long way from the other points."]
+    random.shuffle(rel_opts)
+    parts = [
+        make_part("(a)", "Describe the correlation.", corr, options=corr_opts,
+                  worked_solution=[f"As the {xn} {'increases' if positive else 'increases'}, the {yn} "
+                                   f"{'increases' if positive else 'decreases'}: {corr.lower()}."]),
+        make_part("(b)", f"Use the line of best fit to estimate the {yn} when the {xn} is {xe}.", ye,
+                  scaffold_steps=[{"prompt": "What is one small square worth on the vertical scale?", "answer": 5}],
+                  worked_solution=[f"Go up from {xe} to the line, then across to the scale: {ye}."]),
+        make_part("(c)", f"A pupil uses the line to estimate the {yn} when the {xn} is {far}. Which statement is correct?",
+                  rel_right, options=rel_opts,
+                  worked_solution=[rel_right + f" The data only goes up to {max(xs)}."]),
+    ]
+    q = Question(question_text=f"The scattergraph shows {xn} and {yn}, with a line of best fit drawn.",
+                 correct_answer=corr, topic=TOPIC, question_type=QTYPE, parts=parts,
+                 worked_solution=multipart_worked_solution(parts), notes=NOTES_SCATTER)
+    q.metadata["diagram"] = "composite_shape"
+    q.metadata["diagram_params"] = {"module_path": "topics.finance_statistics.comparing_data_diagrams",
+                                    "kind": "scatter_graph",
+                                    "args": [xs, ys, (0, xmax, 1, 2 if xmax <= 14 else 4), (0, ymax, 5, 10), xl, yl, (a, b)],
+                                    "width": 560}
+    return q
+
+
 def generate_comparing_question(calc_mode=False):
     return random.choice([generate_comparing_l1, generate_comparing_l2, generate_comparing_l3,
-                          generate_comparing_l4, generate_comparing_l5])(calc_mode=calc_mode)
+                          generate_comparing_l4, generate_comparing_l5, generate_comparing_l6])(calc_mode=calc_mode)

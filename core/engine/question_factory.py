@@ -185,6 +185,7 @@ from topics.finance_statistics.comparing_data import (
     generate_comparing_l3,
     generate_comparing_l4,
     generate_comparing_l5,
+    generate_comparing_l6,
 )
 from topics.finance_statistics.commission import generate_commission_question
 from topics.finance_statistics.mortgages import (
@@ -670,6 +671,7 @@ _N5_LEVELS = {
             "Mean and Standard Deviation": generate_comparing_l3,
             "Comparing Mean and Standard Deviation": generate_comparing_l4,
             "Line Graphs": generate_comparing_l5,
+            "Scatter Graphs": generate_comparing_l6,
         },
     },
     "Geometry and Measure": {
