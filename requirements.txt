@@ -6,3 +6,4 @@ supabase
 bcrypt
 plotly
 openpyxl
+pypdfium2

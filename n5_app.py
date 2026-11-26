@@ -22,6 +22,8 @@ from core.ui.dashboard_ui import render_dashboard
 from core.ui.student_dashboard_ui import render_student_dashboard
 from core.ui.assignments_ui import render_my_assignments, render_assignment_runner, render_teacher_assignments
 from core.ui.revision_guide_ui import render_revision_guide
+from core.ui.past_paper_ui import render_past_papers, reset_past_paper
+from core.data.past_papers import get_past_paper_units, get_past_paper_topics
 from core.db.assignments import outstanding_count
 from core.db.tracker import save_practice_attempt
 from core.models.answers import clock_answers_match
@@ -270,6 +272,8 @@ st.divider()
 _mode_options = ["Practice", "Test", "Unit Assessment"]
 if qualification == "N5 Numeracy":
     _mode_options.append("Practice Assessment")
+if get_past_paper_units(qualification):
+    _mode_options.append("Past Paper Questions")
 goto = st.session_state.pop("revision_goto", None)  # set by the Revision Guide's "Practise" buttons
 if goto and goto["question_type"] in QUAL_REGISTRY[qualification].get(goto["unit"], {}):
     st.session_state[f"mode_{qualification}"] = "Practice"
@@ -283,6 +287,7 @@ if st.session_state.mode != mode:
     st.session_state.submitted = False
     reset_test()
     reset_unit_assessment()
+    reset_past_paper()
     if mode != "Practice Assessment":
         reset_numeracy_assessment()
 
@@ -291,6 +296,18 @@ user_id = user["id"] if user else None
 # --- N5 Numeracy Practice Assessment shortcut ---
 if mode == "Practice Assessment":
     render_numeracy_assessment(user_id=user_id)
+    st.stop()
+
+# --- Past Paper Questions: has its own topic list, which includes skills the app has no practice questions for ---
+if mode == "Past Paper Questions":
+    paper_unit = st.selectbox("Choose Unit", get_past_paper_units(qualification), key=f"pp_unit_{qualification}")
+    paper_topic = st.selectbox("Choose Topic", get_past_paper_topics(qualification, paper_unit),
+                               key=f"pp_topic_{qualification}_{paper_unit}")
+    if st.session_state.get("last_past_paper_topic") != (qualification, paper_unit, paper_topic):
+        st.session_state.last_past_paper_topic = (qualification, paper_unit, paper_topic)
+        reset_past_paper()
+    st.divider()
+    render_past_papers(qualification, paper_unit, paper_topic)
     st.stop()
 
 # --- Unit Assessment shortcut: 10 random questions, harder levels, across a unit ---
