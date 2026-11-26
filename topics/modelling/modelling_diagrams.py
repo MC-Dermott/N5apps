@@ -135,3 +135,19 @@ def container_and_graphs(kind, kinds, path):
 
 def rate_graph(x1, y1, xlabel, ylabel, path):
     return line_graph(0, 0, x1, y1, path, xlabel, ylabel, xmax=x1 * 1.15, ymax=y1 * 1.1, points=True)
+
+
+def exp_graph(a, f, n, xlabel, ylabel, path):
+    """A smooth exponential model y = a × f^x from x = 0 to n on a grid, for reading values and describing change."""
+    fig, ax = plt.subplots(figsize=(4.6, 3.1))
+    xs = np.linspace(0, n, 200)
+    ax.plot(xs, a * f ** xs, color="#1f4e8c", lw=2)
+    ax.plot(range(0, n + 1), [a * f ** k for k in range(0, n + 1)], "o", color="#1f4e8c", ms=4)
+    ax.set_xlim(0, n); ax.set_ylim(0, max(a, a * f ** n) * 1.1)
+    ax.set_xticks(range(0, n + 1))
+    ax.minorticks_on(); ax.grid(True, which="major", color="#bbbbbb", lw=0.6); ax.grid(True, which="minor", axis="y", color="#e4e4e4", lw=0.4)
+    ax.set_axisbelow(True)
+    ax.set_xlabel(xlabel, fontsize=9); ax.set_ylabel(ylabel, fontsize=9); ax.tick_params(labelsize=8, which="both")
+    ax.tick_params(which="minor", axis="x", bottom=False)
+    fig.tight_layout()
+    return _save(fig, path)

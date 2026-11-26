@@ -950,6 +950,14 @@ def _extend_higher(further):
 for _f in (_FURTHER_FINANCE, _FURTHER_PLAN_STATS, _FURTHER_MODELLING):
     _extend_higher(_f)
 
+# Gaps found when the Finance, Planning and Modelling learning outcomes were mapped to the app (Nov 2026).
+from topics.finance_statistics.prelim_gaps_finance import GAPS as _GAPS_FINANCE  # noqa: E402
+from topics.finance_statistics.prelim_gaps_planning import GAPS as _GAPS_PLANNING  # noqa: E402
+from topics.modelling.prelim_gaps_modelling import GAPS as _GAPS_MODELLING  # noqa: E402
+
+for _f in (_GAPS_FINANCE, _GAPS_PLANNING, _GAPS_MODELLING):
+    _extend_higher(_f)
+
 # Assessment sequence: one of each type in canonical order
 _NUMERACY_ASSESSMENT_GENERATORS = [
     generate_compound_percentages,
