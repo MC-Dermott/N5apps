@@ -165,6 +165,12 @@ password. The trackers' `App username` values are 5-character initials+digits na
 `.pipeline-tools/assessment_tracker/assign_usernames.py`.
 
 
+**My Revision Guide (Nov 2026).** Pupil home page button (`core/ui/revision_guide_ui.py`, `core/db/revision.py`, table
+`revision_guide`, migration `migrations/2026-11-26_revision_guide.sql`, run once in the Supabase SQL Editor). Rows are written on
+request by `Resources/Apps/.pipeline-tools/assessment_tracker/sync_revision_guide.py [--apply]` (dry run without `--apply`): unit
+assessment marks per tracker topic, weakest first, with a class-result fallback, summary sheet links and practice buttons that
+preselect the unit and topic (`revision_goto` in `n5_app.py`). Tests: `venv/bin/python tests/test_revision_guide.py`.
+
 **Saved progress and mixed assignments (Oct 2026).** A part-finished assignment test is saved after each answer
 (`core/db/progress.py`, table `assignment_progress`, migration `2026-10-26_assignment_progress.sql`); the pupil gets
 Continue / Start over. An assignment with `format = 'mixed'` (migration `2026-10-26_assignment_format.sql`) is a single

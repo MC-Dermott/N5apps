@@ -21,6 +21,7 @@ from core.auth.auth import login_as_admin
 from core.ui.dashboard_ui import render_dashboard
 from core.ui.student_dashboard_ui import render_student_dashboard
 from core.ui.assignments_ui import render_my_assignments, render_assignment_runner, render_teacher_assignments
+from core.ui.revision_guide_ui import render_revision_guide
 from core.db.assignments import outstanding_count
 from core.db.tracker import save_practice_attempt
 from core.models.answers import clock_answers_match
@@ -63,7 +64,8 @@ def _do_logout():
     for key in ["user", "qualification", "submitted", "last_qualification",
                 "last_topic", "last_question_type", "last_tracked_qid",
                 "show_dashboard", "show_student_dashboard", "show_assignments",
-                "show_teacher_assignments", "active_assignment"]:
+                "show_teacher_assignments", "active_assignment",
+                "show_revision_guide", "revision_goto"]:
         st.session_state.pop(key, None)
     reset_test()
     reset_numeracy_assessment()
@@ -144,6 +146,19 @@ if st.session_state.get("show_dashboard"):
     render_dashboard()
     st.stop()
 
+# --- Revision guide ---
+if st.session_state.get("show_revision_guide"):
+    st.title("Applications of Maths Practice")
+    col_back, col_corner = st.columns([5, 1])
+    with col_back:
+        if st.button("← Back"):
+            st.session_state.pop("show_revision_guide", None)
+            st.rerun()
+    with col_corner:
+        _render_auth_button()
+    render_revision_guide(user)
+    st.stop()
+
 # --- Assignments pages ---
 if st.session_state.get("show_assignments") or st.session_state.get("show_teacher_assignments"):
     st.title("Applications of Maths Practice")
@@ -187,6 +202,10 @@ if "qualification" not in st.session_state:
         if st.button("📝 My Assignments" + (f" ({todo} to do)" if todo else ""), use_container_width=True,
                      type="primary" if todo else "secondary"):
             st.session_state.show_assignments = True
+            st.rerun()
+        st.write("")
+        if st.button("🧭 My Revision Guide", use_container_width=True):
+            st.session_state.show_revision_guide = True
             st.rerun()
         st.write("")
 
@@ -251,7 +270,13 @@ st.divider()
 _mode_options = ["Practice", "Test", "Unit Assessment"]
 if qualification == "N5 Numeracy":
     _mode_options.append("Practice Assessment")
-mode = st.radio("Mode", _mode_options, horizontal=True, index=0)
+goto = st.session_state.pop("revision_goto", None)  # set by the Revision Guide's "Practise" buttons
+if goto and goto["question_type"] in QUAL_REGISTRY[qualification].get(goto["unit"], {}):
+    st.session_state[f"mode_{qualification}"] = "Practice"
+    st.session_state[f"unit_{qualification}"] = goto["unit"]
+    st.session_state[f"qtype_{qualification}_{goto['unit']}"] = goto["question_type"]
+    st.session_state.quiz["current_question"] = None
+mode = st.radio("Mode", _mode_options, horizontal=True, index=0, key=f"mode_{qualification}")
 
 if st.session_state.mode != mode:
     st.session_state.mode = mode
@@ -292,7 +317,7 @@ st.divider()
 
 # --- Unit and topic selection ---
 topic_registry = QUAL_REGISTRY[qualification]
-topic = st.selectbox("Choose Unit", list(topic_registry.keys()))
+topic = st.selectbox("Choose Unit", list(topic_registry.keys()), key=f"unit_{qualification}")
 
 if st.session_state.get("last_topic") != topic:
     st.session_state.last_topic = topic
@@ -300,7 +325,7 @@ if st.session_state.get("last_topic") != topic:
     reset_test()
 
 question_types = list(topic_registry[topic].keys())
-question_type = st.selectbox("Choose Topic", question_types)
+question_type = st.selectbox("Choose Topic", question_types, key=f"qtype_{qualification}_{topic}")
 
 if st.session_state.get("last_question_type") != question_type:
     st.session_state.last_question_type = question_type
