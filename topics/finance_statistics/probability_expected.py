@@ -680,6 +680,68 @@ def generate_probability_expected_l5(calc_mode=False):
     return random.choice([_compare, _compare, _best])()
 
 
+# ── Bias, fairness and sample size ───────────────────────────────────────────────────────────
+NOTES_BIAS = """
+**Bias and sample size**
+
+- A sample is **biased** if some people are much more likely to be asked than others, so it doesn't represent the whole group.
+- A **larger** sample, chosen **at random** from the whole group, gives a more reliable result.
+- For a **fair** dice, coin or spinner, results should be **close to** the expected number. The more trials, the closer you would expect to be.
+
+**Example:** A fair coin is flipped 400 times. Expected heads = 1/2 × 400 = 200. Getting 310 heads is far from 200, so the coin is probably **biased**.
+"""
+
+_SURVEYS = [
+    ("whether the town needs a new swimming pool", "people leaving the swimming pool",
+     "people chosen at random from everyone who lives in the town"),
+    ("how pupils in a school travel to school", "pupils getting off the school bus",
+     "pupils chosen at random from the whole school roll"),
+    ("whether people want longer library opening hours", "people using the library one morning",
+     "households chosen at random from the whole area"),
+    ("how often adults in a town exercise", "adults arriving at a gym",
+     "adults chosen at random from across the town"),
+]
+
+
+def _bias_survey():
+    topic, biased, fair = random.choice(_SURVEYS)
+    small, big = random.choice([(10, 200), (15, 300), (20, 400)])
+    right = f"Ask {big} {fair}."
+    options = [right, f"Ask {small} {fair}.", f"Ask {big} {biased}.", f"Ask {small} {biased}."]
+    random.shuffle(options)
+    text = f"A researcher wants to find out {topic}. Which method will give the most reliable result?"
+    dis = [{"value": f"Ask {small} {fair}.", "mistake": "this is unbiased, but a larger sample is more reliable."},
+           {"value": f"Ask {big} {biased}.", "mistake": "a large sample is no help if it is biased."}]
+    worked = [f"The sample must be chosen fairly from the whole group (not just {biased}) and be large.", right]
+    return text, right, worked, dis, options
+
+
+def _bias_dice():
+    n = random.choice([300, 600, 900, 1200])
+    expected = n // 6
+    biased = random.random() < 0.5
+    got = expected + (random.randint(int(0.6 * expected), expected) if biased else random.choice([-4, -3, -2, 2, 3, 4]))
+    yes = f"It is probably biased: {got} is far from the {expected} sixes expected."
+    no = f"There is no real evidence of bias: {got} is close to the {expected} sixes expected."
+    options = [yes, no, f"It must be fair, because it landed on six at least once.",
+               f"It is biased, because the result is not exactly {expected}."]
+    random.shuffle(options)
+    right = yes if biased else no
+    text = f"A dice is rolled {n} times and lands on six {got} times. Which conclusion is best?"
+    dis = [{"value": options[i], "mistake": "results from a fair dice are rarely exactly the expected number — ask "
+                                            "whether they are close to it."}
+           for i in range(4) if options[i].startswith("It is biased, because")]
+    worked = [f"Expected sixes = 1/6 × {n} = {expected}", right]
+    return text, right, worked, dis, options
+
+
+def generate_probability_expected_l6(calc_mode=False):
+    """Effects of bias and sample size."""
+    text, ans, worked, dis, options = random.choice([_bias_survey, _bias_dice])()
+    return Question(question_text=text, correct_answer=ans, topic=TOPIC, question_type=QTYPE, worked_solution=worked,
+                    notes=NOTES_BIAS, distractors=dis, metadata={"options": options})
+
+
 def generate_probability_expected_question(calc_mode=False):
     return random.choice([generate_probability_expected_l1, generate_probability_expected_l2,
                           generate_probability_expected_l3, generate_probability_expected_l4,

@@ -1,3 +1,4 @@
+import math
 import random
 from core.models.question_model import Question
 from core.models.distractors import distractors
@@ -285,8 +286,107 @@ def generate_ratio_l3(calc_mode=False):
 
 
 # ---------------------------------------------------------------------------
+# Writing and simplifying a ratio
+# ---------------------------------------------------------------------------
+
+NOTES_SIMPLIFY = """
+**Writing and Simplifying a Ratio:**
+
+1. Write the quantities **in the order the question names them**, in the **same units**.
+2. Divide every number by the highest common factor.
+
+**Example:** A mix uses 2 litres of juice and 500 ml of water. Write juice : water in its simplest form.
+- 2000 : 500
+- = **4 : 1** (dividing both by 500)
+"""
+
+_PAIRS_SIMPLIFY = [("adults", "children", "At a swimming pool there are {a} adults and {b} children."),
+                   ("red", "blue", "A bag holds {a} red counters and {b} blue counters."),
+                   ("wins", "losses", "A netball team had {a} wins and {b} losses."),
+                   ("cars", "vans", "A car park holds {a} cars and {b} vans.")]
+
+
+def generate_ratio_simplify(calc_mode=False):
+    first, second, sentence = random.choice(_PAIRS_SIMPLIFY)
+    while True:
+        p, q = random.randint(1, 9), random.randint(1, 9)
+        if p != q and math.gcd(p, q) == 1:
+            break
+    k = random.choice([3, 4, 5, 6, 8, 12])
+    a, b = p * k, q * k
+    swap = random.random() < 0.5
+    x, y = (b, a) if swap else (a, b)
+    n1, n2 = (second, first) if swap else (first, second)
+    rp, rq = (q, p) if swap else (p, q)
+    right = f"{rp} : {rq}"
+    wrong = [(f"{rq} : {rp}", f"the order matters — the question asks for {n1} first."),
+             (f"{rp} : {rp + rq}", f"that compares {n1} with the total, not with {n2}."),
+             (f"{x} : {y}", "that isn't in its simplest form.")]
+    opts = list(dict.fromkeys([right] + [v for v, _ in wrong]))
+    random.shuffle(opts)
+    return Question(
+        question_text=sentence.format(a=a, b=b) + f"\n\nWrite the ratio of **{n1} to {n2}** in its simplest form.",
+        correct_answer=right,
+        topic="Numeracy",
+        question_type="Ratio",
+        scaffold_steps=[{"prompt": "Highest common factor of the two numbers", "answer": k}],
+        worked_solution=[f"{n1} : {n2} = {x} : {y}", f"= {right} (dividing both by {k})"],
+        notes=NOTES_SIMPLIFY,
+        metadata={"options": opts},
+        distractors=[{"value": v, "mistake": m} for v, m in wrong if v != right],
+    )
+
+
+# ---------------------------------------------------------------------------
+# Scale drawings
+# ---------------------------------------------------------------------------
+
+NOTES_SCALE = """
+**Scale Drawings:** a scale of 1 : 50 means 1 cm on the drawing is 50 cm in real life.
+
+- Drawing → real: **multiply** by the scale, then change units.
+- Real → drawing: change to cm, then **divide** by the scale.
+
+**Example:** On a plan with scale 1 : 50, a wall is 8.4 cm long.
+- 8.4 × 50 = 420 cm = **4.2 m**
+"""
+
+_SCALE_THINGS = ["a wall", "a classroom", "a garden", "a stage", "a car park", "a kitchen"]
+
+
+def generate_ratio_scale(calc_mode=False):
+    thing = random.choice(_SCALE_THINGS)
+    scale = random.choice([20, 50, 100, 200])
+    drawing = random.choice([x / 2 for x in range(5, 31)]) if calc_mode else round(random.randint(25, 180) / 10, 1)
+    real_cm = round(drawing * scale, 1)
+    real_m = round(real_cm / 100, 3)
+    if random.random() < 0.5:
+        text = (f"A plan is drawn with a scale of **1 : {scale}**.\n\nOn the plan, {thing} is {drawing:g} cm long.\n\n"
+                f"Calculate its real length in **metres**.")
+        answer = real_m
+        steps = [{"prompt": "Real length in cm (drawing length × scale)", "answer": real_cm},
+                 {"prompt": "Real length in metres", "answer": real_m}]
+        worked = [f"{drawing:g} × {scale} = {real_cm:g} cm", f"{real_cm:g} ÷ 100 = {real_m:g} m"]
+        wrong = [(real_cm, "that's in centimetres — change to metres."),
+                 (round(drawing / scale, 4), "drawing → real means multiply by the scale.")]
+    else:
+        text = (f"A plan is drawn with a scale of **1 : {scale}**.\n\nIn real life, {thing} is {real_m:g} m long.\n\n"
+                f"Calculate its length on the plan in **centimetres**.")
+        answer = drawing
+        steps = [{"prompt": "Real length in cm", "answer": real_cm},
+                 {"prompt": "Length on the plan (real length in cm ÷ scale)", "answer": drawing}]
+        worked = [f"{real_m:g} m = {real_cm:g} cm", f"{real_cm:g} ÷ {scale} = {drawing:g} cm"]
+        wrong = [(round(real_m / scale, 4), "change the real length to centimetres first."),
+                 (round(real_m * scale, 3), "real → drawing means divide by the scale.")]
+    return Question(question_text=text, correct_answer=answer, topic="Numeracy", question_type="Ratio",
+                    scaffold_steps=steps, worked_solution=worked, notes=NOTES_SCALE,
+                    distractors=distractors(answer, wrong))
+
+
+# ---------------------------------------------------------------------------
 # Default dispatcher
 # ---------------------------------------------------------------------------
 
 def generate_ratio_question(calc_mode=False):
-    return random.choice([generate_ratio_l1, generate_ratio_l2, generate_ratio_l3])(calc_mode=calc_mode)
+    return random.choice([generate_ratio_simplify, generate_ratio_l1, generate_ratio_l2, generate_ratio_l3,
+                          generate_ratio_scale])(calc_mode=calc_mode)

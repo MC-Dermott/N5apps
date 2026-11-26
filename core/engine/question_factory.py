@@ -178,6 +178,12 @@ from topics.finance_statistics.national_insurance import (
     generate_ni_l4,
 )
 from topics.finance_statistics.wages import generate_wages_question, generate_wages_l1, generate_wages_l2
+from topics.finance_statistics.statistical_graphs import (
+    generate_statistical_graphs_question, generate_statistical_graphs_l1, generate_statistical_graphs_l2,
+    generate_statistical_graphs_l3, generate_statistical_graphs_l4,
+)
+from topics.numeracy.ratio import generate_ratio_simplify, generate_ratio_scale
+from topics.numeracy.fractions import generate_fraction_compare_fdp
 from topics.finance_statistics.comparing_data import (
     generate_comparing_question,
     generate_comparing_l1,
@@ -186,6 +192,9 @@ from topics.finance_statistics.comparing_data import (
     generate_comparing_l4,
     generate_comparing_l5,
     generate_comparing_l6,
+    generate_comparing_l7,
+    generate_comparing_l8,
+    generate_comparing_l9,
 )
 from topics.finance_statistics.commission import generate_commission_question
 from topics.finance_statistics.mortgages import (
@@ -292,6 +301,7 @@ from topics.modelling.mathematical_modelling import (
 from topics.finance_statistics.probability_expected import (
     generate_probability_expected_question, generate_probability_expected_l1, generate_probability_expected_l2,
     generate_probability_expected_l3, generate_probability_expected_l4, generate_probability_expected_l5,
+    generate_probability_expected_l6,
 )
 from topics.geometry_measure.volume import (
     generate_volume_question, generate_volume_question_n4, generate_volume_prism, generate_cylinder_question,
@@ -412,6 +422,7 @@ _N5_TOPICS = {
         "Commission": generate_commission_question,
         "Comparing Data Sets": generate_comparing_question,
         "Probability and Expected Frequency": generate_probability_expected_question,
+        "Statistical Graphs": generate_statistical_graphs_question,
     },
     "Geometry and Measure": {
         "Pythagoras Theorem": generate_pythagoras_question,
@@ -521,6 +532,7 @@ _N5_LEVELS = {
             "Add or Subtract 3 Fractions": generate_fraction_three,
             "Improper Fractions": generate_improper_fraction_conversion,
             "Simplify Fractions": generate_fraction_simplification,
+            "Compare Fractions, Decimals and Percentages": generate_fraction_compare_fdp,
             "Exam Style: Two Fractions, Subtract from 1": generate_fraction_exam_l1,
             "Exam Style: Two Fractions, Subtract from Several Items": generate_fraction_exam_l2,
             "Exam Style: Three Fractions, Subtract from a Whole": generate_fraction_exam_l3,
@@ -539,9 +551,11 @@ _N5_LEVELS = {
             "Combined Events": generate_numeracy_probability_l2,
         },
         "Ratio and Proportion": {
+            "Ratio: Writing and Simplifying": generate_ratio_simplify,
             "Ratio: Find a Share": generate_numeracy_ratio_l1,
             "Ratio: Find the Total": generate_numeracy_ratio_l2,
             "Ratio: Using the Difference": generate_numeracy_ratio_l3,
+            "Ratio: Scale Drawings": generate_ratio_scale,
             "Direct Proportion: Table": generate_direct_proportion_l1,
             "Direct Proportion: Best Value": generate_direct_proportion_l2,
             "Direct Proportion: Unit Conversion": generate_direct_proportion_l3,
@@ -664,6 +678,7 @@ _N5_LEVELS = {
             "Combined Events": generate_probability_expected_l3,
             "Expected Frequency": generate_probability_expected_l4,
             "More or Less than Expected": generate_probability_expected_l5,
+            "Bias and Sample Size": generate_probability_expected_l6,
         },
         "Comparing Data Sets": {
             "Median and Quartiles": generate_comparing_l1,
@@ -672,6 +687,15 @@ _N5_LEVELS = {
             "Comparing Mean and Standard Deviation": generate_comparing_l4,
             "Line Graphs": generate_comparing_l5,
             "Scatter Graphs": generate_comparing_l6,
+            "Mean, Median, Mode and Range": generate_comparing_l7,
+            "Constructing Boxplots": generate_comparing_l8,
+            "Comparing Boxplots": generate_comparing_l9,
+        },
+        "Statistical Graphs": {
+            "Comparative Bar Charts": generate_statistical_graphs_l1,
+            "Compound Bar Charts and Ratio": generate_statistical_graphs_l2,
+            "Conversion Graphs": generate_statistical_graphs_l3,
+            "Stem-and-Leaf Diagrams": generate_statistical_graphs_l4,
         },
     },
     "Geometry and Measure": {
@@ -1078,7 +1102,7 @@ def generate_unit_assessment(topic, qualification="National 5", num_questions=10
 _CALC_MODE_AWARE = {
     generate_ni_question, generate_ni_l1, generate_ni_l2, generate_ni_l3,
     generate_ratio_and_proportion_question, generate_numeracy_sdt_question,
-    generate_numeracy_ratio_l1, generate_numeracy_ratio_l2, generate_numeracy_ratio_l3,
+    generate_numeracy_ratio_l1, generate_numeracy_ratio_l2, generate_numeracy_ratio_l3, generate_ratio_scale,
     generate_direct_proportion_l1, generate_direct_proportion_l2, generate_direct_proportion_l3,
     generate_indirect_proportion_question, generate_indirect_proportion_l1, generate_indirect_proportion_l2,
     generate_indirect_proportion_hm_question, generate_indirect_proportion_hm_l1, generate_indirect_proportion_hm_l2,
@@ -1094,6 +1118,7 @@ _CALC_MODE_AWARE = {
 }
 
 _ALWAYS_CALC_SAFE = {
+    generate_ratio_simplify, generate_fraction_compare_fdp,
     generate_fraction_question, generate_fraction_question_n4, generate_numeracy_fractions_question,
     generate_fraction_exam_style, generate_fraction_exam_l1, generate_fraction_exam_l2, generate_fraction_exam_l3,
     generate_fraction_addition, generate_fraction_subtraction, generate_fraction_three,

@@ -822,3 +822,49 @@ def generate_fraction_question():
         ],
         notes=NOTES,
     )
+
+
+# ---------------------------------------------------------------------------
+# Comparing and ordering fractions, decimals and percentages
+# ---------------------------------------------------------------------------
+
+NOTES_COMPARE_FDP = """
+**Comparing fractions, decimals and percentages** — change them all into the **same form** first (usually decimals or percentages), and show it.
+
+**Example:** Put 3/5, 0.58 and 62% in order, smallest first.
+- 3/5 = 60%, 0.58 = 58%, 62%
+- Order: **0.58, 3/5, 62%**
+
+⚠ Don't just state which is biggest — show the comparison.
+"""
+
+
+def generate_fraction_compare_fdp():
+    from itertools import permutations
+    while True:
+        d = random.choice([4, 5, 8, 10, 20, 25])
+        n = random.choice([k for k in range(1, d) if math.gcd(k, d) == 1])
+        base = round(n / d * 100)
+        a, b = random.sample([x for x in range(-6, 7) if abs(x) >= 2], 2)
+        pc, dec = base + a, (base + b) / 100
+        if 0 < pc < 100 and 0 < dec < 1 and abs(a - b) >= 2:
+            break
+    items = [(f"{n}/{d}", n / d), (f"{pc}%", pc / 100), (f"{dec:.2f}", dec)]
+    random.shuffle(items)
+    right = ", ".join(s for s, _ in sorted(items, key=lambda t: t[1]))
+    others = [", ".join(s for s, _ in perm) for perm in permutations(items)]
+    others = [o for o in others if o != right]
+    options = [right] + random.sample(others, 3)
+    random.shuffle(options)
+    return Question(
+        question_text=(f"Put these in order, **smallest first**:\n\n**{items[0][0]}, &nbsp; {items[1][0]}, &nbsp; "
+                       f"{items[2][0]}**"),
+        correct_answer=right,
+        topic="Numeracy",
+        question_type="Fractions",
+        scaffold_steps=[{"prompt": f"{n}/{d} as a percentage", "answer": round(n / d * 100, 2)},
+                        {"prompt": f"{dec:.2f} as a percentage", "answer": round(dec * 100, 2)}],
+        worked_solution=[f"{s} = {v * 100:g}%" for s, v in items] + [f"Order: **{right}**"],
+        notes=NOTES_COMPARE_FDP,
+        metadata={"options": options},
+    )

@@ -397,6 +397,171 @@ def generate_comparing_l6(calc_mode=False):
     return q
 
 
+NOTES_AVERAGES = """
+**Mean, median, mode and range**
+
+- **Mean** = total ÷ number of values
+- **Median** = middle value of the **ordered** list
+- **Mode** = most common value
+- **Range** = highest − lowest (a measure of spread)
+
+**Example:** 6, 9, 4, 9, 12
+- Mean = 40 ÷ 5 = **8**
+- Ordered: 4, 6, 9, 9, 12, so median = **9** and mode = **9**
+- Range = 12 − 4 = **8**
+"""
+
+
+def generate_comparing_l7(calc_mode=False):
+    """Mean, median, mode and range."""
+    what, unit = random.choice(_LISTS)
+    while True:
+        n = random.choice([7, 9])
+        xs = _data(n - 1)
+        xs.append(random.choice(xs))
+        random.shuffle(xs)
+        counts = {v: xs.count(v) for v in xs}
+        modes = [v for v, c in counts.items() if c == max(counts.values())]
+        if sum(xs) % n == 0 and len(modes) == 1 and sorted(xs)[n // 2] != xs[n // 2]:
+            break
+    mean, med, mode, rng = sum(xs) // n, sorted(xs)[n // 2], modes[0], max(xs) - min(xs)
+    ordered = ", ".join(map(str, sorted(xs)))
+    parts = [
+        make_part("(a)", "Calculate the mean.", mean,
+                  scaffold_steps=[{"prompt": "Total of the values", "answer": sum(xs)}],
+                  worked_solution=[f"{sum(xs)} ÷ {n} = {mean}"]),
+        make_part("(b)", "Find the median.", med,
+                  worked_solution=[f"Ordered: {ordered}", f"Median = {med}"],
+                  distractors=distractors(med, [(xs[n // 2], "put the list in order first.")])),
+        make_part("(c)", "Write down the mode.", mode, worked_solution=[f"Mode = {mode}"]),
+        make_part("(d)", "Calculate the range.", rng,
+                  worked_solution=[f"{max(xs)} − {min(xs)} = {rng}"],
+                  distractors=distractors(rng, [(abs(xs[-1] - xs[0]), "range is highest − lowest, not last − first.")])),
+    ]
+    return Question(question_text=f"The data shows {what}:\n\n**{', '.join(map(str, xs))}**", correct_answer=mean,
+                    topic=TOPIC, question_type=QTYPE, parts=parts, worked_solution=multipart_worked_solution(parts),
+                    notes=NOTES_AVERAGES)
+
+
+NOTES_BOXPLOT = """
+**Boxplots** show the five-figure summary: lowest value, Q1, median, Q3, highest value. Draw them on squared paper with a scale.
+
+**Example (from the worksheet):** Construct a boxplot for the creels data from the median and quartiles example.
+- Five-figure summary: lowest 8, Q1 13, median 18, Q3 23.5, highest 30
+- Box from Q1 to Q3 with a line at the median; whiskers to the lowest and highest values; drawn against a labelled scale.
+
+⚠ Don't draw a dot plot or just mark the five values with crosses — neither gets the marks (2024 and 2025 marking instructions).
+"""
+
+_BOX_DIAG = "topics.finance_statistics.statistical_graphs_diagrams"
+
+
+def _box_metadata(plots, lo, hi, label):
+    return {"diagram": "composite_shape",
+            "diagram_params": {"module_path": _BOX_DIAG, "kind": "boxplots",
+                               "args": [plots, lo, hi, 5, label], "width": 600}}
+
+
+def generate_comparing_l8(calc_mode=False):
+    """Constructing a boxplot: the five-figure summary, then pick the correct drawing."""
+    what, unit = random.choice(_LISTS)
+    while True:
+        n = random.choice([11, 12])
+        xs = _data(n)
+        q1, md, q3 = _quartiles(xs)
+        lo, hi = min(xs), max(xs)
+        mean_like = (q1 + q3) / 2
+        if lo < q1 < md < q3 < hi and q3 - q1 >= 5 and abs(mean_like - md) >= 1.5 and hi - q3 >= 2 and q1 - lo >= 2:
+            break
+    right = [lo, q1, md, q3, hi]
+    wrong_median = [lo, q1, mean_like, q3, hi]       # median drawn in the middle of the box
+    wrong_box = [lo, (lo + q1) / 2, md, (q3 + hi) / 2, hi]  # box not drawn from Q1 to Q3
+    drawings = [right, wrong_median, wrong_box]
+    random.shuffle(drawings)
+    letters = ["A", "B", "C"]
+    answer = letters[drawings.index(right)]
+    axis_lo, axis_hi = int(lo // 5) * 5 - 5, int(hi // 5) * 5 + 10
+    parts = [
+        make_part("(a)", "Find the median.", md, worked_solution=[
+            f"Ordered: {', '.join(map(str, sorted(xs)))}", f"Median = {_fmt(md)}"]),
+        make_part("(b)", "Find the lower quartile.", q1, worked_solution=[f"Q1 = {_fmt(q1)}"]),
+        make_part("(c)", "Find the upper quartile.", q3, worked_solution=[f"Q3 = {_fmt(q3)}"]),
+        make_part("(d)", "Draw the boxplot in your jotter. Then choose the drawing below that matches yours.", answer,
+                  options=letters,
+                  worked_solution=[f"Lowest {lo}, Q1 {_fmt(q1)}, median {_fmt(md)}, Q3 {_fmt(q3)}, highest {hi}: "
+                                   f"boxplot {answer}"]),
+    ]
+    q = Question(question_text=f"The data shows {what}:\n\n**{', '.join(map(str, xs))}**", correct_answer=md,
+                 topic=TOPIC, question_type=QTYPE, parts=parts, worked_solution=multipart_worked_solution(parts),
+                 notes=NOTES_BOXPLOT)
+    q.metadata.update(_box_metadata([(f"Boxplot {l}", d) for l, d in zip(letters, drawings)], axis_lo, axis_hi,
+                                    unit.capitalize()))
+    return q
+
+
+NOTES_BOX_COMPARE = """
+**Comparing boxplots** — make one comment about the **average** (median) and one about the **spread** (IQR), in context.
+
+**Example:** Walking times: Calum has median 14 minutes and IQR 8; Iona has median 11 minutes and IQR 4.
+- *On average, Calum's walking times are longer than Iona's.*
+- *Calum's walking times are more spread out than Iona's.*
+
+⚠ Don't use "on average" about the spread, and don't write about "the median" or "the box" — write about the data in context.
+"""
+
+_BOX_PAIRS = [("Class A", "Class B", "test marks", "Test mark", "higher", "lower"),
+              ("Route 1", "Route 2", "journey times", "Journey time (minutes)", "longer", "shorter"),
+              ("Shop A", "Shop B", "daily sales", "Daily sales", "higher", "lower"),
+              ("Team X", "Team Y", "race times", "Race time (seconds)", "longer", "shorter")]
+
+
+def generate_comparing_l9(calc_mode=False):
+    """Comparing two boxplots: read a median and an IQR, then choose valid comments."""
+    a, b, what, label, up, down = random.choice(_BOX_PAIRS)
+    while True:
+        plots = []
+        for _ in range(2):
+            lo = random.randint(10, 22)
+            q1 = lo + random.randint(3, 8)
+            md = q1 + random.randint(2, 7)
+            q3 = md + random.randint(2, 7)
+            plots.append([lo, q1, md, q3, q3 + random.randint(3, 8)])
+        ma, mb = plots[0][2], plots[1][2]
+        ia, ib = plots[0][3] - plots[0][1], plots[1][3] - plots[1][1]
+        if abs(ma - mb) >= 2 and abs(ia - ib) >= 2:
+            break
+    hi, lo_ = (a, b) if ma > mb else (b, a)
+    wide, narrow = (a, b) if ia > ib else (b, a)
+    mean_right = f"On average, the {what} for {hi} are {up} than for {lo_}."
+    mean_opts = [mean_right, f"On average, the {what} for {lo_} are {up} than for {hi}.",
+                 f"The median for {hi} is {up}.", f"On average, the {what} for {hi} are more spread out."]
+    sd_right = f"The {what} for {wide} are more spread out than for {narrow}."
+    sd_opts = [sd_right, f"The {what} for {narrow} are more spread out than for {wide}.",
+               f"On average, the {what} for {wide} are more spread out than for {narrow}.",
+               f"The box for {wide} is more spread out."]
+    random.shuffle(mean_opts)
+    random.shuffle(sd_opts)
+    parts = [
+        make_part("(a)", f"Write down the median for {a}.", ma, worked_solution=[f"Line inside the box: {ma}"]),
+        make_part("(b)", f"Calculate the interquartile range for {b}.", ib,
+                  scaffold_steps=[{"prompt": "Q1 (left end of the box)", "answer": plots[1][1]},
+                                  {"prompt": "Q3 (right end of the box)", "answer": plots[1][3]}],
+                  worked_solution=[f"{plots[1][3]} − {plots[1][1]} = {ib}"],
+                  distractors=distractors(ib, [(plots[1][4] - plots[1][0], "that's the range (whisker to whisker) — "
+                                                                           "the IQR is the width of the box.")])),
+        make_part("(c)", "Which is a valid comment about the averages?", mean_right, options=mean_opts,
+                  worked_solution=[mean_right]),
+        make_part("(d)", "Which is a valid comment about the spread?", sd_right, options=sd_opts,
+                  worked_solution=[sd_right]),
+    ]
+    q = Question(question_text=f"The boxplots show the {what} for {a} and {b}.", correct_answer=ma, topic=TOPIC,
+                 question_type=QTYPE, parts=parts, worked_solution=multipart_worked_solution(parts),
+                 notes=NOTES_BOX_COMPARE)
+    q.metadata.update(_box_metadata([(a, plots[0]), (b, plots[1])], 5, 55, label))
+    return q
+
+
 def generate_comparing_question(calc_mode=False):
     return random.choice([generate_comparing_l1, generate_comparing_l2, generate_comparing_l3,
-                          generate_comparing_l4, generate_comparing_l5, generate_comparing_l6])(calc_mode=calc_mode)
+                          generate_comparing_l4, generate_comparing_l5, generate_comparing_l6,
+                          generate_comparing_l7, generate_comparing_l8, generate_comparing_l9])(calc_mode=calc_mode)
